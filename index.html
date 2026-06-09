@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCC Music - Reproductor de Audio FLAC & WAV</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
+</head>
+<body>
+    <!-- Navegación -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">🎵 NCC Music</div>
+            <ul class="nav-links">
+                <li><a href="#inicio">Inicio</a></li>
+                <li><a href="#reproductor">Reproductor</a></li>
+                <li><a href="#acerca">Acerca de</a></li>
+                <li><a href="#contacto">Contacto</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Sección Hero -->
+    <section id="inicio" class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Bienvenido a NCC Music</h1>
+                <p>Reproductor de audio de alta calidad para archivos FLAC y WAV</p>
+                <a href="#reproductor" class="cta-button">Comienza a reproducir</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Reproductor de Audio -->
+    <section id="reproductor" class="player-section">
+        <div class="container">
+            <h2>Reproductor de Audio</h2>
+            
+            <div class="player-container">
+                <div class="player-display">
+                    <div class="album-art">
+                        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="50" cy="50" r="45" fill="#333"/>
+                            <circle cx="50" cy="50" r="35" fill="#1a1a1a"/>
+                            <circle cx="50" cy="50" r="25" fill="#0a0a0a"/>
+                            <circle cx="50" cy="50" r="8" fill="#333"/>
+                        </svg>
+                    </div>
+                    <div class="track-info">
+                        <h3 id="track-name">Selecciona una canción</h3>
+                        <p id="track-artist">NCC Music</p>
+                        <div class="time-display">
+                            <span id="current-time">0:00</span>
+                            <span> / </span>
+                            <span id="duration">0:00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="progress-bar">
+                    <input type="range" id="progress-slider" min="0" max="100" value="0">
+                </div>
+
+                <div class="controls">
+                    <button id="prev-button" class="control-btn" title="Anterior">⏮️</button>
+                    <button id="play-button" class="control-btn play-btn" title="Reproducir">▶️</button>
+                    <button id="next-button" class="control-btn" title="Siguiente">⏭️</button>
+                    <button id="shuffle-button" class="control-btn" title="Modo aleatorio">🔀</button>
+                    <button id="repeat-button" class="control-btn" title="Repetir">🔁</button>
+                </div>
+
+                <div class="volume-control">
+                    <label for="volume-slider">🔊</label>
+                    <input type="range" id="volume-slider" min="0" max="100" value="70">
+                    <span id="volume-value">70%</span>
+                </div>
+
+                <div class="file-upload">
+                    <label for="file-input" class="upload-btn">📁 Cargar archivo</label>
+                    <input type="file" id="file-input" accept=".flac,.wav,.mp3,.ogg" multiple>
+                </div>
+
+                <div class="playlist">
+                    <h3>Playlist</h3>
+                    <ul id="playlist" class="playlist-list"></ul>
+                </div>
+            </div>
+
+            <audio id="audio-player"></audio>
+        </div>
+    </section>
+
+    <!-- Acerca de -->
+    <section id="acerca" class="about-section">
+        <div class="container">
+            <h2>Acerca de Este Proyecto</h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <h3>Un reproductor de audio moderno</h3>
+                    <p>Este sitio web te permite reproducir archivos de audio de alta calidad en formatos FLAC y WAV directamente desde tu navegador. Diseñado para los audiófilos que valoran la calidad del sonido.</p>
+                    <h4>Características:</h4>
+                    <ul class="features-list">
+                        <li>✅ Soporte para FLAC, WAV, MP3 y OGG</li>
+                        <li>✅ Carga de múltiples archivos</li>
+                        <li>✅ Control de volumen</li>
+                        <li>✅ Modo shuffle y repeat</li>
+                        <li>✅ Visualizador de progreso</li>
+                        <li>✅ Interfaz responsiva</li>
+                    </ul>
+                </div>
+                <div class="about-image">
+                    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="200" height="200" fill="#f0f0f0" rx="10"/>
+                        <circle cx="100" cy="60" r="20" fill="#ff6b6b"/>
+                        <circle cx="100" cy="60" r="15" fill="#fff"/>
+                        <circle cx="100" cy="60" r="8" fill="#ff6b6b"/>
+                        <path d="M 80 100 Q 100 130 120 100" stroke="#4ecdc4" stroke-width="3" fill="none" stroke-linecap="round"/>
+                        <path d="M 70 110 Q 100 140 130 110" stroke="#4ecdc4" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.6"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contacto -->
+    <section id="contacto" class="contact-section">
+        <div class="container">
+            <h2>Contacto</h2>
+            <div class="social-links">
+                <a href="#" class="social-btn" title="GitHub">GitHub</a>
+                <a href="#" class="social-btn" title="Twitter">Twitter</a>
+                <a href="#" class="social-btn" title="Email">📧 Email</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 NCC Music. Creado con ❤️ para los amantes del audio de calidad.</p>
+        </div>
+    </footer>
+
+    <script src="js/player.js"></script>
+</body>
+</html>
