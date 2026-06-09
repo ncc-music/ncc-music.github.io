@@ -12,121 +12,100 @@ const playerState = {
     shuffledIndices: []
 };
 
-// Variables para elementos del DOM
-let audio, playButton, prevButton, nextButton, shuffleButton, repeatButton;
-let volumeSlider, volumeValue, progressSlider, currentTimeEl, durationEl;
-let trackName, trackArtist, playlistEl, albumArt, loadingInitial;
-
 // Inicialización cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('🎵 DOM cargado, inicializando...');
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🎵 DOM cargado');
+    try {
+        initPlayer();
+    } catch (err) {
+        console.error('Error en initPlayer:', err);
+    }
+});
+
+function initPlayer() {
+    console.log('📍 Inicializando reproductor...');
     
-    // Obtener elementos del DOM
-    audio = document.getElementById('audio-player');
-    playButton = document.getElementById('play-button');
-    prevButton = document.getElementById('prev-button');
-    nextButton = document.getElementById('next-button');
-    shuffleButton = document.getElementById('shuffle-button');
-    repeatButton = document.getElementById('repeat-button');
-    volumeSlider = document.getElementById('volume-slider');
-    volumeValue = document.getElementById('volume-value');
-    progressSlider = document.getElementById('progress-slider');
-    currentTimeEl = document.getElementById('current-time');
-    durationEl = document.getElementById('duration');
-    trackName = document.getElementById('track-name');
-    trackArtist = document.getElementById('track-artist');
-    playlistEl = document.getElementById('playlist');
-    albumArt = document.querySelector('.album-art');
-    loadingInitial = document.getElementById('loading-initial');
+    // Obtener elementos
+    const audio = document.getElementById('audio-player');
+    const playButton = document.getElementById('play-button');
+    const playlistEl = document.getElementById('playlist');
+    const loadingInitial = document.getElementById('loading-initial');
     
-    console.log('✅ Elementos del DOM obtenidos');
-    
-    // Verificar que todos los elementos existan
-    if (!audio || !playButton || !playlistEl) {
-        console.error('❌ Elementos del DOM no encontrados');
+    if (!audio) {
+        console.error('❌ audio-player no encontrado');
+        return;
+    }
+    if (!playButton) {
+        console.error('❌ play-button no encontrado');
+        return;
+    }
+    if (!playlistEl) {
+        console.error('❌ playlist no encontrado');
         return;
     }
     
-    initializePlayer();
-    loadFromR2Auto();
-});
-
-function initializePlayer() {
-    console.log('📍 Inicializando reproductor...');
+    console.log('✅ Elementos encontrados');
     
-    // Event listeners para audio
-    audio.addEventListener('timeupdate', updateProgress);
-    audio.addEventListener('loadedmetadata', updateDuration);
-    audio.addEventListener('ended', handleTrackEnd);
-    audio.addEventListener('canplay', () => {
-        if (albumArt) albumArt.classList.add('playing');
+    // Event listeners
+    audio.addEventListener('timeupdate', function() {
+        updateProgress(audio);
     });
-    audio.addEventListener('pause', () => {
-        if (albumArt) albumArt.classList.remove('playing');
+    audio.addEventListener('loadedmetadata', function() {
+        updateDuration(audio);
+    });
+    audio.addEventListener('ended', function() {
+        nextTrack(audio, playButton, playlistEl);
     });
 
-    // Botones de control
-    playButton.addEventListener('click', togglePlay);
-    prevButton.addEventListener('click', previousTrack);
-    nextButton.addEventListener('click', nextTrack);
-    shuffleButton.addEventListener('click', toggleShuffle);
-    repeatButton.addEventListener('click', toggleRepeat);
+    playButton.addEventListener('click', function() {
+        togglePlay(audio, playButton);
+    });
+    
+    document.getElementById('prev-button').addEventListener('click', function() {
+        previousTrack(audio, playButton, playlistEl);
+    });
+    
+    document.getElementById('next-button').addEventListener('click', function() {
+        nextTrack(audio, playButton, playlistEl);
+    });
 
-    // Volumen
-    volumeSlider.addEventListener('input', changeVolume);
+    document.getElementById('volume-slider').addEventListener('input', function(e) {
+        audio.volume = e.target.value / 100;
+        document.getElementById('volume-value').textContent = Math.round(e.target.value) + '%';
+    });
 
-    // Progreso
-    progressSlider.addEventListener('input', seek);
-    progressSlider.addEventListener('change', seekEnd);
+    document.getElementById('progress-slider').addEventListener('input', function(e) {
+        const seekTime = (e.target.value / 100) * audio.duration;
+        audio.currentTime = seekTime;
+    });
 
-    // Teclas de teclado
-    document.addEventListener('keydown', handleKeyPress);
-
-    audio.volume = 0.7;
-    console.log('✅ Reproductor inicializado');
+    // Cargar desde R2
+    loadFromR2(audio, playButton, playlistEl, loadingInitial);
 }
 
-// Auto-cargar desde Cloudflare R2
-async function loadFromR2Auto() {
-    try {
-        console.log('🔄 Cargando desde Cloudflare R2...');
-        console.log('URL:', r2BaseUrl + r2Track);
-        
-        // Crear playlist con el archivo de R2
-        playerState.playlist = [{
-            name: 'DJ Sebel - From da darkside - 4A',
-            url: r2BaseUrl + r2Track,
-            duration: 0
-        }];
+function loadFromR2(audio, playButton, playlistEl, loadingInitial) {
+    console.log('🔄 Cargando desde Cloudflare R2...');
+    
+    playerState.playlist = [{
+        name: 'DJ Sebel - From da darkside - 4A',
+        url: r2BaseUrl + r2Track,
+        duration: 0
+    }];
 
-        playerState.currentTrackIndex = 0;
-        
-        console.log('✅ Playlist creada:', playerState.playlist);
-        
-        // Ocultar loading
-        if (loadingInitial) {
-            loadingInitial.style.display = 'none';
-        }
-        
-        updatePlaylistUI();
-        
-        // Auto-play primera canción
-        if (playerState.playlist.length > 0) {
-            console.log('▶️ Reproduciendo pista 0');
-            playTrack(0);
-        }
-    } catch (error) {
-        console.error('❌ Error cargando desde R2:', error);
-        if (loadingInitial) {
-            loadingInitial.innerHTML = `<h3>❌ Error: ${error.message}</h3>`;
-        }
+    playerState.currentTrackIndex = 0;
+    
+    console.log('✅ Playlist creada:', playerState.playlist);
+    
+    if (loadingInitial) {
+        loadingInitial.style.display = 'none';
     }
+    
+    updatePlaylistUI(playlistEl);
+    playTrack(0, audio, playButton, playlistEl);
 }
 
-// Reproducción
-function togglePlay() {
+function togglePlay(audio, playButton) {
     if (playerState.playlist.length === 0) {
-        alert('Por favor, carga canciones primero.');
         return;
     }
 
@@ -136,164 +115,75 @@ function togglePlay() {
         playButton.textContent = '▶️';
     } else {
         if (audio.src === '') {
-            playTrack(playerState.currentTrackIndex);
+            playTrack(playerState.currentTrackIndex, audio, playButton);
         } else {
-            audio.play().catch(err => console.error('Error playing:', err));
+            audio.play();
         }
         playerState.isPlaying = true;
         playButton.textContent = '⏸️';
     }
 }
 
-function playTrack(index) {
+function playTrack(index, audio, playButton, playlistEl) {
     if (playerState.playlist.length === 0) return;
 
     playerState.currentTrackIndex = index;
     const track = playerState.playlist[index];
 
     console.log('🎵 Reproduciendo:', track.name);
-    console.log('URL:', track.url);
 
     audio.src = track.url;
-    trackName.textContent = track.name;
-    trackArtist.textContent = extractArtistName(track.name);
+    document.getElementById('track-name').textContent = track.name;
+    document.getElementById('track-artist').textContent = 'DJ Sebel';
 
-    audio.play().catch(err => {
-        console.error('Error playing track:', err);
-        nextTrack();
-    });
+    audio.play();
     playerState.isPlaying = true;
     playButton.textContent = '⏸️';
 
-    updatePlaylistUI();
+    if (playlistEl) {
+        updatePlaylistUI(playlistEl);
+    }
 }
 
-function nextTrack() {
+function nextTrack(audio, playButton, playlistEl) {
     if (playerState.playlist.length === 0) return;
-
-    let nextIndex;
-    if (playerState.shuffle) {
-        nextIndex = getNextShuffleIndex();
-    } else {
-        nextIndex = (playerState.currentTrackIndex + 1) % playerState.playlist.length;
-    }
-
-    playTrack(nextIndex);
+    const nextIndex = (playerState.currentTrackIndex + 1) % playerState.playlist.length;
+    playTrack(nextIndex, audio, playButton, playlistEl);
 }
 
-function previousTrack() {
+function previousTrack(audio, playButton, playlistEl) {
     if (playerState.playlist.length === 0) return;
-
-    let prevIndex;
-    if (playerState.shuffle) {
-        prevIndex = getPreviousShuffleIndex();
-    } else {
-        prevIndex = playerState.currentTrackIndex === 0 
-            ? playerState.playlist.length - 1 
-            : playerState.currentTrackIndex - 1;
-    }
-
-    playTrack(prevIndex);
+    const prevIndex = playerState.currentTrackIndex === 0 
+        ? playerState.playlist.length - 1 
+        : playerState.currentTrackIndex - 1;
+    playTrack(prevIndex, audio, playButton, playlistEl);
 }
 
-function handleTrackEnd() {
-    if (playerState.repeat === 2) {
-        audio.currentTime = 0;
-        audio.play();
-    } else {
-        nextTrack();
+function updateProgress(audio) {
+    const progressSlider = document.getElementById('progress-slider');
+    const currentTimeEl = document.getElementById('current-time');
+    
+    if (progressSlider && audio.duration) {
+        const progress = (audio.currentTime / audio.duration) * 100;
+        progressSlider.value = progress;
+    }
+    
+    if (currentTimeEl) {
+        currentTimeEl.textContent = formatTime(audio.currentTime);
     }
 }
 
-// Shuffle
-function toggleShuffle() {
-    playerState.shuffle = !playerState.shuffle;
-    shuffleButton.classList.toggle('active', playerState.shuffle);
-
-    if (playerState.shuffle) {
-        generateShuffleIndices();
+function updateDuration(audio) {
+    const durationEl = document.getElementById('duration');
+    if (durationEl) {
+        durationEl.textContent = formatTime(audio.duration);
     }
 }
 
-function generateShuffleIndices() {
-    playerState.shuffledIndices = Array.from(
-        { length: playerState.playlist.length },
-        (_, i) => i
-    );
-
-    for (let i = playerState.shuffledIndices.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [playerState.shuffledIndices[i], playerState.shuffledIndices[j]] =
-            [playerState.shuffledIndices[j], playerState.shuffledIndices[i]];
-    }
-}
-
-function getNextShuffleIndex() {
-    const currentShufflePos = playerState.shuffledIndices.indexOf(
-        playerState.currentTrackIndex
-    );
-    const nextPos = (currentShufflePos + 1) % playerState.shuffledIndices.length;
-    return playerState.shuffledIndices[nextPos];
-}
-
-function getPreviousShuffleIndex() {
-    const currentShufflePos = playerState.shuffledIndices.indexOf(
-        playerState.currentTrackIndex
-    );
-    const prevPos = currentShufflePos === 0 
-        ? playerState.shuffledIndices.length - 1 
-        : currentShufflePos - 1;
-    return playerState.shuffledIndices[prevPos];
-}
-
-// Repeat
-function toggleRepeat() {
-    playerState.repeat = (playerState.repeat + 1) % 3;
-    repeatButton.classList.toggle('active', playerState.repeat > 0);
-
-    if (playerState.repeat === 0) {
-        repeatButton.textContent = '🔁';
-    } else if (playerState.repeat === 1) {
-        repeatButton.textContent = '🔂';
-    } else {
-        repeatButton.textContent = '🔃';
-    }
-}
-
-// Volumen
-function changeVolume(e) {
-    const volume = e.target.value / 100;
-    audio.volume = volume;
-    volumeValue.textContent = Math.round(volume * 100) + '%';
-}
-
-// Progreso
-function updateProgress() {
-    const progress = (audio.currentTime / audio.duration) * 100;
-    progressSlider.value = progress;
-    currentTimeEl.textContent = formatTime(audio.currentTime);
-}
-
-function updateDuration() {
-    durationEl.textContent = formatTime(audio.duration);
-}
-
-function seek(e) {
-    const seekTime = (e.target.value / 100) * audio.duration;
-    audio.currentTime = seekTime;
-}
-
-function seekEnd(e) {
-    const seekTime = (e.target.value / 100) * audio.duration;
-    audio.currentTime = seekTime;
-    if (playerState.isPlaying) {
-        audio.play();
-    }
-}
-
-function updatePlaylistUI() {
+function updatePlaylistUI(playlistEl) {
     playlistEl.innerHTML = '';
     const playlistCount = document.getElementById('playlist-count');
+    
     if (playlistCount) {
         playlistCount.textContent = playerState.playlist.length;
     }
@@ -315,42 +205,20 @@ function updatePlaylistUI() {
 
         li.appendChild(nameSpan);
         li.appendChild(durationSpan);
-        li.addEventListener('click', () => playTrack(index));
+        
+        const audio = document.getElementById('audio-player');
+        const playButton = document.getElementById('play-button');
+        li.addEventListener('click', function() {
+            playTrack(index, audio, playButton, playlistEl);
+        });
 
         playlistEl.appendChild(li);
     });
 }
 
-// Teclas de teclado
-function handleKeyPress(e) {
-    switch(e.code) {
-        case 'Space':
-            e.preventDefault();
-            togglePlay();
-            break;
-        case 'ArrowRight':
-            nextTrack();
-            break;
-        case 'ArrowLeft':
-            previousTrack();
-            break;
-    }
-}
-
-// Utilidades
 function formatTime(seconds) {
     if (!seconds || isNaN(seconds)) return '0:00';
-
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-
     return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
-
-function extractArtistName(filename) {
-    const parts = filename.split(' - ');
-    if (parts.length > 1) {
-        return parts[0];
-    }
-    return 'NCC Music';
 }
