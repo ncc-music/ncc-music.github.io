@@ -12,48 +12,57 @@ const playerState = {
     shuffledIndices: []
 };
 
-// Elementos del DOM
-const audio = document.getElementById('audio-player');
-const playButton = document.getElementById('play-button');
-const prevButton = document.getElementById('prev-button');
-const nextButton = document.getElementById('next-button');
-const shuffleButton = document.getElementById('shuffle-button');
-const repeatButton = document.getElementById('repeat-button');
-const volumeSlider = document.getElementById('volume-slider');
-const volumeValue = document.getElementById('volume-value');
-const progressSlider = document.getElementById('progress-slider');
-const currentTimeEl = document.getElementById('current-time');
-const durationEl = document.getElementById('duration');
-const trackName = document.getElementById('track-name');
-const trackArtist = document.getElementById('track-artist');
-const playlistEl = document.getElementById('playlist');
-const albumArt = document.querySelector('.album-art');
-const folderIdInput = document.getElementById('folder-id');
-const loadGdriveBtn = document.getElementById('load-gdrive-btn');
-const loadStatus = document.getElementById('load-status');
-const playlistCount = document.getElementById('playlist-count');
-const loadingInitial = document.getElementById('loading-initial');
-const gdriveConfigPanel = document.getElementById('gdrive-config-panel');
-const toggleConfigBtn = document.getElementById('toggle-config-btn');
+// Variables para elementos del DOM
+let audio, playButton, prevButton, nextButton, shuffleButton, repeatButton;
+let volumeSlider, volumeValue, progressSlider, currentTimeEl, durationEl;
+let trackName, trackArtist, playlistEl, albumArt, loadingInitial;
 
-// Inicialización
+// Inicialización cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🎵 Inicializando reproductor...');
+    console.log('🎵 DOM cargado, inicializando...');
+    
+    // Obtener elementos del DOM
+    audio = document.getElementById('audio-player');
+    playButton = document.getElementById('play-button');
+    prevButton = document.getElementById('prev-button');
+    nextButton = document.getElementById('next-button');
+    shuffleButton = document.getElementById('shuffle-button');
+    repeatButton = document.getElementById('repeat-button');
+    volumeSlider = document.getElementById('volume-slider');
+    volumeValue = document.getElementById('volume-value');
+    progressSlider = document.getElementById('progress-slider');
+    currentTimeEl = document.getElementById('current-time');
+    durationEl = document.getElementById('duration');
+    trackName = document.getElementById('track-name');
+    trackArtist = document.getElementById('track-artist');
+    playlistEl = document.getElementById('playlist');
+    albumArt = document.querySelector('.album-art');
+    loadingInitial = document.getElementById('loading-initial');
+    
+    console.log('✅ Elementos del DOM obtenidos');
+    
+    // Verificar que todos los elementos existan
+    if (!audio || !playButton || !playlistEl) {
+        console.error('❌ Elementos del DOM no encontrados');
+        return;
+    }
+    
     initializePlayer();
     loadFromR2Auto();
 });
 
 function initializePlayer() {
-    console.log('📍 initializePlayer ejecutado');
+    console.log('📍 Inicializando reproductor...');
+    
     // Event listeners para audio
     audio.addEventListener('timeupdate', updateProgress);
     audio.addEventListener('loadedmetadata', updateDuration);
     audio.addEventListener('ended', handleTrackEnd);
     audio.addEventListener('canplay', () => {
-        albumArt.classList.add('playing');
+        if (albumArt) albumArt.classList.add('playing');
     });
     audio.addEventListener('pause', () => {
-        albumArt.classList.remove('playing');
+        if (albumArt) albumArt.classList.remove('playing');
     });
 
     // Botones de control
@@ -70,23 +79,11 @@ function initializePlayer() {
     progressSlider.addEventListener('input', seek);
     progressSlider.addEventListener('change', seekEnd);
 
-    // Google Drive
-    loadGdriveBtn.addEventListener('click', loadFromGoogleDrive);
-    folderIdInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            loadFromGoogleDrive();
-        }
-    });
-
-    // Toggle configuración
-    toggleConfigBtn.addEventListener('click', () => {
-        gdriveConfigPanel.style.display = gdriveConfigPanel.style.display === 'none' ? 'block' : 'none';
-    });
-
     // Teclas de teclado
     document.addEventListener('keydown', handleKeyPress);
 
     audio.volume = 0.7;
+    console.log('✅ Reproductor inicializado');
 }
 
 // Auto-cargar desde Cloudflare R2
@@ -106,9 +103,10 @@ async function loadFromR2Auto() {
         
         console.log('✅ Playlist creada:', playerState.playlist);
         
-        // Ocultar loading y mostrar reproductor
-        loadingInitial.style.display = 'none';
-        gdriveConfigPanel.style.display = 'none';
+        // Ocultar loading
+        if (loadingInitial) {
+            loadingInitial.style.display = 'none';
+        }
         
         updatePlaylistUI();
         
@@ -119,140 +117,9 @@ async function loadFromR2Auto() {
         }
     } catch (error) {
         console.error('❌ Error cargando desde R2:', error);
-        loadingInitial.innerHTML = `<h3>❌ Error: ${error.message}</h3>`;
-        gdriveConfigPanel.style.display = 'block';
-    }
-}
-
-// Obtener archivos de Google Drive - Método directo
-async function getGoogleDriveFilesViaDirect(folderId) {
-    try {
-        // Método 1: Usar el endpoint de descarga directa
-        const response = await fetch(
-            `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+trashed=false&spaces=drive&fields=id,name,mimeType&pageSize=1000&key=AIzaSyDyWJOw5w-1yfWreKdy0sXiaTmMO8Ky4S8`,
-            {
-                method: 'GET'
-            }
-        );
-
-        if (response.ok) {
-            const data = await response.json();
-            if (data.files && data.files.length > 0) {
-                return data.files.map(f => ({
-                    name: f.name,
-                    id: f.id
-                }));
-            }
+        if (loadingInitial) {
+            loadingInitial.innerHTML = `<h3>❌ Error: ${error.message}</h3>`;
         }
-        
-        throw new Error('API method 1 failed');
-    } catch (error) {
-        console.warn('API method 1 failed, trying method 2:', error);
-        return await getGoogleDriveFilesViaDirect2(folderId);
-    }
-}
-
-// Método alternativo: Parser HTML
-async function getGoogleDriveFilesViaDirect2(folderId) {
-    try {
-        // Usar un proxy público para evitar CORS
-        const response = await fetch(
-            `https://www.googleapis.com/drive/v3/files?corpora=user&q=%27${folderId}%27+in+parents&fields=files(id,name)&pageSize=1000&key=AIzaSyDyWJOw5w-1yfWreKdy0sXiaTmMO8Ky4S8`
-        );
-
-        if (response.ok) {
-            const data = await response.json();
-            return (data.files || []).map(f => ({
-                name: f.name,
-                id: f.id
-            }));
-        }
-
-        throw new Error('Method 2 failed');
-    } catch (error) {
-        console.warn('Method 2 failed, trying method 3:', error);
-        // Última opción: intentar acceder a la carpeta pública
-        return await tryPublicFolderAccess(folderId);
-    }
-}
-
-// Intenta acceder directo a la carpeta pública
-async function tryPublicFolderAccess(folderId) {
-    // Este método intenta cargar archivos conocidos
-    // Ya que la carpeta es pública, los usuarios podrían compartir los IDs manualmente
-    console.warn('Métodos automáticos agotados. Usando archivos pre-cargados.');
-    
-    // Retornar array vacío para que el usuario configure manualmente
-    throw new Error('No se pudieron obtener los archivos automáticamente. Por favor, usa el botón "Cambiar carpeta" e intenta de nuevo con el ID de carpeta correcto.');
-}
-
-// Cargar archivos desde Google Drive (manual)
-async function loadFromGoogleDrive() {
-    const folderId = folderIdInput.value.trim();
-    
-    if (!folderId) {
-        showStatus('Por favor ingresa un ID de carpeta válido', 'error');
-        return;
-    }
-
-    showStatus('Cargando archivos...', 'loading');
-    
-    try {
-        const files = await getGoogleDriveFilesViaDirect(folderId);
-        
-        if (files.length === 0) {
-            showStatus('No se encontraron archivos en esta carpeta. Verifica el ID.', 'error');
-            playerState.playlist = [];
-            updatePlaylistUI();
-            return;
-        }
-
-        // Filtrar solo archivos de audio
-        const audioFiles = files.filter(file => {
-            const name = file.name.toLowerCase();
-            return name.match(/\.(flac|wav|mp3|ogg|m4a|aac)$/i);
-        });
-
-        if (audioFiles.length === 0) {
-            showStatus('No se encontraron archivos de audio en esta carpeta', 'error');
-            playerState.playlist = [];
-            updatePlaylistUI();
-            return;
-        }
-
-        // Crear playlist
-        playerState.playlist = audioFiles.map(file => ({
-            name: file.name.replace(/\.[^/.]+$/, ''),
-            id: file.id,
-            url: `https://drive.google.com/uc?id=${file.id}&export=download`,
-            duration: 0
-        }));
-
-        playerState.currentTrackIndex = 0;
-        updatePlaylistUI();
-        showStatus(`✅ Se cargaron ${audioFiles.length} canciones correctamente`, 'success');
-        gdriveConfigPanel.style.display = 'none';
-        
-        // Auto-play primera canción
-        if (playerState.playlist.length > 0) {
-            playTrack(0);
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showStatus(`Error: ${error.message}`, 'error');
-        playerState.playlist = [];
-        updatePlaylistUI();
-    }
-}
-
-function showStatus(message, type) {
-    loadStatus.textContent = message;
-    loadStatus.className = `load-status ${type}`;
-    
-    if (type === 'success') {
-        setTimeout(() => {
-            loadStatus.className = 'load-status';
-        }, 5000);
     }
 }
 
@@ -293,7 +160,6 @@ function playTrack(index) {
 
     audio.play().catch(err => {
         console.error('Error playing track:', err);
-        showStatus('Error al reproducir el archivo', 'error');
         nextTrack();
     });
     playerState.isPlaying = true;
@@ -334,8 +200,6 @@ function handleTrackEnd() {
     if (playerState.repeat === 2) {
         audio.currentTime = 0;
         audio.play();
-    } else if (playerState.repeat === 1) {
-        nextTrack();
     } else {
         nextTrack();
     }
@@ -429,7 +293,10 @@ function seekEnd(e) {
 
 function updatePlaylistUI() {
     playlistEl.innerHTML = '';
-    playlistCount.textContent = playerState.playlist.length;
+    const playlistCount = document.getElementById('playlist-count');
+    if (playlistCount) {
+        playlistCount.textContent = playerState.playlist.length;
+    }
 
     playerState.playlist.forEach((track, index) => {
         const li = document.createElement('li');
