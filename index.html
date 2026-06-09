@@ -11,7 +11,7 @@
     <!-- Navegación -->
     <nav class="navbar">
         <div class="container">
-            <div class="logo">🎵 NCC Music</div>
+            <div class="logo">🎵 NCC Music - Promotional Lossless Audio</div>
             <ul class="nav-links">
                 <li><a href="#inicio">Home</a></li>
                 <li><a href="#reproductor">Mixes</a></li>
@@ -24,11 +24,10 @@
     <section id="reproductor" class="player-section">
         <div class="container">
             <h2>Music mixed by Nicolás Cardú</h2>
-            
             <div class="player-container">
                 <!-- Estado de carga inicial -->
                 <div id="loading-initial" class="gdrive-config">
-                    <h3>⏳ Cargando tu música...</h3>
+                    <h3>⏳ Loading...</h3>
                     <div class="spinner"></div>
                 </div>
 
@@ -50,7 +49,7 @@
                         </svg>
                     </div>
                     <div class="track-info">
-                        <h3 id="track-name">Selecciona una canción</h3>
+                        <h3 id="track-name">Select</h3>
                         <p id="track-artist">NCC Music</p>
                         <div class="time-display">
                             <span id="current-time">0:00</span>
@@ -66,7 +65,7 @@
 
                 <div class="controls">
                     <button id="prev-button" class="control-btn" title="Anterior">⏮️</button>
-                    <button id="play-button" class="control-btn play-btn" title="Reproducir">▶️</button>
+                    <button id="play-button" class="control-btn play-btn" title="PLAY">▶️</button>
                     <button id="next-button" class="control-btn" title="Siguiente">⏭️</button>
                     <button id="shuffle-button" class="control-btn" title="Modo aleatorio">🔀</button>
                     <button id="repeat-button" class="control-btn" title="Repetir">🔁</button>
@@ -74,13 +73,12 @@
 
                 <div class="volume-control">
                     <label for="volume-slider">🔊</label>
-                    <input type="range" id="volume-slider" min="0" max="100" value="70">
-                    <span id="volume-value">70%</span>
+                    <input type="range" id="volume-slider" min="0" max="100" value="80">
+                    <span id="volume-value">80%</span>
                 </div>
 
                 <div class="playlist">
                     <h3>Playlist (<span id="playlist-count">0</span> canciones)</h3>
-                    <button id="toggle-config-btn" class="toggle-config-btn">⚙️ Cambiar carpeta</button>
                     <ul id="playlist" class="playlist-list"></ul>
                 </div>
             </div>
@@ -95,12 +93,11 @@
             <h2>Bio</h2>
             <div class="about-content">
                 <div class="about-text">
-                    <h3>Does it matter?
-
-Just enjoy the music and dance</h3>                    <h4>Características:</h4>
+                    <h3>Does it matter? Just enjoy the music</h3> 
+                    <h4>Notas:</h4>
                     <ul class="features-list">
-                        <li>✅ Reproducción desde Google Drive</li>
-                        <li>✅ Soporte para FLAC, WAV, AIFF.</li>
+                        <li>✅ Reproducción de audio Lossless</li>
+                        <li>✅ Aviso: Alto consumo de datos celulares. HD Music</li>
                     </ul>
                 </div>
                 <div class="about-image">
@@ -132,7 +129,7 @@ Just enjoy the music and dance</h3>                    <h4>Características:</h4
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2026 NCC Music. Creado con ❤️ para los amantes de la música de calidad</p>
+            <p>&copy; 2026 NCC-Music. Creado con ❤️ para los amantes de la música.</p>
         </div>
     </footer>
 
