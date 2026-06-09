@@ -1,3 +1,7 @@
+// URL de Cloudflare R2
+const r2BaseUrl = 'https://pub-a23ce9da093b4cbf812140922221fc46.r2.dev';
+const r2Track = '/086-%20DJ%20Sebel-%20From%20da%20darkside%20-%204A.mp3';
+
 // Estado del reproductor
 const playerState = {
     isPlaying: false,
@@ -5,8 +9,7 @@ const playerState = {
     playlist: [],
     shuffle: false,
     repeat: 0,
-    shuffledIndices: [],
-    folderId: '1qpn8-eKsB2BYr9Qf1fhAVaYe46n5064W'
+    shuffledIndices: []
 };
 
 // Elementos del DOM
@@ -33,17 +36,15 @@ const loadingInitial = document.getElementById('loading-initial');
 const gdriveConfigPanel = document.getElementById('gdrive-config-panel');
 const toggleConfigBtn = document.getElementById('toggle-config-btn');
 
-// URL de Cloudflare R2
-const r2BaseUrl = 'https://pub-a23ce9da093b4cbf812140922221fc46.r2.dev';
-const r2Track = '/086-%20DJ%20Sebel-%20From%20da%20darkside%20-%204A.mp3';
-
 // Inicialización
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('🎵 Inicializando reproductor...');
     initializePlayer();
     loadFromR2Auto();
 });
 
 function initializePlayer() {
+    console.log('📍 initializePlayer ejecutado');
     // Event listeners para audio
     audio.addEventListener('timeupdate', updateProgress);
     audio.addEventListener('loadedmetadata', updateDuration);
@@ -91,7 +92,8 @@ function initializePlayer() {
 // Auto-cargar desde Cloudflare R2
 async function loadFromR2Auto() {
     try {
-        console.log('Cargando desde Cloudflare R2:', r2BaseUrl + r2Track);
+        console.log('🔄 Cargando desde Cloudflare R2...');
+        console.log('URL:', r2BaseUrl + r2Track);
         
         // Crear playlist con el archivo de R2
         playerState.playlist = [{
@@ -102,6 +104,8 @@ async function loadFromR2Auto() {
 
         playerState.currentTrackIndex = 0;
         
+        console.log('✅ Playlist creada:', playerState.playlist);
+        
         // Ocultar loading y mostrar reproductor
         loadingInitial.style.display = 'none';
         gdriveConfigPanel.style.display = 'none';
@@ -110,10 +114,11 @@ async function loadFromR2Auto() {
         
         // Auto-play primera canción
         if (playerState.playlist.length > 0) {
+            console.log('▶️ Reproduciendo pista 0');
             playTrack(0);
         }
     } catch (error) {
-        console.error('Error cargando desde R2:', error);
+        console.error('❌ Error cargando desde R2:', error);
         loadingInitial.innerHTML = `<h3>❌ Error: ${error.message}</h3>`;
         gdriveConfigPanel.style.display = 'block';
     }
@@ -124,7 +129,7 @@ async function getGoogleDriveFilesViaDirect(folderId) {
     try {
         // Método 1: Usar el endpoint de descarga directa
         const response = await fetch(
-            `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+trashed=false&spaces=drive&fields=id,name,mimeType&pageSize=1000&key=AIzaSyDyWJOw5w-1yfWreKdy0sXiaTmMO8Ky4S8`[...]
+            `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+trashed=false&spaces=drive&fields=id,name,mimeType&pageSize=1000&key=AIzaSyDyWJOw5w-1yfWreKdy0sXiaTmMO8Ky4S8`,
             {
                 method: 'GET'
             }
@@ -193,7 +198,6 @@ async function loadFromGoogleDrive() {
     showStatus('Cargando archivos...', 'loading');
     
     try {
-        playerState.folderId = folderId;
         const files = await getGoogleDriveFilesViaDirect(folderId);
         
         if (files.length === 0) {
@@ -279,6 +283,9 @@ function playTrack(index) {
 
     playerState.currentTrackIndex = index;
     const track = playerState.playlist[index];
+
+    console.log('🎵 Reproduciendo:', track.name);
+    console.log('URL:', track.url);
 
     audio.src = track.url;
     trackName.textContent = track.name;
