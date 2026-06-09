@@ -33,10 +33,14 @@ const loadingInitial = document.getElementById('loading-initial');
 const gdriveConfigPanel = document.getElementById('gdrive-config-panel');
 const toggleConfigBtn = document.getElementById('toggle-config-btn');
 
+// URL de Cloudflare R2
+const r2BaseUrl = 'https://pub-a23ce9da093b4cbf812140922221fc46.r2.dev';
+const r2Track = '/086-%20DJ%20Sebel-%20From%20da%20darkside%20-%204A.mp3';
+
 // Inicialización
 document.addEventListener('DOMContentLoaded', () => {
     initializePlayer();
-    loadFromGoogleDriveAuto();
+    loadFromR2Auto();
 });
 
 function initializePlayer() {
@@ -84,37 +88,17 @@ function initializePlayer() {
     audio.volume = 0.7;
 }
 
-// Auto-cargar desde Google Drive
-async function loadFromGoogleDriveAuto() {
+// Auto-cargar desde Cloudflare R2
+async function loadFromR2Auto() {
     try {
-        console.log('Intentando cargar desde:', playerState.folderId);
-        const files = await getGoogleDriveFilesViaDirect(playerState.folderId);
+        console.log('Cargando desde Cloudflare R2:', r2BaseUrl + r2Track);
         
-        if (files.length === 0) {
-            loadingInitial.innerHTML = '<h3>❌ No se encontraron archivos de audio. Verifica que la carpeta sea pública.</h3>';
-            gdriveConfigPanel.style.display = 'block';
-            return;
-        }
-
-        // Filtrar solo archivos de audio
-        const audioFiles = files.filter(file => {
-            const name = file.name.toLowerCase();
-            return name.match(/\.(flac|wav|mp3|ogg|m4a|aac)$/i);
-        });
-
-        if (audioFiles.length === 0) {
-            loadingInitial.innerHTML = '<h3>❌ No se encontraron archivos de audio válidos</h3>';
-            gdriveConfigPanel.style.display = 'block';
-            return;
-        }
-
-        // Crear playlist
-        playerState.playlist = audioFiles.map(file => ({
-            name: file.name.replace(/\.[^/.]+$/, ''),
-            id: file.id,
-            url: `https://drive.google.com/uc?id=${file.id}&export=download`,
+        // Crear playlist con el archivo de R2
+        playerState.playlist = [{
+            name: 'DJ Sebel - From da darkside - 4A',
+            url: r2BaseUrl + r2Track,
             duration: 0
-        }));
+        }];
 
         playerState.currentTrackIndex = 0;
         
@@ -129,8 +113,8 @@ async function loadFromGoogleDriveAuto() {
             playTrack(0);
         }
     } catch (error) {
-        console.error('Error cargando automáticamente:', error);
-        loadingInitial.innerHTML = `<h3>❌ Error: ${error.message}</h3><p>Verifica que la carpeta sea pública</p>`;
+        console.error('Error cargando desde R2:', error);
+        loadingInitial.innerHTML = `<h3>❌ Error: ${error.message}</h3>`;
         gdriveConfigPanel.style.display = 'block';
     }
 }
@@ -140,7 +124,7 @@ async function getGoogleDriveFilesViaDirect(folderId) {
     try {
         // Método 1: Usar el endpoint de descarga directa
         const response = await fetch(
-            `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+trashed=false&spaces=drive&fields=id,name,mimeType&pageSize=1000&key=AIzaSyDyWJOw5w-1yfWreKdy0sXiaTmMO8Ky4S8`,
+            `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+trashed=false&spaces=drive&fields=id,name,mimeType&pageSize=1000&key=AIzaSyDyWJOw5w-1yfWreKdy0sXiaTmMO8Ky4S8`[...]
             {
                 method: 'GET'
             }
