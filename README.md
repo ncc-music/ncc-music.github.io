@@ -1,0 +1,152 @@
+🎵 NCC Music - Reproductor de Audio FLAC & WAV
+==============================================
+
+Un reproductor de audio moderno y elegante para archivos de alta calidad, incluyendo formatos FLAC y WAV, alojado en GitHub Pages.
+
+## 🌟 Características
+
+- ✅ **Soporte para múltiples formatos**: FLAC, WAV, MP3, OGG
+- ✅ **Carga de archivos locales**: Sube tus propias canciones
+- ✅ **Playlist completa**: Gestión de múltiples canciones
+- ✅ **Controles avanzados**:
+  - Play/Pause
+  - Siguiente/Anterior
+  - Shuffle (Modo aleatorio)
+  - Repeat (Sin repetición, repetir todo, repetir uno)
+  - Control de volumen
+  - Barra de progreso interactiva
+
+- ✅ **Interfaz moderna**: Diseño responsive y atractivo
+- ✅ **Visualización**: Visualizador de disco giratorio
+- ✅ **Atajos de teclado**:
+  - `Espacio`: Play/Pause
+  - `Flecha derecha`: Siguiente canción
+  - `Flecha izquierda`: Canción anterior
+
+## 🚀 Características del Sitio
+
+- **Página de inicio atractiva**: Hero section con call-to-action
+- **Reproductor interactivo**: Interfaz intuitiva y fácil de usar
+- **Sección Acerca de**: Información sobre el proyecto
+- **Contacto**: Enlaces a redes sociales
+- **Diseño responsivo**: Funciona perfectamente en dispositivos móviles
+
+## 📁 Estructura del Proyecto
+
+```
+ncc-music.github.io/
+├── index.html          # Página principal
+├── styles.css          # Estilos CSS
+├── js/
+│   └── player.js       # Lógica del reproductor
+└── README.md           # Este archivo
+```
+
+## 🛠️ Instalación
+
+1. **Clonar el repositorio**
+```bash
+git clone https://github.com/ncc-music/ncc-music.github.io.git
+cd ncc-music.github.io
+```
+
+2. **Abrir en un navegador**
+   - Opción 1: Abrir directamente `index.html` en tu navegador
+   - Opción 2: Usar un servidor local
+```bash
+# Con Python 3
+python -m http.server 8000
+
+# Con Node.js (necesitas tener http-server instalado)
+npx http-server
+```
+
+3. **Acceder al sitio**
+   - Abre tu navegador en `http://localhost:8000` (si usas servidor local)
+   - O directamente en `https://ncc-music.github.io`
+
+## 📱 Uso
+
+1. **Cargar archivos de audio**:
+   - Haz clic en el botón "📁 Cargar archivo"
+   - Selecciona uno o múltiples archivos (FLAC, WAV, MP3, OGG)
+   - Los archivos se agregarán a la playlist
+
+2. **Reproducir música**:
+   - Haz clic en una canción de la playlist o en el botón ▶️
+   - Usa los botones de control o atajos de teclado
+
+3. **Controlar reproducción**:
+   - Usa los botones de control para navegar
+   - Ajusta el volumen con el slider
+   - Arrastra la barra de progreso para buscar en la canción
+
+## 🎨 Personalización
+
+### Cambiar colores
+
+Edita las variables CSS en `styles.css`:
+
+```css
+:root {
+    --primary-color: #ff6b6b;      /* Color primario (rojo)*/
+    --secondary-color: #4ecdc4;    /* Color secundario (turquesa) */
+    --dark-bg: #0f0f0f;            /* Fondo oscuro */
+    --light-bg: #1a1a1a;           /* Fondo claro */
+    --text-color: #ffffff;          /* Color de texto */
+}
+```
+
+### Agregar información personal
+
+Edita la sección de contacto en `index.html`:
+
+```html
+<div class="social-links">
+    <a href="tu-github-url" class="social-btn">GitHub</a>
+    <a href="tu-twitter-url" class="social-btn">Twitter</a>
+    <a href="mailto:tu-email@example.com" class="social-btn">📧 Email</a>
+</div>
+```
+
+## 🔧 Tecnologías Utilizadas
+
+- **HTML5**: Estructura semántica
+- **CSS3**: Estilos modernos con variables CSS y Flexbox/Grid
+- **JavaScript Vanilla**: Lógica del reproductor sin dependencias
+- **Web Audio API**: Manipulación de audio
+- **GitHub Pages**: Hosting gratuito
+
+## 🎯 Mejoras Futuras
+
+- [ ] Sincronización con Spotify API
+- [ ] Tema oscuro/claro configurable
+- [ ] Estadísticas de reproducción
+- [ ] Soporte para streaming
+- [ ] Ecualizador visual
+- [ ] Historial de reproducción
+- [ ] Favoritos y listas personalizadas
+
+## 📝 Licencia
+
+Este proyecto está bajo la licencia MIT. Siéntete libre de usarlo y modificarlo.
+
+## 🤝 Contribuciones
+
+¡Las contribuciones son bienvenidas! Si tienes ideas para mejorar el reproductor:
+
+1. Fork el proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
+
+## 📧 Contacto
+
+¿Preguntas o sugerencias? ¡Abre un issue en el repositorio!
+
+---
+
+Hecho con ❤️ para los amantes del audio de calidad.
+
+**[🎵 Visita el sitio](https://ncc-music.github.io)**
