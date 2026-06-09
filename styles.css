@@ -33,6 +33,134 @@ body {
     padding: 0 20px;
 }
 
+/* Spinner de carga */
+.spinner {
+    border: 4px solid rgba(255, 107, 107, 0.2);
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin-loader 1s linear infinite;
+    margin: 20px auto;
+}
+
+@keyframes spin-loader {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Estilos adicionales para Google Drive */
+
+.gdrive-config {
+    background-color: rgba(78, 205, 196, 0.1);
+    border: 2px solid var(--secondary-color);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.gdrive-config h3 {
+    color: var(--secondary-color);
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+}
+
+.gdrive-input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 12px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--secondary-color);
+    border-radius: 6px;
+    color: var(--text-color);
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.gdrive-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.load-btn {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--secondary-color);
+    color: var(--dark-bg);
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.load-btn:hover {
+    background-color: #3eb3a6;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(78, 205, 196, 0.3);
+}
+
+.load-btn:active {
+    transform: translateY(0);
+}
+
+.toggle-config-btn {
+    padding: 8px 15px;
+    background-color: rgba(78, 205, 196, 0.2);
+    color: var(--secondary-color);
+    border: 1px solid var(--secondary-color);
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+    margin-bottom: 12px;
+}
+
+.toggle-config-btn:hover {
+    background-color: rgba(78, 205, 196, 0.3);
+}
+
+.load-status {
+    margin-top: 12px;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    text-align: center;
+    display: none;
+}
+
+.load-status.success {
+    background-color: rgba(76, 175, 80, 0.2);
+    color: #4caf50;
+    display: block;
+}
+
+.load-status.error {
+    background-color: rgba(244, 67, 54, 0.2);
+    color: #f44336;
+    display: block;
+}
+
+.load-status.loading {
+    background-color: rgba(33, 150, 243, 0.2);
+    color: #2196f3;
+    display: block;
+}
+
+.instructions-list {
+    list-style: decimal;
+    margin-left: 20px;
+    color: var(--text-secondary);
+}
+
+.instructions-list li {
+    padding: 0.5rem 0;
+    margin-bottom: 0.3rem;
+}
+
 /* Navegación */
 .navbar {
     background-color: var(--light-bg);
@@ -304,33 +432,6 @@ input[type="range"]::-moz-range-thumb:hover {
     color: var(--text-secondary);
 }
 
-/* Carga de archivos */
-.file-upload {
-    margin-bottom: 25px;
-}
-
-#file-input {
-    display: none;
-}
-
-.upload-btn {
-    display: block;
-    padding: 12px 25px;
-    background-color: var(--secondary-color);
-    color: var(--dark-bg);
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    text-align: center;
-    transition: all 0.3s;
-    border: 2px solid var(--secondary-color);
-}
-
-.upload-btn:hover {
-    background-color: transparent;
-    color: var(--secondary-color);
-}
-
 /* Playlist */
 .playlist {
     border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -566,5 +667,13 @@ input[type="range"]::-moz-range-thumb:hover {
 
     .about-text h3 {
         font-size: 1.3rem;
+    }
+
+    .gdrive-config {
+        padding: 15px;
+    }
+
+    .player-container {
+        max-width: 100%;
     }
 }

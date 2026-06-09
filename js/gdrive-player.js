@@ -6,7 +6,7 @@ const playerState = {
     shuffle: false,
     repeat: 0,
     shuffledIndices: [],
-    folderId: localStorage.getItem('gdriveFolderId') || ''
+    folderId: '1qpn8-eKsB2BYr9Qf1fhAVaYe46n5064W'
 };
 
 // Elementos del DOM
@@ -29,13 +29,14 @@ const folderIdInput = document.getElementById('folder-id');
 const loadGdriveBtn = document.getElementById('load-gdrive-btn');
 const loadStatus = document.getElementById('load-status');
 const playlistCount = document.getElementById('playlist-count');
+const loadingInitial = document.getElementById('loading-initial');
+const gdriveConfigPanel = document.getElementById('gdrive-config-panel');
+const toggleConfigBtn = document.getElementById('toggle-config-btn');
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', () => {
     initializePlayer();
-    if (playerState.folderId) {
-        folderIdInput.value = playerState.folderId;
-    }
+    loadFromGoogleDriveAuto();
 });
 
 function initializePlayer() {
@@ -72,13 +73,73 @@ function initializePlayer() {
         }
     });
 
+    // Toggle configuración
+    toggleConfigBtn.addEventListener('click', () => {
+        gdriveConfigPanel.style.display = gdriveConfigPanel.style.display === 'none' ? 'block' : 'none';
+    });
+
     // Teclas de teclado
     document.addEventListener('keydown', handleKeyPress);
 
     audio.volume = 0.7;
 }
 
-// Cargar archivos desde Google Drive
+// Auto-cargar desde Google Drive
+async function loadFromGoogleDriveAuto() {
+    try {
+        const files = await getGoogleDriveFiles(playerState.folderId);
+        
+        if (files.length === 0) {
+            loadingInitial.innerHTML = '<h3>❌ No se encontraron archivos de audio</h3>';
+            gdriveConfigPanel.style.display = 'block';
+            return;
+        }
+
+        // Filtrar solo archivos de audio
+        const audioFiles = files.filter(file => {
+            const mimeType = file.mimeType || '';
+            const name = file.name.toLowerCase();
+            return (
+                mimeType.includes('audio') ||
+                name.match(/\.(flac|wav|mp3|ogg|m4a)$/i)
+            );
+        });
+
+        if (audioFiles.length === 0) {
+            loadingInitial.innerHTML = '<h3>❌ No se encontraron archivos de audio válidos</h3>';
+            gdriveConfigPanel.style.display = 'block';
+            return;
+        }
+
+        // Crear playlist
+        playerState.playlist = audioFiles.map(file => ({
+            name: file.name.replace(/\.[^/.]+$/, ''),
+            id: file.id,
+            url: `https://drive.google.com/uc?id=${file.id}&export=download`,
+            duration: 0,
+            mimeType: file.mimeType
+        }));
+
+        playerState.currentTrackIndex = 0;
+        
+        // Ocultar loading y mostrar reproductor
+        loadingInitial.style.display = 'none';
+        gdriveConfigPanel.style.display = 'none';
+        
+        updatePlaylistUI();
+        
+        // Auto-play primera canción
+        if (playerState.playlist.length > 0) {
+            playTrack(0);
+        }
+    } catch (error) {
+        console.error('Error cargando automáticamente:', error);
+        loadingInitial.innerHTML = '<h3>❌ Error al cargar. Verifica que la carpeta sea pública.</h3>';
+        gdriveConfigPanel.style.display = 'block';
+    }
+}
+
+// Cargar archivos desde Google Drive (manual)
 async function loadFromGoogleDrive() {
     const folderId = folderIdInput.value.trim();
     
@@ -90,11 +151,7 @@ async function loadFromGoogleDrive() {
     showStatus('Cargando archivos...', 'loading');
     
     try {
-        // Guardar el ID en localStorage
-        localStorage.setItem('gdriveFolderId', folderId);
         playerState.folderId = folderId;
-
-        // Obtener archivos de la carpeta
         const files = await getGoogleDriveFiles(folderId);
         
         if (files.length === 0) {
@@ -106,7 +163,7 @@ async function loadFromGoogleDrive() {
 
         // Filtrar solo archivos de audio
         const audioFiles = files.filter(file => {
-            const mimeType = file.mimeType;
+            const mimeType = file.mimeType || '';
             const name = file.name.toLowerCase();
             return (
                 mimeType.includes('audio') ||
@@ -133,6 +190,7 @@ async function loadFromGoogleDrive() {
         playerState.currentTrackIndex = 0;
         updatePlaylistUI();
         showStatus(`✅ Se cargaron ${audioFiles.length} canciones correctamente`, 'success');
+        gdriveConfigPanel.style.display = 'none';
         
         // Auto-play primera canción
         if (playerState.playlist.length > 0) {
@@ -140,46 +198,67 @@ async function loadFromGoogleDrive() {
         }
     } catch (error) {
         console.error('Error:', error);
-        showStatus('Error al cargar desde Google Drive. Verifica el ID de la carpeta.', 'error');
+        showStatus('Error al cargar desde Google Drive. Verifica que la carpeta sea pública.', 'error');
         playerState.playlist = [];
         updatePlaylistUI();
     }
 }
 
-// Obtener archivos de Google Drive usando API pública (sin autenticación)
+// Obtener archivos de Google Drive
 async function getGoogleDriveFiles(folderId) {
     try {
-        // Usar un enfoque alternativo sin necesidad de API key
-        // Descargamos el contenido de la carpeta compartida
+        // Intentar con API de Google Drive
         const response = await fetch(
-            `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents&fields=id,name,mimeType&key=AIzaSyBGOGwBNFGKUK-JkzWPtqH0VR9hYgALZLQ`,
+            `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+trashed=false&fields=id,name,mimeType,webContentLink,size&pageSize=1000&key=AIzaSyBGOGwBNFGKUK-JkzWPtqH0VR9hYgALZLQ`,
             {
                 method: 'GET',
                 mode: 'cors'
             }
         );
 
-        if (!response.ok) {
-            // Fallback: intentar una forma alternativa
-            return await getGoogleDriveFilesAlternative(folderId);
+        if (response.ok) {
+            const data = await response.json();
+            return data.files || [];
+        } else {
+            throw new Error('API error');
         }
-
-        const data = await response.json();
-        return data.files || [];
     } catch (error) {
-        console.warn('API method 1 failed, trying alternative...', error);
+        console.warn('API method failed:', error);
+        // Intentar método alternativo
         return await getGoogleDriveFilesAlternative(folderId);
     }
 }
 
-// Método alternativo sin usar API (usando scraping básico)
+// Método alternativo (scraping)
 async function getGoogleDriveFilesAlternative(folderId) {
     try {
-        // Crear un archivo de configuración que debe editarse manualmente
-        // Para este método, se sugiere usar la consola
-        throw new Error('Usa el método de importación manual o configura una carpeta compartida públicamente');
+        // Crear URL de acceso público a la carpeta
+        const folderUrl = `https://drive.google.com/drive/folders/${folderId}`;
+        
+        // Intentar obtener el contenido
+        const response = await fetch(folderUrl, {
+            method: 'GET',
+            mode: 'no-cors'
+        });
+
+        // Si llegamos aquí sin error, intentar un endpoint alternativo
+        const altResponse = await fetch(
+            `https://www.googleapis.com/drive/v3/files?corpora=user&q='${folderId}'+in+parents&fields=files(id,name,mimeType)&pageSize=1000`,
+            {
+                method: 'GET',
+                mode: 'cors'
+            }
+        );
+
+        if (altResponse.ok) {
+            const data = await altResponse.json();
+            return data.files || [];
+        }
+        
+        throw new Error('No se pudo acceder a los archivos');
     } catch (error) {
-        throw error;
+        console.error('Alternative method failed:', error);
+        throw new Error('Asegúrate de que la carpeta esté compartida públicamente');
     }
 }
 
@@ -229,6 +308,7 @@ function playTrack(index) {
     audio.play().catch(err => {
         console.error('Error playing track:', err);
         showStatus('Error al reproducir el archivo', 'error');
+        nextTrack();
     });
     playerState.isPlaying = true;
     playButton.textContent = '⏸️';
