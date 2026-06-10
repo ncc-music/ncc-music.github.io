@@ -7,9 +7,6 @@ const playerState = {
     isPlaying: false,
     currentTrackIndex: 0,
     playlist: [],
-    shuffle: false,
-    repeat: 0,
-    shuffledIndices: []
 };
 
 // Inicialización cuando el DOM esté listo
