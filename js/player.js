@@ -47,8 +47,6 @@ function initializePlayer() {
     playButton.addEventListener('click', togglePlay);
     prevButton.addEventListener('click', previousTrack);
     nextButton.addEventListener('click', nextTrack);
-    shuffleButton.addEventListener('click', toggleShuffle);
-    repeatButton.addEventListener('click', toggleRepeat);
 
     // Volumen
     volumeSlider.addEventListener('input', changeVolume);
