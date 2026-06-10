@@ -1,6 +1,6 @@
 // URL de Cloudflare R2
 const r2BaseUrl = 'https://pub-a23ce9da093b4cbf812140922221fc46.r2.dev';
-const r2Track = '/086-%20DJ%20Sebel-%20From%20da%20darkside%20-%204A.mp3';
+const r2Track = '/NCSHORTTEST120.aiff';
 
 // Estado del reproductor
 const playerState = {
