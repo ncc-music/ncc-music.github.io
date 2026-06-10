@@ -87,7 +87,7 @@ function loadFromR2(audio, playButton, playlistEl, loadingInitial) {
     console.log('🔄 Cargando desde Cloudflare R2...');
     
     playerState.playlist = [{
-        name: 'DJ Sebel - From da darkside - 4A',
+        name: 'Nicolás Cardú - Testdrive',
         url: r2BaseUrl + r2Track,
         duration: 0
     }];
@@ -134,7 +134,7 @@ function playTrack(index, audio, playButton, playlistEl) {
 
     audio.src = track.url;
     document.getElementById('track-name').textContent = track.name;
-    document.getElementById('track-artist').textContent = 'DJ Sebel';
+    document.getElementById('track-artist').textContent = 'Nicolás Cardú';
 
     audio.play();
     playerState.isPlaying = true;
