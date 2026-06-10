@@ -1,6 +1,6 @@
 // URL de Cloudflare R2
 const r2BaseUrl = 'https://pub-a23ce9da093b4cbf812140922221fc46.r2.dev';
-const r2Track = '/NCSHORTTEST120.aiff';
+const r2Track = '/NCSHORTTEST120.flac';
 
 // Estado del reproductor
 const playerState = {
