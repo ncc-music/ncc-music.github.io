@@ -13,8 +13,6 @@ const audio = document.getElementById('audio-player');
 const playButton = document.getElementById('play-button');
 const prevButton = document.getElementById('prev-button');
 const nextButton = document.getElementById('next-button');
-const shuffleButton = document.getElementById('shuffle-button');
-const repeatButton = document.getElementById('repeat-button');
 const fileInput = document.getElementById('file-input');
 const uploadBtn = document.querySelector('.upload-btn');
 const volumeSlider = document.getElementById('volume-slider');
@@ -77,7 +75,7 @@ function loadSampleTracks() {
 // Reproducción
 function togglePlay() {
     if (playerState.playlist.length === 0) {
-        alert('Por favor, carga un archivo de audio primero.');
+        alert('Carga un archivo de audio primero.');
         return;
     }
 
