@@ -1,6 +1,5 @@
-// URL de Cloudflare R2
-const r2BaseUrl = 'https://pub-a23ce9da093b4cbf812140922221fc46.r2.dev';
-const r2Track = '/NCSHORTTEST120.flac';
+// La web vive en GitHub Pages. Esta URL debe apuntar al Worker que lista R2.
+const playlistApiUrl = '';
 
 // Estado del reproductor
 const playerState = {
@@ -80,25 +79,62 @@ function initPlayer() {
     loadFromR2(audio, playButton, playlistEl, loadingInitial);
 }
 
-function loadFromR2(audio, playButton, playlistEl, loadingInitial) {
+async function loadFromR2(audio, playButton, playlistEl, loadingInitial) {
     console.log('🔄 Cargando desde Cloudflare R2...');
-    
-    playerState.playlist = [{
-        name: 'Nicolás Cardú - Testdrive',
-        url: r2BaseUrl + r2Track,
-        duration: 0
-    }];
 
-    playerState.currentTrackIndex = 0;
-    
-    console.log('✅ Playlist creada:', playerState.playlist);
-    
-    if (loadingInitial) {
-        loadingInitial.style.display = 'none';
+    try {
+        if (!playlistApiUrl) {
+            throw new Error('Falta configurar playlistApiUrl con la URL del Worker.');
+        }
+
+        const response = await fetch(playlistApiUrl);
+        if (!response.ok) {
+            throw new Error(`No se pudo cargar la playlist (${response.status})`);
+        }
+
+        const data = await response.json();
+        playerState.playlist = normalizeR2Playlist(data);
+        playerState.currentTrackIndex = 0;
+        playerState.isPlaying = false;
+
+        console.log('✅ Playlist cargada:', playerState.playlist);
+
+        if (loadingInitial) {
+            loadingInitial.style.display = 'none';
+        }
+
+        updatePlaylistUI(playlistEl);
+
+        if (playerState.playlist.length > 0) {
+            selectTrack(0, audio, playButton, playlistEl);
+        } else {
+            showLoadError(loadingInitial, 'No se encontraron audios en el bucket R2.');
+        }
+    } catch (err) {
+        console.error('❌ Error cargando playlist desde R2:', err);
+        showLoadError(loadingInitial, 'No se pudo cargar la playlist desde Cloudflare R2.');
     }
-    
-    updatePlaylistUI(playlistEl);
-    playTrack(0, audio, playButton, playlistEl);
+}
+
+function normalizeR2Playlist(data) {
+    const tracks = Array.isArray(data) ? data : data.tracks || [];
+
+    return tracks
+        .filter(track => track.name && (track.url || track.key))
+        .map(track => ({
+            name: track.name,
+            artist: track.artist || 'Nicolás Cardú',
+            url: track.url,
+            duration: 0,
+            key: track.key || ''
+        }));
+}
+
+function showLoadError(loadingInitial, message) {
+    if (!loadingInitial) return;
+
+    loadingInitial.style.display = 'block';
+    loadingInitial.innerHTML = `<h3>${message}</h3>`;
 }
 
 function togglePlay(audio, playButton) {
@@ -124,22 +160,35 @@ function togglePlay(audio, playButton) {
 function playTrack(index, audio, playButton, playlistEl) {
     if (playerState.playlist.length === 0) return;
 
+    const track = selectTrack(index, audio, playButton, playlistEl);
+    console.log('🎵 Reproduciendo:', track.name);
+
+    audio.play()
+        .then(() => {
+            playerState.isPlaying = true;
+            playButton.textContent = '⏸️';
+        })
+        .catch((err) => {
+            console.warn('El navegador bloqueó la reproducción automática:', err);
+            playerState.isPlaying = false;
+            playButton.textContent = '▶️';
+        });
+}
+
+function selectTrack(index, audio, playButton, playlistEl) {
     playerState.currentTrackIndex = index;
     const track = playerState.playlist[index];
 
-    console.log('🎵 Reproduciendo:', track.name);
-
     audio.src = track.url;
     document.getElementById('track-name').textContent = track.name;
-    document.getElementById('track-artist').textContent = 'Nicolás Cardú';
-
-    audio.play();
-    playerState.isPlaying = true;
-    playButton.textContent = '⏸️';
+    document.getElementById('track-artist').textContent = track.artist || 'Nicolás Cardú';
+    playButton.textContent = '▶️';
 
     if (playlistEl) {
         updatePlaylistUI(playlistEl);
     }
+
+    return track;
 }
 
 function nextTrack(audio, playButton, playlistEl) {

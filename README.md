@@ -62,6 +62,36 @@ npx http-server
    - Abre tu navegador en `http://localhost:8000`
    - O directamente en `https://ncc-music.github.io`
 
+## ☁️ Playlist automática desde Cloudflare R2
+
+La web se aloja en GitHub Pages y los archivos de audio se alojan en Cloudflare R2. Para que la playlist se genere sola, un Worker mínimo lista los archivos del bucket y devuelve JSON al reproductor.
+
+1. **Subir audios a R2**
+   - Subí tus archivos de audio al bucket.
+   - El bucket debe permitir acceso público a los archivos que use el reproductor.
+
+2. **Crear un Worker en Cloudflare**
+   - Entrá a `Workers & Pages`.
+   - Creá un Worker, no Workers KV.
+   - Abrí `Edit code` o `Quick edit`.
+   - Pegá el contenido de `cloudflare-worker.js`.
+
+3. **Conectar el Worker con R2**
+   - En la configuración del Worker, agregá un binding de R2.
+   - Nombre del binding: `MY_BUCKET`.
+   - Bucket: tu bucket real de R2.
+
+4. **Agregar variables del Worker**
+   - `R2_PUBLIC_URL`: opcional si cambiás la URL pública del bucket.
+   - `ALLOWED_ORIGIN`: `https://ncc-music.github.io`.
+   - `AUDIO_PREFIX`: opcional, sólo si tus audios están dentro de una carpeta, por ejemplo `mixes/`.
+
+5. **Conectar GitHub Pages con el Worker**
+   - Copiá la URL del Worker.
+   - Pegala en `js/gdrive-player.js`, en `playlistApiUrl`.
+
+El Worker devuelve la playlist automática en `/playlist`.
+
 ## 📱 Uso
 
 1. **Reproducir música**:
