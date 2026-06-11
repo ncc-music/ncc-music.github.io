@@ -6,13 +6,10 @@ Un reproductor de audio moderno y elegante para archivos de alta calidad, incluy
 ## 🌟 Características
 
 - ✅ **Soporte para múltiples formatos**: FLAC, WAV, MP3, OGG
-- ✅ **Carga de archivos locales**: Sube tus propias canciones
 - ✅ **Playlist completa**: Gestión de múltiples canciones
 - ✅ **Controles avanzados**:
   - Play/Pause
   - Siguiente/Anterior
-  - Shuffle (Modo aleatorio)
-  - Repeat (Sin repetición, repetir todo, repetir uno)
   - Control de volumen
   - Barra de progreso interactiva
 
@@ -25,9 +22,9 @@ Un reproductor de audio moderno y elegante para archivos de alta calidad, incluy
 
 ## 🚀 Características del Sitio
 
-- **Página de inicio atractiva**: Hero section con call-to-action
-- **Reproductor interactivo**: Interfaz intuitiva y fácil de usar
-- **Sección Acerca de**: Información sobre el proyecto
+- **Home**: Hero section con call-to-action
+- **Reproductor**: Interfaz intuitiva y fácil de usar
+- **Sección Bio**: Biografia personal
 - **Contacto**: Enlaces a redes sociales
 - **Diseño responsivo**: Funciona perfectamente en dispositivos móviles
 
@@ -62,21 +59,16 @@ npx http-server
 ```
 
 3. **Acceder al sitio**
-   - Abre tu navegador en `http://localhost:8000` (si usas servidor local)
+   - Abre tu navegador en `http://localhost:8000`
    - O directamente en `https://ncc-music.github.io`
 
 ## 📱 Uso
 
-1. **Cargar archivos de audio**:
-   - Haz clic en el botón "📁 Cargar archivo"
-   - Selecciona uno o múltiples archivos (FLAC, WAV, MP3, OGG)
-   - Los archivos se agregarán a la playlist
-
-2. **Reproducir música**:
+1. **Reproducir música**:
    - Haz clic en una canción de la playlist o en el botón ▶️
    - Usa los botones de control o atajos de teclado
 
-3. **Controlar reproducción**:
+2. **Controlar reproducción**:
    - Usa los botones de control para navegar
    - Ajusta el volumen con el slider
    - Arrastra la barra de progreso para buscar en la canción
@@ -97,18 +89,6 @@ Edita las variables CSS en `styles.css`:
 }
 ```
 
-### Agregar información personal
-
-Edita la sección de contacto en `index.html`:
-
-```html
-<div class="social-links">
-    <a href="tu-github-url" class="social-btn">GitHub</a>
-    <a href="tu-twitter-url" class="social-btn">Twitter</a>
-    <a href="mailto:tu-email@example.com" class="social-btn">📧 Email</a>
-</div>
-```
-
 ## 🔧 Tecnologías Utilizadas
 
 - **HTML5**: Estructura semántica
@@ -116,20 +96,19 @@ Edita la sección de contacto en `index.html`:
 - **JavaScript Vanilla**: Lógica del reproductor sin dependencias
 - **Web Audio API**: Manipulación de audio
 - **GitHub Pages**: Hosting gratuito
+- **R2 Cloudflare**: Hosting gratuito hasta 10gb
 
 ## 🎯 Mejoras Futuras
 
 - [ ] Sincronización con Spotify API
 - [ ] Tema oscuro/claro configurable
 - [ ] Estadísticas de reproducción
-- [ ] Soporte para streaming
-- [ ] Ecualizador visual
 - [ ] Historial de reproducción
 - [ ] Favoritos y listas personalizadas
 
 ## 📝 Licencia
 
-Este proyecto está bajo la licencia MIT. Siéntete libre de usarlo y modificarlo.
+Este proyecto está bajo la licencia MIT.
 
 ## 🤝 Contribuciones
 
@@ -143,7 +122,7 @@ Este proyecto está bajo la licencia MIT. Siéntete libre de usarlo y modificarl
 
 ## 📧 Contacto
 
-¿Preguntas o sugerencias? ¡Abre un issue en el repositorio!
+¿Preguntas o sugerencias? ncc.dictator110@passinbox.com
 
 ---
 
