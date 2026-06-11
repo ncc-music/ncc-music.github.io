@@ -564,24 +564,48 @@ input[type="range"]::-moz-range-thumb:hover {
 .social-links {
     display: flex;
     justify-content: center;
-    gap: 20px;
+    gap: 18px;
     flex-wrap: wrap;
 }
 
 .social-btn {
-    padding: 12px 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 58px;
+    height: 58px;
     background-color: var(--secondary-color);
     color: var(--dark-bg);
     text-decoration: none;
-    border-radius: 50px;
-    font-weight: bold;
+    border-radius: 50%;
     transition: all 0.3s;
     border: 2px solid var(--secondary-color);
 }
 
-.social-btn:hover {
+.social-btn:hover,
+.social-btn:focus-visible {
     background-color: transparent;
     color: var(--secondary-color);
+    outline: none;
+    transform: translateY(-2px);
+}
+
+.social-btn svg {
+    width: 28px;
+    height: 28px;
+    fill: currentColor;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
 /* Footer */
