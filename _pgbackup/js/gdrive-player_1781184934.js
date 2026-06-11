@@ -1,5 +1,5 @@
 // La web vive en GitHub Pages. Esta URL debe apuntar al Worker que lista R2.
-const playlistApiUrl = 'https://rapid-silence-8ef7.nc-music-87a.workers.dev/';
+const playlistApiUrl = https://rapid-silence-8ef7.nc-music-87a.workers.dev/;
 
 // Estado del reproductor
 const playerState = {
