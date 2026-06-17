@@ -173,8 +173,8 @@ body {
 
 .navbar .container {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 24px;
 }
 
 .logo {
@@ -183,10 +183,15 @@ body {
     color: var(--primary-color);
 }
 
+.logo-extra {
+    display: inline;
+}
+
 .nav-links {
     display: flex;
     list-style: none;
     gap: 2rem;
+    margin-left: auto;
 }
 
 .nav-links a {
@@ -197,6 +202,36 @@ body {
 
 .nav-links a:hover {
     color: var(--primary-color);
+}
+
+.nav-social-links {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.nav-social-links .social-btn {
+    width: 34px;
+    height: 34px;
+    background-color: var(--secondary-color);
+    border: 1px solid rgba(78, 205, 196, 0.82);
+    color: #030303;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+}
+
+.nav-social-links .social-btn:hover,
+.nav-social-links .social-btn:focus-visible {
+    background-color: var(--accent);
+    border-color: var(--accent);
+    color: #030303;
+    transform: translateY(-1px);
+}
+
+.nav-social-links .social-btn svg,
+.nav-social-links .social-btn img {
+    width: 18px;
+    height: 18px;
 }
 
 /* Sección Hero */
@@ -647,16 +682,26 @@ input[type="range"]::-moz-range-thumb:hover {
 
 .social-btn:hover,
 .social-btn:focus-visible {
-    background-color: transparent;
-    color: var(--secondary-color);
+    background-color: var(--accent);
+    border-color: var(--accent);
+    color: #030303;
     outline: none;
     transform: translateY(-2px);
 }
 
-.social-btn svg {
+.social-btn svg,
+.social-btn img {
     width: 28px;
     height: 28px;
+}
+
+.social-btn svg {
     fill: currentColor;
+}
+
+.social-btn img {
+    display: block;
+    object-fit: contain;
 }
 
 .sr-only {
@@ -682,9 +727,22 @@ input[type="range"]::-moz-range-thumb:hover {
 
 /* Responsive */
 @media (max-width: 768px) {
+    .navbar .container {
+        gap: 14px;
+    }
+
     .nav-links {
         gap: 1rem;
         font-size: 0.9rem;
+    }
+
+    .nav-social-links {
+        gap: 7px;
+    }
+
+    .nav-social-links .social-btn {
+        width: 32px;
+        height: 32px;
     }
 
     .hero-content h1 {
@@ -729,8 +787,31 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 @media (max-width: 480px) {
+    .logo {
+        font-size: 1rem;
+    }
+
+    .logo-extra {
+        display: none;
+    }
+
     .nav-links {
         display: none;
+    }
+
+    .nav-social-links {
+        margin-left: auto;
+    }
+
+    .nav-social-links .social-btn {
+        width: 30px;
+        height: 30px;
+    }
+
+    .nav-social-links .social-btn svg,
+    .nav-social-links .social-btn img {
+        width: 16px;
+        height: 16px;
     }
 
     .hero-content h1 {
