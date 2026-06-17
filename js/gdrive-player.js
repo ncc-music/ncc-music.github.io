@@ -64,7 +64,7 @@ function initPlayer() {
         updateProgress(audio);
     });
     audio.addEventListener('loadedmetadata', function() {
-        updateDuration(audio, playlistEl);
+        updateDuration(audio);
         drawWaveform(audio);
     });
     audio.addEventListener('ended', function() {
@@ -120,7 +120,7 @@ async function loadFromR2(audio, playButton, playlistEl, loadingInitial) {
 
         if (playerState.playlist.length > 0) {
             selectTrack(0, audio, playButton, playlistEl);
-            loadPlaylistDurations(playlistEl);
+            loadPlaylistDurations();
         } else {
             showLoadError(loadingInitial, 'No se encontraron audios en el bucket R2.');
         }
@@ -252,7 +252,7 @@ function updateProgress(audio) {
     drawWaveform(audio);
 }
 
-function updateDuration(audio, playlistEl) {
+function updateDuration(audio) {
     const duration = normalizeDuration(audio.duration);
     const durationEl = document.getElementById('duration');
 
@@ -262,9 +262,7 @@ function updateDuration(audio, playlistEl) {
             currentTrack.duration = duration;
         }
 
-        if (playlistEl) {
-            updatePlaylistUI(playlistEl);
-        }
+        updatePlaylistDuration(playerState.currentTrackIndex, duration);
     }
 
     if (durationEl) {
@@ -283,6 +281,7 @@ function updatePlaylistUI(playlistEl) {
     playerState.playlist.forEach((track, index) => {
         const li = document.createElement('li');
         li.className = 'playlist-item';
+        li.dataset.trackIndex = index.toString();
         if (index === playerState.currentTrackIndex) {
             li.classList.add('active');
         }
@@ -293,6 +292,7 @@ function updatePlaylistUI(playlistEl) {
 
         const durationSpan = document.createElement('span');
         durationSpan.className = 'playlist-item-duration';
+        durationSpan.dataset.trackDuration = index.toString();
         durationSpan.textContent = formatTrackDuration(track.duration);
 
         li.appendChild(nameSpan);
@@ -308,7 +308,7 @@ function updatePlaylistUI(playlistEl) {
     });
 }
 
-async function loadPlaylistDurations(playlistEl) {
+async function loadPlaylistDurations() {
     const requestId = durationRequestId + 1;
     durationRequestId = requestId;
 
@@ -323,7 +323,7 @@ async function loadPlaylistDurations(playlistEl) {
             if (requestId !== durationRequestId) return;
 
             track.duration = duration;
-            updatePlaylistUI(playlistEl);
+            updatePlaylistDuration(index, duration);
 
             if (index === playerState.currentTrackIndex) {
                 const durationEl = document.getElementById('duration');
@@ -334,6 +334,13 @@ async function loadPlaylistDurations(playlistEl) {
         } catch (err) {
             console.warn('No se pudo leer la duración del track:', track.name, err);
         }
+    }
+}
+
+function updatePlaylistDuration(index, duration) {
+    const durationEl = document.querySelector(`[data-track-duration="${index}"]`);
+    if (durationEl) {
+        durationEl.textContent = formatTrackDuration(duration);
     }
 }
 
