@@ -8,6 +8,17 @@ const playerState = {
     playlist: [],
 };
 
+const waveformState = {
+    canvas: null,
+    status: null,
+    peaks: [],
+    cache: new Map(),
+    requestId: 0,
+    isSeeking: false,
+    hoverRatio: null,
+    audioContext: null,
+};
+
 // Inicialización cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🎵 DOM cargado');
@@ -26,6 +37,8 @@ function initPlayer() {
     const playButton = document.getElementById('play-button');
     const playlistEl = document.getElementById('playlist');
     const loadingInitial = document.getElementById('loading-initial');
+    const waveformCanvas = document.getElementById('waveform-canvas');
+    const waveformStatus = document.getElementById('waveform-status');
     
     if (!audio) {
         console.error('❌ audio-player no encontrado');
@@ -41,6 +54,8 @@ function initPlayer() {
     }
     
     console.log('✅ Elementos encontrados');
+
+    setupWaveform(audio, waveformCanvas, waveformStatus);
     
     // Event listeners
     audio.addEventListener('timeupdate', function() {
@@ -48,6 +63,7 @@ function initPlayer() {
     });
     audio.addEventListener('loadedmetadata', function() {
         updateDuration(audio);
+        drawWaveform(audio);
     });
     audio.addEventListener('ended', function() {
         nextTrack(audio, playButton, playlistEl);
@@ -68,11 +84,6 @@ function initPlayer() {
     document.getElementById('volume-slider').addEventListener('input', function(e) {
         audio.volume = e.target.value / 100;
         document.getElementById('volume-value').textContent = Math.round(e.target.value) + '%';
-    });
-
-    document.getElementById('progress-slider').addEventListener('input', function(e) {
-        const seekTime = (e.target.value / 100) * audio.duration;
-        audio.currentTime = seekTime;
     });
 
     // Cargar desde R2
@@ -125,6 +136,7 @@ function normalizeR2Playlist(data) {
             name: track.name,
             artist: track.artist || 'Nicolás Cardú',
             url: track.url,
+            waveformUrl: track.waveformUrl || track.waveform_url || track.analysisUrl || '',
             duration: 0,
             key: track.key || ''
         }));
@@ -182,7 +194,12 @@ function selectTrack(index, audio, playButton, playlistEl) {
     audio.src = track.url;
     document.getElementById('track-name').textContent = track.name;
     document.getElementById('track-artist').textContent = track.artist || 'Nicolás Cardú';
+    document.getElementById('current-time').textContent = '0:00';
+    document.getElementById('duration').textContent = '0:00';
     playButton.textContent = '▶️';
+    playerState.isPlaying = false;
+    resetWaveform(audio);
+    loadWaveform(track, audio);
 
     if (playlistEl) {
         updatePlaylistUI(playlistEl);
@@ -206,17 +223,14 @@ function previousTrack(audio, playButton, playlistEl) {
 }
 
 function updateProgress(audio) {
-    const progressSlider = document.getElementById('progress-slider');
     const currentTimeEl = document.getElementById('current-time');
-    
-    if (progressSlider && audio.duration) {
-        const progress = (audio.currentTime / audio.duration) * 100;
-        progressSlider.value = progress;
-    }
     
     if (currentTimeEl) {
         currentTimeEl.textContent = formatTime(audio.currentTime);
     }
+
+    updateWaveformAria(audio);
+    drawWaveform(audio);
 }
 
 function updateDuration(audio) {
@@ -260,6 +274,292 @@ function updatePlaylistUI(playlistEl) {
 
         playlistEl.appendChild(li);
     });
+}
+
+function setupWaveform(audio, canvas, status) {
+    waveformState.canvas = canvas;
+    waveformState.status = status;
+
+    if (!canvas) return;
+
+    canvas.addEventListener('pointerdown', function(e) {
+        if (!isSeekable(audio)) return;
+        waveformState.isSeeking = true;
+        canvas.setPointerCapture(e.pointerId);
+        seekWaveformFromPointer(e, audio);
+    });
+
+    canvas.addEventListener('pointermove', function(e) {
+        const rect = canvas.getBoundingClientRect();
+        waveformState.hoverRatio = clamp((e.clientX - rect.left) / rect.width, 0, 1);
+
+        if (waveformState.isSeeking) {
+            seekWaveformFromPointer(e, audio);
+        } else {
+            drawWaveform(audio);
+        }
+    });
+
+    canvas.addEventListener('pointerup', function(e) {
+        waveformState.isSeeking = false;
+        if (canvas.hasPointerCapture(e.pointerId)) {
+            canvas.releasePointerCapture(e.pointerId);
+        }
+    });
+
+    canvas.addEventListener('pointercancel', function(e) {
+        waveformState.isSeeking = false;
+        waveformState.hoverRatio = null;
+        if (canvas.hasPointerCapture(e.pointerId)) {
+            canvas.releasePointerCapture(e.pointerId);
+        }
+        drawWaveform(audio);
+    });
+
+    canvas.addEventListener('pointerleave', function() {
+        if (!waveformState.isSeeking) {
+            waveformState.hoverRatio = null;
+            drawWaveform(audio);
+        }
+    });
+
+    canvas.addEventListener('keydown', function(e) {
+        if (!isSeekable(audio)) return;
+
+        if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            audio.currentTime = Math.min(audio.duration, audio.currentTime + 5);
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            audio.currentTime = Math.max(0, audio.currentTime - 5);
+        } else if (e.key === 'Home') {
+            e.preventDefault();
+            audio.currentTime = 0;
+        } else if (e.key === 'End') {
+            e.preventDefault();
+            audio.currentTime = audio.duration;
+        }
+    });
+
+    window.addEventListener('resize', function() {
+        drawWaveform(audio);
+    });
+
+    drawWaveform(audio);
+}
+
+function resetWaveform(audio) {
+    waveformState.requestId += 1;
+    waveformState.peaks = [];
+    waveformState.hoverRatio = null;
+    setWaveformStatus('Loading waveform...');
+    drawWaveform(audio);
+}
+
+async function loadWaveform(track, audio) {
+    const canvas = waveformState.canvas;
+    if (!canvas || !track) return;
+
+    const waveformUrl = track.waveformUrl || track.url;
+    const requestId = waveformState.requestId;
+
+    if (!waveformUrl) {
+        setWaveformStatus('Waveform unavailable');
+        drawWaveform(audio);
+        return;
+    }
+
+    const cachedPeaks = waveformState.cache.get(waveformUrl);
+    if (cachedPeaks) {
+        if (requestId !== waveformState.requestId) return;
+        waveformState.peaks = cachedPeaks;
+        setWaveformStatus('');
+        drawWaveform(audio);
+        return;
+    }
+
+    try {
+        const response = await fetch(waveformUrl, { mode: 'cors' });
+        if (!response.ok) {
+            throw new Error(`Waveform fetch failed (${response.status})`);
+        }
+
+        const arrayBuffer = await response.arrayBuffer();
+        if (requestId !== waveformState.requestId) return;
+
+        const audioContext = getWaveformAudioContext();
+        const decodedAudio = await audioContext.decodeAudioData(arrayBuffer);
+        if (requestId !== waveformState.requestId) return;
+
+        const peaks = buildWaveformPeaks(decodedAudio, 1400);
+        waveformState.cache.set(waveformUrl, peaks);
+        waveformState.peaks = peaks;
+        setWaveformStatus('');
+    } catch (err) {
+        console.warn('No se pudo generar el waveform real:', err);
+        if (requestId !== waveformState.requestId) return;
+        waveformState.peaks = [];
+        setWaveformStatus('Waveform unavailable');
+    }
+
+    drawWaveform(audio);
+}
+
+function getWaveformAudioContext() {
+    if (!waveformState.audioContext) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        waveformState.audioContext = new AudioContextClass();
+    }
+
+    return waveformState.audioContext;
+}
+
+function buildWaveformPeaks(audioBuffer, sampleCount) {
+    const channels = [];
+    const channelCount = audioBuffer.numberOfChannels;
+
+    for (let i = 0; i < channelCount; i++) {
+        channels.push(audioBuffer.getChannelData(i));
+    }
+
+    const blockSize = Math.max(1, Math.floor(audioBuffer.length / sampleCount));
+    const peaks = [];
+    let maxPeak = 0;
+
+    for (let i = 0; i < sampleCount; i++) {
+        const start = i * blockSize;
+        const end = Math.min(start + blockSize, audioBuffer.length);
+        let peak = 0;
+
+        for (let channel = 0; channel < channels.length; channel++) {
+            const data = channels[channel];
+            for (let sample = start; sample < end; sample++) {
+                const value = Math.abs(data[sample]);
+                if (value > peak) peak = value;
+            }
+        }
+
+        peaks.push(peak);
+        if (peak > maxPeak) maxPeak = peak;
+    }
+
+    if (maxPeak === 0) return peaks;
+    return peaks.map(peak => peak / maxPeak);
+}
+
+function drawWaveform(audio) {
+    const canvas = waveformState.canvas;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const width = Math.max(1, Math.floor(rect.width));
+    const height = Math.max(1, Math.floor(rect.height));
+
+    if (canvas.width !== width * dpr || canvas.height !== height * dpr) {
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+    }
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+
+    const progress = isSeekable(audio) ? audio.currentTime / audio.duration : 0;
+    const peaks = waveformState.peaks.length > 0
+        ? waveformState.peaks
+        : buildPlaceholderPeaks(160);
+    const gap = width < 420 ? 1 : 2;
+    const barWidth = width < 420 ? 2 : 3;
+    const step = barWidth + gap;
+    const barCount = Math.max(24, Math.floor(width / step));
+    const centerY = height / 2;
+    const maxBarHeight = Math.max(8, height - 18);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+    ctx.fillRect(0, centerY - 1, width, 2);
+
+    for (let i = 0; i < barCount; i++) {
+        const ratio = barCount === 1 ? 0 : i / (barCount - 1);
+        const peak = samplePeak(peaks, ratio);
+        const barHeight = Math.max(3, peak * maxBarHeight);
+        const x = i * step;
+        const y = centerY - (barHeight / 2);
+        const played = ratio <= progress;
+
+        ctx.fillStyle = played ? '#cbff3d' : 'rgba(78, 205, 196, 0.38)';
+        ctx.fillRect(x, y, barWidth, barHeight);
+    }
+
+    if (waveformState.hoverRatio !== null && isSeekable(audio)) {
+        const hoverX = waveformState.hoverRatio * width;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
+        ctx.fillRect(hoverX, 8, 1, height - 16);
+    }
+
+    if (isSeekable(audio)) {
+        const progressX = clamp(progress, 0, 1) * width;
+        ctx.fillStyle = '#cbff3d';
+        ctx.fillRect(progressX - 1, 6, 2, height - 12);
+        ctx.beginPath();
+        ctx.arc(progressX, centerY, 5, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+function buildPlaceholderPeaks(count) {
+    const peaks = [];
+
+    for (let i = 0; i < count; i++) {
+        const wave = Math.sin(i * 0.19) * 0.5 + Math.sin(i * 0.047) * 0.35;
+        peaks.push(0.16 + Math.abs(wave) * 0.42);
+    }
+
+    return peaks;
+}
+
+function samplePeak(peaks, ratio) {
+    if (peaks.length === 0) return 0;
+
+    const index = ratio * (peaks.length - 1);
+    const left = Math.floor(index);
+    const right = Math.min(peaks.length - 1, left + 1);
+    const mix = index - left;
+
+    return peaks[left] * (1 - mix) + peaks[right] * mix;
+}
+
+function seekWaveformFromPointer(e, audio) {
+    if (!isSeekable(audio)) return;
+
+    const rect = waveformState.canvas.getBoundingClientRect();
+    const ratio = clamp((e.clientX - rect.left) / rect.width, 0, 1);
+    audio.currentTime = ratio * audio.duration;
+    waveformState.hoverRatio = ratio;
+    updateProgress(audio);
+}
+
+function updateWaveformAria(audio) {
+    const canvas = waveformState.canvas;
+    if (!canvas) return;
+
+    const progress = isSeekable(audio) ? (audio.currentTime / audio.duration) * 100 : 0;
+    canvas.setAttribute('aria-valuenow', Math.round(progress).toString());
+    canvas.setAttribute('aria-valuetext', `${formatTime(audio.currentTime)} de ${formatTime(audio.duration)}`);
+}
+
+function setWaveformStatus(message) {
+    if (waveformState.status) {
+        waveformState.status.textContent = message;
+    }
+}
+
+function isSeekable(audio) {
+    return Boolean(audio && Number.isFinite(audio.duration) && audio.duration > 0);
+}
+
+function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max);
 }
 
 function formatTime(seconds) {

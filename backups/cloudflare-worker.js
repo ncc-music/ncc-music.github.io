@@ -13,10 +13,6 @@ export default {
             return jsonResponse({ error: "Method not allowed" }, request, env, 405);
         }
 
-        if (url.pathname.startsWith("/audio/")) {
-            return streamAudio(url, request, env);
-        }
-
         if (url.pathname !== "/" && url.pathname !== "/playlist") {
             return jsonResponse({ error: "Not found" }, request, env, 404);
         }
@@ -39,7 +35,6 @@ export default {
             name: object.customMetadata?.title || titleFromKey(object.key),
             artist: object.customMetadata?.artist || "Nicolás Cardú",
             url: `${publicBaseUrl}/${encodePath(object.key)}`,
-            waveformUrl: `${url.origin}/audio/${encodePath(object.key)}`,
             size: object.size,
             uploaded: object.uploaded?.toISOString(),
             contentType: object.httpMetadata?.contentType || contentTypeFromKey(object.key),
@@ -54,30 +49,6 @@ export default {
         });
     },
 };
-
-async function streamAudio(url, request, env) {
-    const bucket = env.MY_BUCKET || env.MUSIC_BUCKET;
-    if (!bucket) {
-        return jsonResponse({ error: "Missing R2 bucket binding" }, request, env, 500);
-    }
-
-    const key = decodePath(url.pathname.slice("/audio/".length));
-    const object = await bucket.get(key);
-
-    if (!object) {
-        return jsonResponse({ error: "Audio not found" }, request, env, 404);
-    }
-
-    return new Response(object.body, {
-        headers: {
-            ...Object.fromEntries(corsHeaders(request, env)),
-            "Cache-Control": "public, max-age=31536000, immutable",
-            "Content-Length": object.size.toString(),
-            "Content-Type": object.httpMetadata?.contentType || contentTypeFromKey(key),
-            "ETag": object.httpEtag,
-        },
-    });
-}
 
 async function listAllAudioObjects(bucket, prefix) {
     const objects = [];
@@ -136,10 +107,6 @@ function encodePath(path) {
     return path.split("/").map(encodeURIComponent).join("/");
 }
 
-function decodePath(path) {
-    return path.split("/").map(decodeURIComponent).join("/");
-}
-
 function jsonResponse(body, request, env, status = 200, extraHeaders = {}) {
     return new Response(JSON.stringify(body, null, 2), {
         status,
@@ -153,23 +120,12 @@ function jsonResponse(body, request, env, status = 200, extraHeaders = {}) {
 
 function corsHeaders(request, env) {
     const origin = request.headers.get("Origin");
-    const allowedOrigins = (env.ALLOWED_ORIGINS || env.ALLOWED_ORIGIN || "https://ncc-music.github.io")
-        .split(",")
-        .map((allowedOrigin) => allowedOrigin.trim())
-        .filter(Boolean);
-    const allowedOrigin = origin && (allowedOrigins.includes(origin) || isLocalOrigin(origin))
-        ? origin
-        : allowedOrigins[0];
+    const allowedOrigin = env.ALLOWED_ORIGIN || "https://ncc-music.github.io";
 
     return new Headers({
-        "Access-Control-Allow-Origin": allowedOrigin,
+        "Access-Control-Allow-Origin": origin === allowedOrigin ? origin : allowedOrigin,
         "Access-Control-Allow-Methods": "GET, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Range",
-        "Access-Control-Expose-Headers": "Content-Length, Content-Type, ETag",
+        "Access-Control-Allow-Headers": "Content-Type",
         "Vary": "Origin",
     });
-}
-
-function isLocalOrigin(origin) {
-    return /^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(origin);
 }

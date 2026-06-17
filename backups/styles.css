@@ -315,46 +315,7 @@ body {
 
 /* Barra de progreso */
 .progress-bar {
-    margin-bottom: 22px;
-}
-
-.waveform-progress {
-    position: relative;
-}
-
-.waveform-canvas {
-    display: block;
-    width: 100%;
-    height: 92px;
-    background: linear-gradient(180deg, rgba(3, 3, 3, 0.88), rgba(3, 3, 3, 0.62));
-    border: 1px solid rgba(78, 205, 196, 0.22);
-    border-radius: 8px;
-    box-shadow: inset 0 0 28px rgba(0, 0, 0, 0.45);
-    cursor: pointer;
-    touch-action: none;
-}
-
-.waveform-canvas:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 3px;
-}
-
-.waveform-status {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-secondary);
-    font-size: 0.82rem;
-    letter-spacing: 0;
-    pointer-events: none;
-    text-align: center;
-    padding: 0 16px;
-}
-
-.waveform-status:empty {
-    display: none;
+    margin-bottom: 20px;
 }
 
 input[type="range"] {
