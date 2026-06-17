@@ -136,10 +136,26 @@ function normalizeR2Playlist(data) {
             name: track.name,
             artist: track.artist || 'Nicolás Cardú',
             url: track.url,
-            waveformUrl: track.waveformUrl || track.waveform_url || track.analysisUrl || '',
+            waveformUrl: getWaveformUrl(track),
             duration: 0,
             key: track.key || ''
         }));
+}
+
+function getWaveformUrl(track) {
+    if (track.waveformUrl || track.waveform_url || track.analysisUrl) {
+        return track.waveformUrl || track.waveform_url || track.analysisUrl;
+    }
+
+    if (!track.key || !playlistApiUrl) {
+        return '';
+    }
+
+    const workerUrl = new URL(playlistApiUrl);
+    workerUrl.pathname = `/audio/${encodePath(track.key)}`;
+    workerUrl.search = '';
+    workerUrl.hash = '';
+    return workerUrl.toString();
 }
 
 function showLoadError(loadingInitial, message) {
@@ -560,6 +576,10 @@ function isSeekable(audio) {
 
 function clamp(value, min, max) {
     return Math.min(Math.max(value, min), max);
+}
+
+function encodePath(path) {
+    return path.split('/').map(encodeURIComponent).join('/');
 }
 
 function formatTime(seconds) {

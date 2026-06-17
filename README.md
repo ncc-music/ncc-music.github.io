@@ -84,13 +84,14 @@ La web se aloja en GitHub Pages y los archivos de audio se alojan en Cloudflare 
 4. **Agregar variables del Worker**
    - `R2_PUBLIC_URL`: opcional si cambiás la URL pública del bucket.
    - `ALLOWED_ORIGIN`: `https://ncc-music.github.io`.
+   - `ALLOWED_ORIGINS`: opcional si querés permitir varios orígenes separados por coma.
    - `AUDIO_PREFIX`: opcional, sólo si tus audios están dentro de una carpeta, por ejemplo `mixes/`.
 
 5. **Conectar GitHub Pages con el Worker**
    - Copiá la URL del Worker.
    - Pegala en `js/gdrive-player.js`, en `playlistApiUrl`.
 
-El Worker devuelve la playlist automática en `/playlist`.
+El Worker devuelve la playlist automática en `/playlist` y sirve `/audio/<archivo>` para que el reproductor pueda generar el waveform real con CORS.
 
 ## 📱 Uso
 
