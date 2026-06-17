@@ -19,6 +19,8 @@ const waveformState = {
     audioContext: null,
 };
 
+let durationRequestId = 0;
+
 // Inicialización cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🎵 DOM cargado');
@@ -62,7 +64,7 @@ function initPlayer() {
         updateProgress(audio);
     });
     audio.addEventListener('loadedmetadata', function() {
-        updateDuration(audio);
+        updateDuration(audio, playlistEl);
         drawWaveform(audio);
     });
     audio.addEventListener('ended', function() {
@@ -118,6 +120,7 @@ async function loadFromR2(audio, playButton, playlistEl, loadingInitial) {
 
         if (playerState.playlist.length > 0) {
             selectTrack(0, audio, playButton, playlistEl);
+            loadPlaylistDurations(playlistEl);
         } else {
             showLoadError(loadingInitial, 'No se encontraron audios en el bucket R2.');
         }
@@ -137,7 +140,7 @@ function normalizeR2Playlist(data) {
             artist: track.artist || 'Nicolás Cardú',
             url: track.url,
             waveformUrl: getWaveformUrl(track),
-            duration: 0,
+            duration: normalizeDuration(track.duration || track.durationSeconds || track.duration_seconds),
             key: track.key || ''
         }));
 }
@@ -211,7 +214,7 @@ function selectTrack(index, audio, playButton, playlistEl) {
     document.getElementById('track-name').textContent = track.name;
     document.getElementById('track-artist').textContent = track.artist || 'Nicolás Cardú';
     document.getElementById('current-time').textContent = '0:00';
-    document.getElementById('duration').textContent = '0:00';
+    document.getElementById('duration').textContent = formatTrackDuration(track.duration);
     playButton.textContent = '▶️';
     playerState.isPlaying = false;
     resetWaveform(audio);
@@ -249,10 +252,23 @@ function updateProgress(audio) {
     drawWaveform(audio);
 }
 
-function updateDuration(audio) {
+function updateDuration(audio, playlistEl) {
+    const duration = normalizeDuration(audio.duration);
     const durationEl = document.getElementById('duration');
+
+    if (duration > 0) {
+        const currentTrack = playerState.playlist[playerState.currentTrackIndex];
+        if (currentTrack) {
+            currentTrack.duration = duration;
+        }
+
+        if (playlistEl) {
+            updatePlaylistUI(playlistEl);
+        }
+    }
+
     if (durationEl) {
-        durationEl.textContent = formatTime(audio.duration);
+        durationEl.textContent = formatTrackDuration(duration);
     }
 }
 
@@ -277,7 +293,7 @@ function updatePlaylistUI(playlistEl) {
 
         const durationSpan = document.createElement('span');
         durationSpan.className = 'playlist-item-duration';
-        durationSpan.textContent = '0:00';
+        durationSpan.textContent = formatTrackDuration(track.duration);
 
         li.appendChild(nameSpan);
         li.appendChild(durationSpan);
@@ -289,6 +305,78 @@ function updatePlaylistUI(playlistEl) {
         });
 
         playlistEl.appendChild(li);
+    });
+}
+
+async function loadPlaylistDurations(playlistEl) {
+    const requestId = durationRequestId + 1;
+    durationRequestId = requestId;
+
+    for (let index = 0; index < playerState.playlist.length; index++) {
+        if (requestId !== durationRequestId) return;
+
+        const track = playerState.playlist[index];
+        if (!track || track.duration > 0 || !track.url) continue;
+
+        try {
+            const duration = await readAudioDuration(track.url);
+            if (requestId !== durationRequestId) return;
+
+            track.duration = duration;
+            updatePlaylistUI(playlistEl);
+
+            if (index === playerState.currentTrackIndex) {
+                const durationEl = document.getElementById('duration');
+                if (durationEl) {
+                    durationEl.textContent = formatTrackDuration(duration);
+                }
+            }
+        } catch (err) {
+            console.warn('No se pudo leer la duración del track:', track.name, err);
+        }
+    }
+}
+
+function readAudioDuration(url) {
+    return new Promise((resolve, reject) => {
+        const metadataAudio = new Audio();
+        let timeoutId;
+
+        function cleanup() {
+            clearTimeout(timeoutId);
+            metadataAudio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+            metadataAudio.removeEventListener('error', handleError);
+            metadataAudio.removeAttribute('src');
+            metadataAudio.load();
+        }
+
+        function handleLoadedMetadata() {
+            const duration = normalizeDuration(metadataAudio.duration);
+            cleanup();
+
+            if (duration > 0) {
+                resolve(duration);
+            } else {
+                reject(new Error('Duración inválida'));
+            }
+        }
+
+        function handleError() {
+            cleanup();
+            reject(new Error('No se pudieron cargar los metadatos'));
+        }
+
+        metadataAudio.preload = 'metadata';
+        metadataAudio.addEventListener('loadedmetadata', handleLoadedMetadata);
+        metadataAudio.addEventListener('error', handleError);
+
+        timeoutId = window.setTimeout(function() {
+            cleanup();
+            reject(new Error('Tiempo de espera agotado'));
+        }, 12000);
+
+        metadataAudio.src = url;
+        metadataAudio.load();
     });
 }
 
@@ -580,6 +668,15 @@ function clamp(value, min, max) {
 
 function encodePath(path) {
     return path.split('/').map(encodeURIComponent).join('/');
+}
+
+function normalizeDuration(value) {
+    const duration = Number(value);
+    return Number.isFinite(duration) && duration > 0 ? duration : 0;
+}
+
+function formatTrackDuration(duration) {
+    return normalizeDuration(duration) > 0 ? formatTime(duration) : '--:--';
 }
 
 function formatTime(seconds) {
