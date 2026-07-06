@@ -60,7 +60,7 @@ npx http-server
 
 3. **Acceder al sitio**
    - Abre tu navegador en `http://localhost:8000`
-   - O directamente en `https://ncc-music.github.io`
+   - O directamente en `https://www.ncc.ar`
 
 ## ☁️ Playlist automática desde Cloudflare R2
 
@@ -83,8 +83,8 @@ La web se aloja en GitHub Pages y los archivos de audio se alojan en Cloudflare 
 
 4. **Agregar variables del Worker**
    - `R2_PUBLIC_URL`: opcional si cambiás la URL pública del bucket.
-   - `ALLOWED_ORIGIN`: `https://ncc-music.github.io`.
-   - `ALLOWED_ORIGINS`: opcional si querés permitir varios orígenes separados por coma.
+   - `ALLOWED_ORIGINS`: `https://www.ncc.ar,https://ncc.ar,https://ncc-music.github.io`.
+   - `ALLOWED_ORIGIN`: opcional si sólo querés permitir un único origen.
    - `AUDIO_PREFIX`: opcional, sólo si tus audios están dentro de una carpeta, por ejemplo `mixes/`.
 
 5. **Conectar GitHub Pages con el Worker**
@@ -159,4 +159,4 @@ Este proyecto está bajo la licencia MIT.
 
 Hecho con ❤️ para los amantes del audio de calidad.
 
-**[🎵 Visita el sitio](https://ncc-music.github.io)**
+**[🎵 Visita el sitio](https://www.ncc.ar)**

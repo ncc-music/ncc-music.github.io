@@ -1,5 +1,10 @@
 const AUDIO_EXTENSIONS = new Set(["flac", "wav", "mp3", "ogg", "m4a", "aac"]);
 const R2_PUBLIC_URL = "https://pub-a23ce9da093b4cbf812140922221fc46.r2.dev";
+const DEFAULT_ALLOWED_ORIGINS = [
+    "https://www.ncc.ar",
+    "https://ncc.ar",
+    "https://ncc-music.github.io",
+];
 
 export default {
     async fetch(request, env) {
@@ -153,10 +158,11 @@ function jsonResponse(body, request, env, status = 200, extraHeaders = {}) {
 
 function corsHeaders(request, env) {
     const origin = request.headers.get("Origin");
-    const allowedOrigins = (env.ALLOWED_ORIGINS || env.ALLOWED_ORIGIN || "https://ncc-music.github.io")
-        .split(",")
-        .map((allowedOrigin) => allowedOrigin.trim())
+    const configuredOrigins = [env.ALLOWED_ORIGINS, env.ALLOWED_ORIGIN]
+        .filter(Boolean)
+        .flatMap((allowedOrigin) => allowedOrigin.split(",").map((item) => item.trim()))
         .filter(Boolean);
+    const allowedOrigins = [...new Set([...DEFAULT_ALLOWED_ORIGINS, ...configuredOrigins])];
     const allowedOrigin = origin && (allowedOrigins.includes(origin) || isLocalOrigin(origin))
         ? origin
         : allowedOrigins[0];
