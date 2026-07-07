@@ -7,6 +7,11 @@
     --text-color: #17a5a5;
     --text-secondary: #b0b0b0;
     --accent: #cbff3d;
+    --text-border-color: var(--secondary-color);
+    --text-border: -0.45px -0.45px 0 var(--text-border-color),
+                   0.45px -0.45px 0 var(--text-border-color),
+                   -0.45px 0.45px 0 var(--text-border-color),
+                   0.45px 0.45px 0 var(--text-border-color);
 }
 
 /* Reset y estilos base */
@@ -25,6 +30,18 @@ body {
     background-color: var(--dark-bg);
     color: var(--text-color);
     line-height: 1.6;
+    text-shadow: var(--text-border);
+}
+
+button,
+input,
+textarea,
+select {
+    text-shadow: var(--text-border);
+}
+
+::placeholder {
+    text-shadow: var(--text-border);
 }
 
 .container {
@@ -714,6 +731,7 @@ input[type="range"]::-moz-range-thumb:hover {
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
+    text-shadow: none;
 }
 
 /* Footer */
