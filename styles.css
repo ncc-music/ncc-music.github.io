@@ -835,13 +835,13 @@ input[type="range"]::-moz-range-thumb:hover {
 .about-text h3 {
     font-size: 1.8rem;
     margin-bottom: 1rem;
-    color: var(--secondary-color);
+    color: var(--link-color);
 }
 
 .about-text p {
-    color: var(--text-secondary);
+    color: var(--link-color);
     margin-bottom: 1.5rem;
-    font-size: 1rem;
+    font-size: 1.8rem;
 }
 
 .about-text h4 {
