@@ -413,9 +413,11 @@ select {
     animation: spin-slow 20s linear infinite;
 }
 
-.album-art svg {
+.album-art img {
     width: 100%;
     height: 100%;
+    display: block;
+    object-fit: cover;
 }
 
 .album-art.playing {
