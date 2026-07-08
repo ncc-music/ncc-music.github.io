@@ -406,7 +406,7 @@ select {
 .album-art {
     width: 120px;
     height: 120px;
-    background-color: var(--dark-bg);
+    background-color: transparent;
     border-radius: 10px;
     overflow: hidden;
     flex-shrink: 0;
