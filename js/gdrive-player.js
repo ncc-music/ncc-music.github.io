@@ -3,12 +3,12 @@ const playlistApiUrl = 'https://rapid-silence-8ef7.nc-music-87a.workers.dev/';
 const playlistSources = [
     {
         id: 'chill-out',
-        title: 'My Chill Out',
+        title: 'Chill Music',
         prefix: 'chill-out/'
     },
     {
         id: 'techno-freaks',
-        title: 'for techno freaks',
+        title: 'Techno Freaks',
         prefix: 'techno-freaks/'
     }
 ];
@@ -281,6 +281,7 @@ function setupPlaylistThemeSwitch(audio, playButton, playlistEl) {
     themeSwitch.addEventListener('change', function() {
         const playlistId = themeSwitch.checked ? 'techno-freaks' : 'chill-out';
         playerState.manualPlaylistTheme = true;
+        applyPlaylistTheme(playlistId);
         setActivePlaylist(playlistId, 0);
 
         if (playerState.playlist.length > 0) {

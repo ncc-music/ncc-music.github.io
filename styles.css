@@ -49,25 +49,39 @@ body[data-playlist-theme="chill-out"] {
 }
 
 body[data-playlist-theme="techno-freaks"] {
-    --primary-color: #18f0ff;
-    --secondary-color: #cbff3d;
+    --primary-color: #4ecdc4;
+    --secondary-color: #17d6c7;
     --dark-bg: #000000;
     --light-bg: #08090b;
-    --text-color: #e8fbff;
-    --text-secondary: #8b969c;
-    --accent: #ff2bd6;
-    --section-border: rgba(203, 255, 61, 0.2);
-    --soft-panel-bg: rgba(255, 255, 255, 0.045);
-    --soft-panel-strong: rgba(255, 255, 255, 0.09);
-    --playlist-hover-bg: rgba(203, 255, 61, 0.12);
-    --playlist-active-bg: rgba(24, 240, 255, 0.16);
-    --control-bg: rgba(24, 240, 255, 0.12);
-    --page-shadow: rgba(24, 240, 255, 0.18);
+    --text-color: #4ee6d6;
+    --text-secondary: #a3d7d0;
+    --accent: #cbff3d;
+    --section-border: rgba(78, 205, 196, 0.24);
+    --soft-panel-bg: rgba(78, 205, 196, 0.055);
+    --soft-panel-strong: rgba(78, 205, 196, 0.11);
+    --playlist-hover-bg: rgba(78, 205, 196, 0.16);
+    --playlist-active-bg: rgba(78, 205, 196, 0.26);
+    --control-bg: rgba(78, 205, 196, 0.14);
+    --page-shadow: rgba(78, 205, 196, 0.2);
     --waveform-bg: linear-gradient(180deg, rgba(0, 0, 0, 0.96), rgba(10, 10, 12, 0.78));
-    --waveform-border: rgba(203, 255, 61, 0.24);
+    --waveform-border: rgba(78, 205, 196, 0.3);
     --hero-bg: linear-gradient(135deg, #000000 0%, #0d1013 100%);
     --icon-ink: #030303;
-    --text-border-color: rgba(24, 240, 255, 0.72);
+    --text-border-color: rgba(78, 205, 196, 0.68);
+}
+
+body[data-playlist-theme="techno-freaks"],
+body[data-playlist-theme="techno-freaks"] .navbar,
+body[data-playlist-theme="techno-freaks"] .player-section,
+body[data-playlist-theme="techno-freaks"] .contact-section {
+    background-color: #000000 !important;
+}
+
+body[data-playlist-theme="techno-freaks"] .hero,
+body[data-playlist-theme="techno-freaks"] .player-container,
+body[data-playlist-theme="techno-freaks"] .about-section,
+body[data-playlist-theme="techno-freaks"] .footer {
+    background: #08090b !important;
 }
 
 /* Reset y estilos base */

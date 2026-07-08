@@ -68,7 +68,7 @@ La web se aloja en GitHub Pages y los archivos de audio se alojan en Cloudflare 
 
 1. **Subir audios a R2**
    - Subí tus archivos de audio al bucket dentro de las carpetas `chill-out/` y `techno-freaks/`.
-   - La web muestra esas carpetas como las playlists **My Chill Out** y **for techno freaks**.
+   - La web muestra esas carpetas como las playlists **Chill Music** y **Techno Freaks**.
    - El bucket debe permitir acceso público a los archivos que use el reproductor.
 
 2. **Crear un Worker en Cloudflare**
