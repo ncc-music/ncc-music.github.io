@@ -17,8 +17,7 @@ const playlistSources = [
 const playerState = {
     isPlaying: false,
     currentTrackIndex: 0,
-    activePlaylistId: playlistSources[0].id,
-    manualPlaylistTheme: false,
+    activePlaylistId: 'techno-freaks',
     playlist: [],
     playlists: playlistSources.map(source => ({
         ...source,
@@ -123,9 +122,7 @@ async function loadFromR2(audio, playButton, playlistEl, loadingInitial) {
         playerState.playlists = await Promise.all(playlistSources.map(loadPlaylistSource));
         const preferredPlaylist = getPlaylistById(playerState.activePlaylistId);
         const firstPlayablePlaylist = getFirstPlayablePlaylist();
-        const initialPlaylist = playerState.manualPlaylistTheme
-            ? preferredPlaylist
-            : firstPlayablePlaylist;
+        const initialPlaylist = preferredPlaylist || firstPlayablePlaylist;
 
         if (initialPlaylist) {
             setActivePlaylist(initialPlaylist.id, 0);
@@ -280,7 +277,6 @@ function setupPlaylistThemeSwitch(audio, playButton, playlistEl) {
 
     themeSwitch.addEventListener('change', function() {
         const playlistId = themeSwitch.checked ? 'techno-freaks' : 'chill-out';
-        playerState.manualPlaylistTheme = true;
         applyPlaylistTheme(playlistId);
         setActivePlaylist(playlistId, 0);
 

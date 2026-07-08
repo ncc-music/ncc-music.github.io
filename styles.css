@@ -31,10 +31,10 @@
 body[data-playlist-theme="chill-out"] {
     --primary-color: #4b5258;
     --secondary-color: #7c878f;
-    --dark-bg: #e5e7e9;
-    --light-bg: #f7f8f8;
-    --text-color: #1f2428;
-    --text-secondary: #5f686f;
+    --dark-bg: #2b2d30;
+    --light-bg: #3a3d40;
+    --text-color: #e6e8ea;
+    --text-secondary: #c5cbd0;
     --accent: #111417;
     --link-color: #e2d66f;
     --link-hover-color: #b8aa28;
@@ -380,6 +380,10 @@ select {
     font-size: 2.5rem;
     margin-bottom: 1.25rem;
     color: var(--primary-color);
+}
+
+.coming-date {
+    color: var(--link-color);
 }
 
 .player-container {
