@@ -49,22 +49,22 @@ body[data-playlist-theme="chill-out"] {
 }
 
 body[data-playlist-theme="techno-freaks"] {
-    --primary-color: #4ecdc4;
-    --secondary-color: #17d6c7;
+    --primary-color: #e2f27f;
+    --secondary-color: #4ecdc4;
     --dark-bg: #000000;
     --light-bg: #08090b;
     --text-color: #4ee6d6;
     --text-secondary: #a3d7d0;
-    --accent: #cbff3d;
-    --section-border: rgba(78, 205, 196, 0.24);
+    --accent: #e8f7a6;
+    --section-border: rgba(226, 242, 127, 0.24);
     --soft-panel-bg: rgba(78, 205, 196, 0.055);
     --soft-panel-strong: rgba(78, 205, 196, 0.11);
-    --playlist-hover-bg: rgba(78, 205, 196, 0.16);
-    --playlist-active-bg: rgba(78, 205, 196, 0.26);
+    --playlist-hover-bg: rgba(226, 242, 127, 0.14);
+    --playlist-active-bg: rgba(226, 242, 127, 0.22);
     --control-bg: rgba(78, 205, 196, 0.14);
-    --page-shadow: rgba(78, 205, 196, 0.2);
+    --page-shadow: rgba(226, 242, 127, 0.18);
     --waveform-bg: linear-gradient(180deg, rgba(0, 0, 0, 0.96), rgba(10, 10, 12, 0.78));
-    --waveform-border: rgba(78, 205, 196, 0.3);
+    --waveform-border: rgba(226, 242, 127, 0.28);
     --hero-bg: linear-gradient(135deg, #000000 0%, #0d1013 100%);
     --icon-ink: #030303;
     --text-border-color: rgba(78, 205, 196, 0.68);
