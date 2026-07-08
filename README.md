@@ -94,6 +94,14 @@ La web se aloja en GitHub Pages y los archivos de audio se alojan en Cloudflare 
 
 El Worker devuelve la playlist automática en `/playlist` y sirve `/audio/<archivo>` para que el reproductor pueda generar el waveform real con CORS.
 
+## 🔎 Indexación en Google
+
+El sitio usa `https://ncc.ar/` como URL canónica e incluye metadatos SEO, datos estructurados JSON-LD, `robots.txt` y `sitemap.xml`.
+
+1. Verificá la propiedad `https://ncc.ar/` en Google Search Console.
+2. Enviá el sitemap: `https://ncc.ar/sitemap.xml`.
+3. Usá la inspección de URL de Search Console para solicitar indexación después de publicar cambios importantes.
+
 ## 📱 Uso
 
 1. **Reproducir música**:

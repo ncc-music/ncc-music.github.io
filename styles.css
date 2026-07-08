@@ -7,6 +7,8 @@
     --text-color: #17a5a5;
     --text-secondary: #b0b0b0;
     --accent: #cbff3d;
+    --link-color: var(--text-color);
+    --link-hover-color: var(--primary-color);
     --section-border: rgba(78, 205, 196, 0.18);
     --soft-panel-bg: rgba(255, 255, 255, 0.05);
     --soft-panel-strong: rgba(255, 255, 255, 0.1);
@@ -33,6 +35,8 @@ body[data-playlist-theme="chill-out"] {
     --text-color: #1f2428;
     --text-secondary: #5f686f;
     --accent: #111417;
+    --link-color: #e2d66f;
+    --link-hover-color: #b8aa28;
     --section-border: rgba(31, 36, 40, 0.14);
     --soft-panel-bg: rgba(31, 36, 40, 0.055);
     --soft-panel-strong: rgba(31, 36, 40, 0.1);
@@ -49,22 +53,24 @@ body[data-playlist-theme="chill-out"] {
 }
 
 body[data-playlist-theme="techno-freaks"] {
-    --primary-color: #e2f27f;
-    --secondary-color: #4ecdc4;
+    --primary-color: #4ecdc4;
+    --secondary-color: #17d6c7;
     --dark-bg: #000000;
     --light-bg: #08090b;
     --text-color: #4ee6d6;
     --text-secondary: #a3d7d0;
     --accent: #e8f7a6;
-    --section-border: rgba(226, 242, 127, 0.24);
+    --link-color: #e8f7a6;
+    --link-hover-color: #f4f9c7;
+    --section-border: rgba(78, 205, 196, 0.24);
     --soft-panel-bg: rgba(78, 205, 196, 0.055);
     --soft-panel-strong: rgba(78, 205, 196, 0.11);
-    --playlist-hover-bg: rgba(226, 242, 127, 0.14);
-    --playlist-active-bg: rgba(226, 242, 127, 0.22);
+    --playlist-hover-bg: rgba(78, 205, 196, 0.16);
+    --playlist-active-bg: rgba(78, 205, 196, 0.26);
     --control-bg: rgba(78, 205, 196, 0.14);
-    --page-shadow: rgba(226, 242, 127, 0.18);
+    --page-shadow: rgba(78, 205, 196, 0.2);
     --waveform-bg: linear-gradient(180deg, rgba(0, 0, 0, 0.96), rgba(10, 10, 12, 0.78));
-    --waveform-border: rgba(226, 242, 127, 0.28);
+    --waveform-border: rgba(78, 205, 196, 0.3);
     --hero-bg: linear-gradient(135deg, #000000 0%, #0d1013 100%);
     --icon-ink: #030303;
     --text-border-color: rgba(78, 205, 196, 0.68);
@@ -284,13 +290,13 @@ select {
 }
 
 .nav-links a {
-    color: var(--text-color);
+    color: var(--link-color);
     text-decoration: none;
     transition: color 0.3s;
 }
 
 .nav-links a:hover {
-    color: var(--primary-color);
+    color: var(--link-hover-color);
 }
 
 .nav-social-links {
@@ -303,16 +309,16 @@ select {
 .nav-social-links .social-btn {
     width: 34px;
     height: 34px;
-    background-color: var(--secondary-color);
-    border: 1px solid var(--secondary-color);
+    background-color: var(--link-color);
+    border: 1px solid var(--link-color);
     color: var(--icon-ink);
     box-shadow: 0 4px 12px var(--page-shadow);
 }
 
 .nav-social-links .social-btn:hover,
 .nav-social-links .social-btn:focus-visible {
-    background-color: var(--accent);
-    border-color: var(--accent);
+    background-color: var(--link-hover-color);
+    border-color: var(--link-hover-color);
     color: var(--icon-ink);
     transform: translateY(-1px);
 }
@@ -887,18 +893,18 @@ input[type="range"]::-moz-range-thumb:hover {
     justify-content: center;
     width: 58px;
     height: 58px;
-    background-color: var(--secondary-color);
+    background-color: var(--link-color);
     color: var(--icon-ink);
     text-decoration: none;
     border-radius: 50%;
     transition: all 0.3s;
-    border: 2px solid var(--secondary-color);
+    border: 2px solid var(--link-color);
 }
 
 .social-btn:hover,
 .social-btn:focus-visible {
-    background-color: var(--accent);
-    border-color: var(--accent);
+    background-color: var(--link-hover-color);
+    border-color: var(--link-hover-color);
     color: var(--icon-ink);
     outline: none;
     transform: translateY(-2px);
