@@ -355,7 +355,7 @@ select {
 .player-section h2 {
     text-align: center;
     font-size: 2.5rem;
-    margin-bottom: 3rem;
+    margin-bottom: 1.25rem;
     color: var(--primary-color);
 }
 
@@ -613,7 +613,8 @@ input[type="range"]::-moz-range-thumb:hover {
     align-items: center;
     justify-content: center;
     gap: 12px;
-    margin: 0 auto 24px;
+    max-width: 600px;
+    margin: 0 auto 28px;
     padding: 10px;
     background-color: var(--soft-panel-bg);
     border: 1px solid var(--section-border);

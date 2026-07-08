@@ -18,6 +18,7 @@ const playerState = {
     isPlaying: false,
     currentTrackIndex: 0,
     activePlaylistId: playlistSources[0].id,
+    manualPlaylistTheme: false,
     playlist: [],
     playlists: playlistSources.map(source => ({
         ...source,
@@ -72,10 +73,11 @@ function initPlayer() {
         console.error('❌ playlist no encontrado');
         return;
     }
-    
+
     console.log('✅ Elementos encontrados');
 
     setupWaveform(audio, waveformCanvas, waveformStatus);
+    setupPlaylistThemeSwitch(audio, playButton, playlistEl);
     
     // Event listeners
     audio.addEventListener('timeupdate', function() {
@@ -119,13 +121,16 @@ async function loadFromR2(audio, playButton, playlistEl, loadingInitial) {
         }
 
         playerState.playlists = await Promise.all(playlistSources.map(loadPlaylistSource));
-        const firstPlayablePlaylist = playerState.playlists.find(playlist => playlist.tracks.length > 0);
+        const preferredPlaylist = getPlaylistById(playerState.activePlaylistId);
+        const firstPlayablePlaylist = getFirstPlayablePlaylist();
+        const initialPlaylist = playerState.manualPlaylistTheme
+            ? preferredPlaylist
+            : firstPlayablePlaylist;
 
-        if (firstPlayablePlaylist) {
-            setActivePlaylist(firstPlayablePlaylist.id, 0);
+        if (initialPlaylist) {
+            setActivePlaylist(initialPlaylist.id, 0);
         } else {
-            playerState.activePlaylistId = playlistSources[0].id;
-            playerState.currentTrackIndex = 0;
+            setActivePlaylist(playerState.activePlaylistId || playlistSources[0].id, 0);
             playerState.playlist = [];
         }
 
@@ -139,8 +144,10 @@ async function loadFromR2(audio, playButton, playlistEl, loadingInitial) {
 
         updatePlaylistUI(playlistEl);
 
-        if (getTotalTrackCount() > 0) {
+        if (playerState.playlist.length > 0) {
             selectTrack(0, audio, playButton, playlistEl, playerState.activePlaylistId);
+            loadPlaylistDurations();
+        } else if (getTotalTrackCount() > 0) {
             loadPlaylistDurations();
         } else {
             const failedCount = playerState.playlists.filter(playlist => playlist.error).length;
@@ -220,6 +227,7 @@ function setActivePlaylist(playlistId, trackIndex = 0) {
     playerState.activePlaylistId = playlist.id;
     playerState.playlist = playlist.tracks;
     playerState.currentTrackIndex = safeTrackIndex;
+    applyPlaylistTheme(playlist.id);
 
     return playlist;
 }
@@ -261,6 +269,44 @@ function showLoadError(loadingInitial, message) {
 
     loadingInitial.style.display = 'block';
     loadingInitial.innerHTML = `<h3>${message}</h3>`;
+}
+
+function setupPlaylistThemeSwitch(audio, playButton, playlistEl) {
+    const themeSwitch = document.getElementById('playlist-theme-switch');
+
+    applyPlaylistTheme(playerState.activePlaylistId);
+
+    if (!themeSwitch) return;
+
+    themeSwitch.addEventListener('change', function() {
+        const playlistId = themeSwitch.checked ? 'techno-freaks' : 'chill-out';
+        playerState.manualPlaylistTheme = true;
+        setActivePlaylist(playlistId, 0);
+
+        if (playerState.playlist.length > 0) {
+            selectTrack(0, audio, playButton, playlistEl, playlistId);
+        } else if (playlistEl) {
+            updatePlaylistUI(playlistEl);
+        }
+    });
+}
+
+function applyPlaylistTheme(playlistId) {
+    const safePlaylistId = playlistSources.some(source => source.id === playlistId)
+        ? playlistId
+        : playlistSources[0].id;
+    const themeSwitch = document.getElementById('playlist-theme-switch');
+    const themeLabels = document.querySelectorAll('[data-theme-option]');
+
+    document.body.dataset.playlistTheme = safePlaylistId;
+
+    if (themeSwitch) {
+        themeSwitch.checked = safePlaylistId === 'techno-freaks';
+    }
+
+    themeLabels.forEach(label => {
+        label.classList.toggle('active', label.dataset.themeOption === safePlaylistId);
+    });
 }
 
 function togglePlay(audio, playButton) {

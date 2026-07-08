@@ -4,7 +4,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>NCC Music</title>
-        <link rel="stylesheet" href="styles.css">
+        <link rel="stylesheet" href="styles.css?v=20260708-playlist-theme-switch">
         <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
     </head>
     <body data-playlist-theme="chill-out">
@@ -46,6 +46,16 @@
         <section id="reproductor" class="player-section">
             <div class="container">
                 <h2>Coming Soon... Save the date! 08/08/2026</h2>
+                <div class="playlist-theme-control" role="group" aria-label="Color de playlist">
+                    <span class="theme-option-label active" data-theme-option="chill-out">My Chill Out</span>
+                    <label class="theme-switch" for="playlist-theme-switch">
+                        <input type="checkbox" id="playlist-theme-switch" aria-label="Cambiar entre playlists">
+                        <span class="theme-switch-track">
+                            <span class="theme-switch-thumb"></span>
+                        </span>
+                    </label>
+                    <span class="theme-option-label" data-theme-option="techno-freaks">for techno freaks</span>
+                </div>
                 <div class="player-container">
                     <!-- Estado de carga inicial -->
                     <div id="loading-initial" class="gdrive-config">
@@ -91,16 +101,6 @@
                         <label for="volume-slider" title="Volumen" aria-label="Volumen">🔊</label>
                         <input type="range" id="volume-slider" min="0" max="100" value="80">
                         <span id="volume-value">80%</span>
-                    </div>
-                    <div class="playlist-theme-control" role="group" aria-label="Color de playlist">
-                        <span class="theme-option-label active" data-theme-option="chill-out">My Chill Out</span>
-                        <label class="theme-switch" for="playlist-theme-switch">
-                            <input type="checkbox" id="playlist-theme-switch" aria-label="Cambiar entre playlists">
-                            <span class="theme-switch-track">
-                                <span class="theme-switch-thumb"></span>
-                            </span>
-                        </label>
-                        <span class="theme-option-label" data-theme-option="techno-freaks">for techno freaks</span>
                     </div>
                     <div class="playlist">
                         <h3>Playlists (<span id="playlist-count">0</span> canciones)</h3>
