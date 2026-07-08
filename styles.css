@@ -9,6 +9,7 @@
     --accent: #cbff3d;
     --link-color: var(--text-color);
     --link-hover-color: var(--primary-color);
+    --player-highlight-border: var(--link-color);
     --section-border: rgba(78, 205, 196, 0.18);
     --soft-panel-bg: rgba(255, 255, 255, 0.05);
     --soft-panel-strong: rgba(255, 255, 255, 0.1);
@@ -37,6 +38,7 @@ body[data-playlist-theme="chill-out"] {
     --accent: #111417;
     --link-color: #e2d66f;
     --link-hover-color: #b8aa28;
+    --player-highlight-border: #e2d66f;
     --section-border: rgba(31, 36, 40, 0.14);
     --soft-panel-bg: rgba(31, 36, 40, 0.055);
     --soft-panel-strong: rgba(31, 36, 40, 0.1);
@@ -62,6 +64,7 @@ body[data-playlist-theme="techno-freaks"] {
     --accent: #e8f7a6;
     --link-color: #e8f7a6;
     --link-hover-color: #f4f9c7;
+    --player-highlight-border: #e8f7a6;
     --section-border: rgba(78, 205, 196, 0.24);
     --soft-panel-bg: rgba(78, 205, 196, 0.055);
     --soft-panel-strong: rgba(78, 205, 196, 0.11);
@@ -381,9 +384,10 @@ select {
 
 .player-container {
     background-color: var(--light-bg);
+    border: 1px solid var(--player-highlight-border);
     border-radius: 15px;
     padding: 40px;
-    box-shadow: 0 20px 60px var(--page-shadow);
+    box-shadow: 0 20px 60px var(--page-shadow), 0 0 0 1px color-mix(in srgb, var(--player-highlight-border) 32%, transparent);
     max-width: 600px;
     margin: 0 auto;
     transition: background-color 0.35s ease, box-shadow 0.35s ease;
@@ -460,7 +464,7 @@ select {
     width: 100%;
     height: 92px;
     background: var(--waveform-bg);
-    border: 1px solid var(--waveform-border);
+    border: 1px solid var(--player-highlight-border);
     border-radius: 8px;
     box-shadow: inset 0 0 28px rgba(0, 0, 0, 0.45);
     cursor: pointer;
@@ -540,7 +544,7 @@ input[type="range"]::-moz-range-thumb:hover {
 
 .control-btn {
     background-color: var(--control-bg);
-    border: 2px solid var(--primary-color);
+    border: 2px solid var(--player-highlight-border);
     color: var(--text-color);
     font-size: 1.2rem;
     width: 50px;
@@ -568,7 +572,7 @@ input[type="range"]::-moz-range-thumb:hover {
     width: 70px;
     height: 70px;
     background-color: var(--primary-color);
-    border-color: var(--primary-color);
+    border-color: var(--player-highlight-border);
     color: var(--dark-bg);
     font-size: 1.5rem;
 }
@@ -586,7 +590,7 @@ input[type="range"]::-moz-range-thumb:hover {
     margin: 0 auto 24px;
     padding: 8px 10px;
     background-color: var(--soft-panel-bg);
-    border: 1px solid var(--section-border);
+    border: 1px solid var(--player-highlight-border);
     border-radius: 8px;
     box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.18);
 }
@@ -637,7 +641,7 @@ input[type="range"]::-moz-range-thumb:hover {
     margin: 0 auto 28px;
     padding: 10px;
     background-color: var(--soft-panel-bg);
-    border: 1px solid var(--section-border);
+    border: 1px solid var(--player-highlight-border);
     border-radius: 8px;
 }
 
@@ -672,7 +676,7 @@ input[type="range"]::-moz-range-thumb:hover {
     height: 30px;
     padding: 3px;
     background-color: var(--dark-bg);
-    border: 1px solid var(--primary-color);
+    border: 1px solid var(--player-highlight-border);
     border-radius: 999px;
     box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.22);
     transition: background-color 0.25s ease, border-color 0.25s ease;
@@ -699,7 +703,7 @@ input[type="range"]::-moz-range-thumb:hover {
 
 /* Playlist */
 .playlist {
-    border-top: 1px solid var(--section-border);
+    border-top: 1px solid var(--player-highlight-border);
     padding-top: 20px;
 }
 
@@ -715,7 +719,7 @@ input[type="range"]::-moz-range-thumb:hover {
 
 .playlist-group + .playlist-group {
     padding-top: 20px;
-    border-top: 1px solid var(--section-border);
+    border-top: 1px solid var(--player-highlight-border);
 }
 
 .playlist-group.active .playlist-group-title {
@@ -773,7 +777,7 @@ input[type="range"]::-moz-range-thumb:hover {
 
 .playlist-item.active {
     background-color: var(--playlist-active-bg);
-    border-left: 3px solid var(--primary-color);
+    border-left: 3px solid var(--player-highlight-border);
 }
 
 .playlist-item-empty {
