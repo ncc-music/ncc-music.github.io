@@ -67,7 +67,8 @@ npx http-server
 La web se aloja en GitHub Pages y los archivos de audio se alojan en Cloudflare R2. Para que la playlist se genere sola, un Worker mínimo lista los archivos del bucket y devuelve JSON al reproductor.
 
 1. **Subir audios a R2**
-   - Subí tus archivos de audio al bucket.
+   - Subí tus archivos de audio al bucket dentro de las carpetas `chill-out/` y `techno-freaks/`.
+   - La web muestra esas carpetas como las playlists **My Chill Out** y **for techno freaks**.
    - El bucket debe permitir acceso público a los archivos que use el reproductor.
 
 2. **Crear un Worker en Cloudflare**
@@ -85,7 +86,7 @@ La web se aloja en GitHub Pages y los archivos de audio se alojan en Cloudflare 
    - `R2_PUBLIC_URL`: opcional si cambiás la URL pública del bucket.
    - `ALLOWED_ORIGINS`: `https://www.ncc.ar,https://ncc.ar,https://ncc-music.github.io`.
    - `ALLOWED_ORIGIN`: opcional si sólo querés permitir un único origen.
-   - `AUDIO_PREFIX`: opcional, sólo si tus audios están dentro de una carpeta, por ejemplo `mixes/`.
+   - `AUDIO_PREFIX`: opcional. La web ya pide `chill-out/` y `techno-freaks/` con el parámetro `prefix`.
 
 5. **Conectar GitHub Pages con el Worker**
    - Copiá la URL del Worker.

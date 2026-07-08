@@ -1,11 +1,29 @@
 // La web vive en GitHub Pages. Esta URL debe apuntar al Worker que lista R2.
 const playlistApiUrl = 'https://rapid-silence-8ef7.nc-music-87a.workers.dev/';
+const playlistSources = [
+    {
+        id: 'chill-out',
+        title: 'My Chill Out',
+        prefix: 'chill-out/'
+    },
+    {
+        id: 'techno-freaks',
+        title: 'for techno freaks',
+        prefix: 'techno-freaks/'
+    }
+];
 
 // Estado del reproductor
 const playerState = {
     isPlaying: false,
     currentTrackIndex: 0,
+    activePlaylistId: playlistSources[0].id,
     playlist: [],
+    playlists: playlistSources.map(source => ({
+        ...source,
+        tracks: [],
+        error: ''
+    })),
 };
 
 const waveformState = {
@@ -100,17 +118,20 @@ async function loadFromR2(audio, playButton, playlistEl, loadingInitial) {
             throw new Error('Falta configurar playlistApiUrl con la URL del Worker.');
         }
 
-        const response = await fetch(playlistApiUrl);
-        if (!response.ok) {
-            throw new Error(`No se pudo cargar la playlist (${response.status})`);
+        playerState.playlists = await Promise.all(playlistSources.map(loadPlaylistSource));
+        const firstPlayablePlaylist = playerState.playlists.find(playlist => playlist.tracks.length > 0);
+
+        if (firstPlayablePlaylist) {
+            setActivePlaylist(firstPlayablePlaylist.id, 0);
+        } else {
+            playerState.activePlaylistId = playlistSources[0].id;
+            playerState.currentTrackIndex = 0;
+            playerState.playlist = [];
         }
 
-        const data = await response.json();
-        playerState.playlist = normalizeR2Playlist(data);
-        playerState.currentTrackIndex = 0;
         playerState.isPlaying = false;
 
-        console.log('✅ Playlist cargada:', playerState.playlist);
+        console.log('✅ Playlists cargadas:', playerState.playlists);
 
         if (loadingInitial) {
             loadingInitial.style.display = 'none';
@@ -118,11 +139,15 @@ async function loadFromR2(audio, playButton, playlistEl, loadingInitial) {
 
         updatePlaylistUI(playlistEl);
 
-        if (playerState.playlist.length > 0) {
-            selectTrack(0, audio, playButton, playlistEl);
+        if (getTotalTrackCount() > 0) {
+            selectTrack(0, audio, playButton, playlistEl, playerState.activePlaylistId);
             loadPlaylistDurations();
         } else {
-            showLoadError(loadingInitial, 'No se encontraron audios en el bucket R2.');
+            const failedCount = playerState.playlists.filter(playlist => playlist.error).length;
+            const message = failedCount === playerState.playlists.length
+                ? 'No se pudieron cargar las playlists desde Cloudflare R2.'
+                : 'No se encontraron audios en las carpetas de R2.';
+            showLoadError(loadingInitial, message);
         }
     } catch (err) {
         console.error('❌ Error cargando playlist desde R2:', err);
@@ -130,19 +155,89 @@ async function loadFromR2(audio, playButton, playlistEl, loadingInitial) {
     }
 }
 
-function normalizeR2Playlist(data) {
+async function loadPlaylistSource(source) {
+    try {
+        const response = await fetch(buildPlaylistUrl(source.prefix));
+        if (!response.ok) {
+            throw new Error(`No se pudo cargar la playlist ${source.title} (${response.status})`);
+        }
+
+        const data = await response.json();
+        return {
+            ...source,
+            tracks: normalizeR2Playlist(data, source),
+            error: ''
+        };
+    } catch (err) {
+        console.error(`❌ Error cargando ${source.title}:`, err);
+        return {
+            ...source,
+            tracks: [],
+            error: 'No se pudo cargar esta playlist.'
+        };
+    }
+}
+
+function buildPlaylistUrl(prefix) {
+    const url = new URL(playlistApiUrl);
+    url.searchParams.set('prefix', normalizePlaylistPrefix(prefix));
+    return url.toString();
+}
+
+function normalizePlaylistPrefix(prefix) {
+    if (!prefix) return '';
+    return prefix.replace(/^\/+/, '').replace(/\/?$/, '/');
+}
+
+function normalizeR2Playlist(data, source) {
     const tracks = Array.isArray(data) ? data : data.tracks || [];
 
     return tracks
         .filter(track => track.name && (track.url || track.key))
-        .map(track => ({
-            name: track.name,
-            artist: track.artist || 'Nicolás Cardú',
-            url: track.url,
-            waveformUrl: getWaveformUrl(track),
-            duration: normalizeDuration(track.duration || track.durationSeconds || track.duration_seconds),
-            key: track.key || ''
-        }));
+        .map(track => {
+            const waveformUrl = getWaveformUrl(track);
+
+            return {
+                name: track.name,
+                artist: track.artist || 'Nicolás Cardú',
+                url: track.url || waveformUrl,
+                waveformUrl,
+                duration: normalizeDuration(track.duration || track.durationSeconds || track.duration_seconds),
+                key: track.key || '',
+                playlistId: source.id,
+                playlistTitle: source.title
+            };
+        });
+}
+
+function setActivePlaylist(playlistId, trackIndex = 0) {
+    const playlist = getPlaylistById(playlistId) || getFirstPlayablePlaylist() || playerState.playlists[0];
+    if (!playlist) return null;
+
+    const lastTrackIndex = Math.max(playlist.tracks.length - 1, 0);
+    const safeTrackIndex = Math.min(Math.max(Number(trackIndex) || 0, 0), lastTrackIndex);
+
+    playerState.activePlaylistId = playlist.id;
+    playerState.playlist = playlist.tracks;
+    playerState.currentTrackIndex = safeTrackIndex;
+
+    return playlist;
+}
+
+function getPlaylistById(playlistId) {
+    return playerState.playlists.find(playlist => playlist.id === playlistId);
+}
+
+function getFirstPlayablePlaylist() {
+    return playerState.playlists.find(playlist => playlist.tracks.length > 0);
+}
+
+function getActivePlaylist() {
+    return getPlaylistById(playerState.activePlaylistId);
+}
+
+function getTotalTrackCount() {
+    return playerState.playlists.reduce((total, playlist) => total + playlist.tracks.length, 0);
 }
 
 function getWaveformUrl(track) {
@@ -179,7 +274,7 @@ function togglePlay(audio, playButton) {
         playButton.textContent = '▶️';
     } else {
         if (audio.src === '') {
-            playTrack(playerState.currentTrackIndex, audio, playButton);
+            playTrack(playerState.currentTrackIndex, audio, playButton, null, playerState.activePlaylistId);
         } else {
             audio.play();
         }
@@ -188,10 +283,10 @@ function togglePlay(audio, playButton) {
     }
 }
 
-function playTrack(index, audio, playButton, playlistEl) {
-    if (playerState.playlist.length === 0) return;
+function playTrack(index, audio, playButton, playlistEl, playlistId = playerState.activePlaylistId) {
+    const track = selectTrack(index, audio, playButton, playlistEl, playlistId);
+    if (!track) return;
 
-    const track = selectTrack(index, audio, playButton, playlistEl);
     console.log('🎵 Reproduciendo:', track.name);
 
     audio.play()
@@ -206,9 +301,12 @@ function playTrack(index, audio, playButton, playlistEl) {
         });
 }
 
-function selectTrack(index, audio, playButton, playlistEl) {
-    playerState.currentTrackIndex = index;
-    const track = playerState.playlist[index];
+function selectTrack(index, audio, playButton, playlistEl, playlistId = playerState.activePlaylistId) {
+    const playlist = setActivePlaylist(playlistId, index);
+    if (!playlist || playlist.tracks.length === 0) return null;
+
+    const track = playerState.playlist[playerState.currentTrackIndex];
+    if (!track) return null;
 
     audio.src = track.url;
     document.getElementById('track-name').textContent = track.name;
@@ -230,7 +328,7 @@ function selectTrack(index, audio, playButton, playlistEl) {
 function nextTrack(audio, playButton, playlistEl) {
     if (playerState.playlist.length === 0) return;
     const nextIndex = (playerState.currentTrackIndex + 1) % playerState.playlist.length;
-    playTrack(nextIndex, audio, playButton, playlistEl);
+    playTrack(nextIndex, audio, playButton, playlistEl, playerState.activePlaylistId);
 }
 
 function previousTrack(audio, playButton, playlistEl) {
@@ -238,7 +336,7 @@ function previousTrack(audio, playButton, playlistEl) {
     const prevIndex = playerState.currentTrackIndex === 0 
         ? playerState.playlist.length - 1 
         : playerState.currentTrackIndex - 1;
-    playTrack(prevIndex, audio, playButton, playlistEl);
+    playTrack(prevIndex, audio, playButton, playlistEl, playerState.activePlaylistId);
 }
 
 function updateProgress(audio) {
@@ -257,12 +355,15 @@ function updateDuration(audio) {
     const durationEl = document.getElementById('duration');
 
     if (duration > 0) {
+        const activePlaylist = getActivePlaylist();
         const currentTrack = playerState.playlist[playerState.currentTrackIndex];
         if (currentTrack) {
             currentTrack.duration = duration;
         }
 
-        updatePlaylistDuration(playerState.currentTrackIndex, duration);
+        if (activePlaylist) {
+            updatePlaylistDuration(activePlaylist.id, playerState.currentTrackIndex, duration);
+        }
     }
 
     if (durationEl) {
@@ -275,36 +376,82 @@ function updatePlaylistUI(playlistEl) {
     const playlistCount = document.getElementById('playlist-count');
     
     if (playlistCount) {
-        playlistCount.textContent = playerState.playlist.length;
+        playlistCount.textContent = getTotalTrackCount();
     }
 
-    playerState.playlist.forEach((track, index) => {
-        const li = document.createElement('li');
-        li.className = 'playlist-item';
-        li.dataset.trackIndex = index.toString();
-        if (index === playerState.currentTrackIndex) {
-            li.classList.add('active');
+    playerState.playlists.forEach((playlist) => {
+        const group = document.createElement('section');
+        group.className = 'playlist-group';
+        if (playlist.id === playerState.activePlaylistId) {
+            group.classList.add('active');
         }
 
-        const nameSpan = document.createElement('span');
-        nameSpan.className = 'playlist-item-name';
-        nameSpan.textContent = track.name;
+        const heading = document.createElement('div');
+        heading.className = 'playlist-group-heading';
 
-        const durationSpan = document.createElement('span');
-        durationSpan.className = 'playlist-item-duration';
-        durationSpan.dataset.trackDuration = index.toString();
-        durationSpan.textContent = formatTrackDuration(track.duration);
+        const title = document.createElement('h4');
+        title.className = 'playlist-group-title';
+        title.textContent = playlist.title;
 
-        li.appendChild(nameSpan);
-        li.appendChild(durationSpan);
-        
+        const count = document.createElement('span');
+        count.className = 'playlist-group-count';
+        count.textContent = `${playlist.tracks.length} ${playlist.tracks.length === 1 ? 'canción' : 'canciones'}`;
+
+        heading.appendChild(title);
+        heading.appendChild(count);
+        group.appendChild(heading);
+
+        if (playlist.error) {
+            const errorMessage = document.createElement('p');
+            errorMessage.className = 'playlist-group-status';
+            errorMessage.textContent = playlist.error;
+            group.appendChild(errorMessage);
+        }
+
+        const list = document.createElement('ul');
+        list.className = 'playlist-list';
+
         const audio = document.getElementById('audio-player');
         const playButton = document.getElementById('play-button');
-        li.addEventListener('click', function() {
-            playTrack(index, audio, playButton, playlistEl);
+
+        if (playlist.tracks.length === 0 && !playlist.error) {
+            const emptyItem = document.createElement('li');
+            emptyItem.className = 'playlist-item playlist-item-empty';
+            emptyItem.textContent = 'Sin canciones por ahora';
+            list.appendChild(emptyItem);
+        }
+
+        playlist.tracks.forEach((track, index) => {
+            const li = document.createElement('li');
+            li.className = 'playlist-item';
+            li.dataset.playlistId = playlist.id;
+            li.dataset.trackIndex = index.toString();
+            if (playlist.id === playerState.activePlaylistId && index === playerState.currentTrackIndex) {
+                li.classList.add('active');
+            }
+
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'playlist-item-name';
+            nameSpan.textContent = track.name;
+
+            const durationSpan = document.createElement('span');
+            durationSpan.className = 'playlist-item-duration';
+            durationSpan.dataset.playlistId = playlist.id;
+            durationSpan.dataset.trackDuration = index.toString();
+            durationSpan.textContent = formatTrackDuration(track.duration);
+
+            li.appendChild(nameSpan);
+            li.appendChild(durationSpan);
+
+            li.addEventListener('click', function() {
+                playTrack(index, audio, playButton, playlistEl, playlist.id);
+            });
+
+            list.appendChild(li);
         });
 
-        playlistEl.appendChild(li);
+        group.appendChild(list);
+        playlistEl.appendChild(group);
     });
 }
 
@@ -312,33 +459,35 @@ async function loadPlaylistDurations() {
     const requestId = durationRequestId + 1;
     durationRequestId = requestId;
 
-    for (let index = 0; index < playerState.playlist.length; index++) {
-        if (requestId !== durationRequestId) return;
-
-        const track = playerState.playlist[index];
-        if (!track || track.duration > 0 || !track.url) continue;
-
-        try {
-            const duration = await readAudioDuration(track.url);
+    for (const playlist of playerState.playlists) {
+        for (let index = 0; index < playlist.tracks.length; index++) {
             if (requestId !== durationRequestId) return;
 
-            track.duration = duration;
-            updatePlaylistDuration(index, duration);
+            const track = playlist.tracks[index];
+            if (!track || track.duration > 0 || !track.url) continue;
 
-            if (index === playerState.currentTrackIndex) {
-                const durationEl = document.getElementById('duration');
-                if (durationEl) {
-                    durationEl.textContent = formatTrackDuration(duration);
+            try {
+                const duration = await readAudioDuration(track.url);
+                if (requestId !== durationRequestId) return;
+
+                track.duration = duration;
+                updatePlaylistDuration(playlist.id, index, duration);
+
+                if (playlist.id === playerState.activePlaylistId && index === playerState.currentTrackIndex) {
+                    const durationEl = document.getElementById('duration');
+                    if (durationEl) {
+                        durationEl.textContent = formatTrackDuration(duration);
+                    }
                 }
+            } catch (err) {
+                console.warn('No se pudo leer la duración del track:', track.name, err);
             }
-        } catch (err) {
-            console.warn('No se pudo leer la duración del track:', track.name, err);
         }
     }
 }
 
-function updatePlaylistDuration(index, duration) {
-    const durationEl = document.querySelector(`[data-track-duration="${index}"]`);
+function updatePlaylistDuration(playlistId, index, duration) {
+    const durationEl = document.querySelector(`[data-playlist-id="${playlistId}"][data-track-duration="${index}"]`);
     if (durationEl) {
         durationEl.textContent = formatTrackDuration(duration);
     }
