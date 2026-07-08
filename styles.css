@@ -29,29 +29,28 @@
 }
 
 body[data-playlist-theme="chill-out"] {
-    --primary-color: #4b5258;
-    --secondary-color: #7c878f;
+    --primary-color: #4ecdc4;
+    --secondary-color: #17d6c7;
     --dark-bg: #2b2d30;
     --light-bg: #3a3d40;
-    --text-color: #e6e8ea;
-    --text-secondary: #c5cbd0;
-    --accent: #111417;
-    --link-color: #e2d66f;
-    --link-hover-color: #b8aa28;
-    --player-highlight-border: #e2d66f;
-    --section-border: rgba(31, 36, 40, 0.14);
-    --soft-panel-bg: rgba(31, 36, 40, 0.055);
-    --soft-panel-strong: rgba(31, 36, 40, 0.1);
-    --playlist-hover-bg: rgba(75, 82, 88, 0.12);
-    --playlist-active-bg: rgba(75, 82, 88, 0.18);
-    --control-bg: rgba(75, 82, 88, 0.12);
-    --page-shadow: rgba(31, 36, 40, 0.18);
-    --waveform-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(221, 224, 226, 0.9));
-    --waveform-border: rgba(31, 36, 40, 0.2);
-    --hero-bg: linear-gradient(135deg, #f8f9f9 0%, #d8dcdf 100%);
-    --icon-ink: #f7f8f8;
-    --text-border-color: transparent;
-    --text-border: none;
+    --text-color: #4ee6d6;
+    --text-secondary: #a3d7d0;
+    --accent: #e8f7a6;
+    --link-color: #e8f7a6;
+    --link-hover-color: #f4f9c7;
+    --player-highlight-border: #e8f7a6;
+    --section-border: rgba(78, 205, 196, 0.2);
+    --soft-panel-bg: rgba(78, 205, 196, 0.055);
+    --soft-panel-strong: rgba(78, 205, 196, 0.11);
+    --playlist-hover-bg: rgba(78, 205, 196, 0.14);
+    --playlist-active-bg: rgba(78, 205, 196, 0.24);
+    --control-bg: rgba(78, 205, 196, 0.14);
+    --page-shadow: rgba(78, 205, 196, 0.18);
+    --waveform-bg: linear-gradient(180deg, rgba(43, 45, 48, 0.96), rgba(58, 61, 64, 0.82));
+    --waveform-border: rgba(78, 205, 196, 0.28);
+    --hero-bg: linear-gradient(135deg, #2b2d30 0%, #3a3d40 100%);
+    --icon-ink: #030303;
+    --text-border-color: rgba(78, 205, 196, 0.52);
 }
 
 body[data-playlist-theme="techno-freaks"] {
