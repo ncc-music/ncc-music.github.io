@@ -7,11 +7,67 @@
     --text-color: #17a5a5;
     --text-secondary: #b0b0b0;
     --accent: #cbff3d;
+    --section-border: rgba(78, 205, 196, 0.18);
+    --soft-panel-bg: rgba(255, 255, 255, 0.05);
+    --soft-panel-strong: rgba(255, 255, 255, 0.1);
+    --playlist-hover-bg: rgba(78, 205, 196, 0.14);
+    --playlist-active-bg: rgba(78, 205, 196, 0.24);
+    --control-bg: rgba(78, 205, 196, 0.14);
+    --page-shadow: rgba(78, 205, 196, 0.18);
+    --waveform-bg: linear-gradient(180deg, rgba(3, 3, 3, 0.88), rgba(3, 3, 3, 0.62));
+    --waveform-border: rgba(78, 205, 196, 0.22);
+    --hero-bg: linear-gradient(135deg, var(--light-bg) 0%, rgba(78, 205, 196, 0.1) 100%);
+    --icon-ink: #030303;
     --text-border-color: var(--secondary-color);
     --text-border: -0.45px -0.45px 0 var(--text-border-color),
                    0.45px -0.45px 0 var(--text-border-color),
                    -0.45px 0.45px 0 var(--text-border-color),
                    0.45px 0.45px 0 var(--text-border-color);
+}
+
+body[data-playlist-theme="chill-out"] {
+    --primary-color: #4b5258;
+    --secondary-color: #7c878f;
+    --dark-bg: #e5e7e9;
+    --light-bg: #f7f8f8;
+    --text-color: #1f2428;
+    --text-secondary: #5f686f;
+    --accent: #111417;
+    --section-border: rgba(31, 36, 40, 0.14);
+    --soft-panel-bg: rgba(31, 36, 40, 0.055);
+    --soft-panel-strong: rgba(31, 36, 40, 0.1);
+    --playlist-hover-bg: rgba(75, 82, 88, 0.12);
+    --playlist-active-bg: rgba(75, 82, 88, 0.18);
+    --control-bg: rgba(75, 82, 88, 0.12);
+    --page-shadow: rgba(31, 36, 40, 0.18);
+    --waveform-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(221, 224, 226, 0.9));
+    --waveform-border: rgba(31, 36, 40, 0.2);
+    --hero-bg: linear-gradient(135deg, #f8f9f9 0%, #d8dcdf 100%);
+    --icon-ink: #f7f8f8;
+    --text-border-color: transparent;
+    --text-border: none;
+}
+
+body[data-playlist-theme="techno-freaks"] {
+    --primary-color: #18f0ff;
+    --secondary-color: #cbff3d;
+    --dark-bg: #000000;
+    --light-bg: #08090b;
+    --text-color: #e8fbff;
+    --text-secondary: #8b969c;
+    --accent: #ff2bd6;
+    --section-border: rgba(203, 255, 61, 0.2);
+    --soft-panel-bg: rgba(255, 255, 255, 0.045);
+    --soft-panel-strong: rgba(255, 255, 255, 0.09);
+    --playlist-hover-bg: rgba(203, 255, 61, 0.12);
+    --playlist-active-bg: rgba(24, 240, 255, 0.16);
+    --control-bg: rgba(24, 240, 255, 0.12);
+    --page-shadow: rgba(24, 240, 255, 0.18);
+    --waveform-bg: linear-gradient(180deg, rgba(0, 0, 0, 0.96), rgba(10, 10, 12, 0.78));
+    --waveform-border: rgba(203, 255, 61, 0.24);
+    --hero-bg: linear-gradient(135deg, #000000 0%, #0d1013 100%);
+    --icon-ink: #030303;
+    --text-border-color: rgba(24, 240, 255, 0.72);
 }
 
 /* Reset y estilos base */
@@ -31,6 +87,7 @@ body {
     color: var(--text-color);
     line-height: 1.6;
     text-shadow: var(--text-border);
+    transition: background-color 0.35s ease, color 0.35s ease;
 }
 
 button,
@@ -52,7 +109,7 @@ select {
 
 /* Spinner de carga */
 .spinner {
-    border: 4px solid rgba(255, 107, 107, 0.2);
+    border: 4px solid var(--soft-panel-strong);
     border-top: 4px solid var(--primary-color);
     border-radius: 50%;
     width: 40px;
@@ -69,7 +126,7 @@ select {
 /* Estilos adicionales para Google Drive */
 
 .gdrive-config {
-    background-color: rgba(78, 205, 196, 0.1);
+    background-color: var(--soft-panel-bg);
     border: 2px solid var(--secondary-color);
     border-radius: 10px;
     padding: 20px;
@@ -86,7 +143,7 @@ select {
     width: 100%;
     padding: 12px;
     margin-bottom: 12px;
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--soft-panel-bg);
     border: 1px solid var(--secondary-color);
     border-radius: 6px;
     color: var(--text-color);
@@ -97,7 +154,7 @@ select {
 .gdrive-input:focus {
     outline: none;
     border-color: var(--primary-color);
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--soft-panel-strong);
 }
 
 .load-btn {
@@ -125,7 +182,7 @@ select {
 
 .toggle-config-btn {
     padding: 8px 15px;
-    background-color: rgba(78, 205, 196, 0.2);
+    background-color: var(--control-bg);
     color: var(--secondary-color);
     border: 1px solid var(--secondary-color);
     border-radius: 6px;
@@ -137,7 +194,7 @@ select {
 }
 
 .toggle-config-btn:hover {
-    background-color: rgba(78, 205, 196, 0.3);
+    background-color: var(--playlist-hover-bg);
 }
 
 .load-status {
@@ -186,6 +243,7 @@ select {
     top: 0;
     z-index: 1000;
     border-bottom: 2px solid var(--primary-color);
+    transition: background-color 0.35s ease, border-color 0.35s ease;
 }
 
 .navbar .container {
@@ -232,16 +290,16 @@ select {
     width: 34px;
     height: 34px;
     background-color: var(--secondary-color);
-    border: 1px solid rgba(78, 205, 196, 0.82);
-    color: #030303;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+    border: 1px solid var(--secondary-color);
+    color: var(--icon-ink);
+    box-shadow: 0 4px 12px var(--page-shadow);
 }
 
 .nav-social-links .social-btn:hover,
 .nav-social-links .social-btn:focus-visible {
     background-color: var(--accent);
     border-color: var(--accent);
-    color: #030303;
+    color: var(--icon-ink);
     transform: translateY(-1px);
 }
 
@@ -254,8 +312,9 @@ select {
 /* Sección Hero */
 .hero {
     padding: 100px 0;
-    background: linear-gradient(135deg, var(--light-bg) 0%, rgba(255, 107, 107, 0.1) 100%);
+    background: var(--hero-bg);
     text-align: center;
+    transition: background 0.35s ease;
 }
 
 .hero-content h1 {
@@ -283,13 +342,14 @@ select {
 
 .cta-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 30px rgba(255, 107, 107, 0.4);
+    box-shadow: 0 10px 30px var(--page-shadow);
 }
 
 /* Sección del Reproductor */
 .player-section {
     padding: 80px 0;
     background-color: var(--dark-bg);
+    transition: background-color 0.35s ease;
 }
 
 .player-section h2 {
@@ -303,9 +363,10 @@ select {
     background-color: var(--light-bg);
     border-radius: 15px;
     padding: 40px;
-    box-shadow: 0 20px 60px rgba(255, 107, 107, 0.2);
+    box-shadow: 0 20px 60px var(--page-shadow);
     max-width: 600px;
     margin: 0 auto;
+    transition: background-color 0.35s ease, box-shadow 0.35s ease;
 }
 
 .player-display {
@@ -378,8 +439,8 @@ select {
     display: block;
     width: 100%;
     height: 92px;
-    background: linear-gradient(180deg, rgba(3, 3, 3, 0.88), rgba(3, 3, 3, 0.62));
-    border: 1px solid rgba(78, 205, 196, 0.22);
+    background: var(--waveform-bg);
+    border: 1px solid var(--waveform-border);
     border-radius: 8px;
     box-shadow: inset 0 0 28px rgba(0, 0, 0, 0.45);
     cursor: pointer;
@@ -458,7 +519,7 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 .control-btn {
-    background-color: rgba(255, 107, 107, 0.2);
+    background-color: var(--control-bg);
     border: 2px solid var(--primary-color);
     color: var(--text-color);
     font-size: 1.2rem;
@@ -493,7 +554,7 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 .play-btn:hover {
-    background-color: #ff5252;
+    background-color: var(--accent);
 }
 
 /* Control de volumen */
@@ -504,8 +565,8 @@ input[type="range"]::-moz-range-thumb:hover {
     width: min(100%, 260px);
     margin: 0 auto 24px;
     padding: 8px 10px;
-    background-color: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(78, 205, 196, 0.18);
+    background-color: var(--soft-panel-bg);
+    border: 1px solid var(--section-border);
     border-radius: 8px;
     box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.18);
 }
@@ -524,7 +585,7 @@ input[type="range"]::-moz-range-thumb:hover {
 .volume-control input[type="range"] {
     flex: 1;
     height: 3px;
-    background: rgba(78, 205, 196, 0.25);
+    background: var(--section-border);
 }
 
 .volume-control input[type="range"]::-webkit-slider-thumb {
@@ -547,9 +608,77 @@ input[type="range"]::-moz-range-thumb:hover {
     font-variant-numeric: tabular-nums;
 }
 
+.playlist-theme-control {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin: 0 auto 24px;
+    padding: 10px;
+    background-color: var(--soft-panel-bg);
+    border: 1px solid var(--section-border);
+    border-radius: 8px;
+}
+
+.theme-option-label {
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    line-height: 1.2;
+    text-align: center;
+    transition: color 0.25s ease;
+}
+
+.theme-option-label.active {
+    color: var(--primary-color);
+}
+
+.theme-switch {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.theme-switch input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.theme-switch-track {
+    position: relative;
+    display: inline-flex;
+    width: 58px;
+    height: 30px;
+    padding: 3px;
+    background-color: var(--dark-bg);
+    border: 1px solid var(--primary-color);
+    border-radius: 999px;
+    box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.22);
+    transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.theme-switch-thumb {
+    width: 22px;
+    height: 22px;
+    background-color: var(--secondary-color);
+    border-radius: 50%;
+    box-shadow: 0 2px 8px var(--page-shadow);
+    transform: translateX(0);
+    transition: transform 0.25s ease, background-color 0.25s ease;
+}
+
+.theme-switch input:checked + .theme-switch-track .theme-switch-thumb {
+    transform: translateX(28px);
+}
+
+.theme-switch input:focus-visible + .theme-switch-track {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+
 /* Playlist */
 .playlist {
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid var(--section-border);
     padding-top: 20px;
 }
 
@@ -565,7 +694,11 @@ input[type="range"]::-moz-range-thumb:hover {
 
 .playlist-group + .playlist-group {
     padding-top: 20px;
-    border-top: 1px solid rgba(78, 205, 196, 0.16);
+    border-top: 1px solid var(--section-border);
+}
+
+.playlist-group.active .playlist-group-title {
+    color: var(--primary-color);
 }
 
 .playlist-group-heading {
@@ -603,7 +736,7 @@ input[type="range"]::-moz-range-thumb:hover {
 .playlist-item {
     padding: 12px;
     margin-bottom: 8px;
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--soft-panel-bg);
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s;
@@ -613,12 +746,12 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 .playlist-item:hover {
-    background-color: rgba(255, 107, 107, 0.2);
+    background-color: var(--playlist-hover-bg);
     transform: translateX(5px);
 }
 
 .playlist-item.active {
-    background-color: rgba(255, 107, 107, 0.3);
+    background-color: var(--playlist-active-bg);
     border-left: 3px solid var(--primary-color);
 }
 
@@ -630,7 +763,7 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 .playlist-item-empty:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--soft-panel-bg);
     transform: none;
 }
 
@@ -652,6 +785,7 @@ input[type="range"]::-moz-range-thumb:hover {
 .about-section {
     padding: 80px 0;
     background-color: var(--light-bg);
+    transition: background-color 0.35s ease;
 }
 
 .about-section h2 {
@@ -716,6 +850,7 @@ input[type="range"]::-moz-range-thumb:hover {
     padding: 80px 0;
     background-color: var(--dark-bg);
     text-align: center;
+    transition: background-color 0.35s ease;
 }
 
 .contact-section h2 {
@@ -738,7 +873,7 @@ input[type="range"]::-moz-range-thumb:hover {
     width: 58px;
     height: 58px;
     background-color: var(--secondary-color);
-    color: var(--dark-bg);
+    color: var(--icon-ink);
     text-decoration: none;
     border-radius: 50%;
     transition: all 0.3s;
@@ -749,7 +884,7 @@ input[type="range"]::-moz-range-thumb:hover {
 .social-btn:focus-visible {
     background-color: var(--accent);
     border-color: var(--accent);
-    color: #030303;
+    color: var(--icon-ink);
     outline: none;
     transform: translateY(-2px);
 }
@@ -788,7 +923,8 @@ input[type="range"]::-moz-range-thumb:hover {
     padding: 30px 0;
     text-align: center;
     color: var(--text-secondary);
-    border-top: 1px solid rgba(255, 107, 107, 0.2);
+    border-top: 1px solid var(--section-border);
+    transition: background-color 0.35s ease, border-color 0.35s ease;
 }
 
 /* Responsive */

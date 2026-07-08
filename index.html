@@ -7,7 +7,7 @@
         <link rel="stylesheet" href="styles.css">
         <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
     </head>
-    <body>
+    <body data-playlist-theme="chill-out">
         <!-- Navegación -->
         <nav class="navbar">
             <div class="container">
@@ -92,6 +92,16 @@
                         <input type="range" id="volume-slider" min="0" max="100" value="80">
                         <span id="volume-value">80%</span>
                     </div>
+                    <div class="playlist-theme-control" role="group" aria-label="Color de playlist">
+                        <span class="theme-option-label active" data-theme-option="chill-out">My Chill Out</span>
+                        <label class="theme-switch" for="playlist-theme-switch">
+                            <input type="checkbox" id="playlist-theme-switch" aria-label="Cambiar entre playlists">
+                            <span class="theme-switch-track">
+                                <span class="theme-switch-thumb"></span>
+                            </span>
+                        </label>
+                        <span class="theme-option-label" data-theme-option="techno-freaks">for techno freaks</span>
+                    </div>
                     <div class="playlist">
                         <h3>Playlists (<span id="playlist-count">0</span> canciones)</h3>
                         <div id="playlist" class="playlist-groups"></div>
@@ -134,6 +144,6 @@
                 <p>&copy; 2026 NCC-Music. Creado con ❤️ para los amantes de la música.</p>
             </div>
         </footer>
-        <script src="js/gdrive-player.js?v=20260708-r2-playlists"></script>
+        <script src="js/gdrive-player.js?v=20260708-playlist-theme-switch"></script>
     </body>
 </html>
