@@ -369,20 +369,9 @@ select {
 
 /* Sección del Reproductor */
 .player-section {
-    padding: 80px 0;
+    padding: 42px 0 80px;
     background-color: var(--dark-bg);
     transition: background-color 0.35s ease;
-}
-
-.player-section h2 {
-    text-align: center;
-    font-size: 2.5rem;
-    margin-bottom: 1.25rem;
-    color: var(--primary-color);
-}
-
-.coming-date {
-    color: var(--link-color);
 }
 
 .player-container {
@@ -641,10 +630,10 @@ input[type="range"]::-moz-range-thumb:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    max-width: 600px;
+    gap: 14px;
+    max-width: 640px;
     margin: 0 auto 28px;
-    padding: 10px;
+    padding: 12px 14px;
     background-color: var(--soft-panel-bg);
     border: 1px solid var(--player-highlight-border);
     border-radius: 8px;
@@ -652,7 +641,8 @@ input[type="range"]::-moz-range-thumb:hover {
 
 .theme-option-label {
     color: var(--text-secondary);
-    font-size: 0.78rem;
+    font-size: 0.92rem;
+    font-weight: 700;
     line-height: 1.2;
     text-align: center;
     transition: color 0.25s ease;
@@ -677,8 +667,8 @@ input[type="range"]::-moz-range-thumb:hover {
 .theme-switch-track {
     position: relative;
     display: inline-flex;
-    width: 58px;
-    height: 30px;
+    width: 66px;
+    height: 34px;
     padding: 3px;
     background-color: var(--dark-bg);
     border: 1px solid var(--player-highlight-border);
@@ -688,8 +678,8 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 .theme-switch-thumb {
-    width: 22px;
-    height: 22px;
+    width: 26px;
+    height: 26px;
     background-color: var(--secondary-color);
     border-radius: 50%;
     box-shadow: 0 2px 8px var(--page-shadow);
@@ -698,7 +688,7 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 .theme-switch input:checked + .theme-switch-track .theme-switch-thumb {
-    transform: translateX(28px);
+    transform: translateX(32px);
 }
 
 .theme-switch input:focus-visible + .theme-switch-track {
@@ -1011,7 +1001,6 @@ input[type="range"]::-moz-range-thumb:hover {
         font-size: 1.2rem;
     }
 
-    .player-section h2,
     .about-section h2,
     .contact-section h2 {
         font-size: 2rem;
@@ -1046,6 +1035,25 @@ input[type="range"]::-moz-range-thumb:hover {
         height: 16px;
     }
 
+    .playlist-theme-control {
+        gap: 8px;
+        padding: 8px;
+    }
+
+    .theme-switch-track {
+        width: 62px;
+        height: 32px;
+    }
+
+    .theme-switch-thumb {
+        width: 24px;
+        height: 24px;
+    }
+
+    .theme-switch input:checked + .theme-switch-track .theme-switch-thumb {
+        transform: translateX(30px);
+    }
+
     .hero-content h1 {
         font-size: 1.5rem;
     }
@@ -1059,7 +1067,6 @@ input[type="range"]::-moz-range-thumb:hover {
         height: 80px;
     }
 
-    .player-section h2,
     .about-section h2,
     .contact-section h2 {
         font-size: 1.5rem;
