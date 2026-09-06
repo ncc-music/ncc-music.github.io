@@ -114,6 +114,25 @@ input[type=range]:disabled { opacity: .4; cursor: default; }
 #waveform-canvas { display: block; width: 100%; height: 90px; cursor: crosshair; touch-action: none; }
 #waveform-status { font-size: 12px; color: var(--muted); }
 .player-message { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #292a2e; border: 1px solid #ffffff20; padding: 12px 20px; width: max-content; max-width: 90vw; border-radius: 6px; font-size: 14px; box-shadow: 0 4px 20px #0005; }
+/* Collection shortcuts retain the artwork from the first redesign. */
+.collections-section { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; margin-top: 22px; }
+.collection-card { display: flex; align-items: center; min-height: 140px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; transition: background .2s; }
+.collection-card:hover { background: #222427; }
+.collection-art { width: 128px; min-height: 140px; align-self: stretch; flex-shrink: 0; position: relative; overflow: hidden; }
+.chill-cover { background: #043335 url("assets/chill-cover.jpg") center / cover; }
+.art-label { position: absolute; bottom: 17px; left: 15px; font-size: 26px; font-weight: 800; letter-spacing: -1px; line-height: .95; }
+.techno-cover { display: grid; place-items: center; background: #0c0d0e; }
+.techno-cover img { width: 96px; height: 96px; object-fit: contain; transform: rotate(9deg); }
+.collection-copy { min-width: 0; padding: 18px; }
+.collection-copy .eyebrow { font-size: 11px; letter-spacing: 1px; }
+.collection-copy h2 { margin: 5px 0; font-size: 21px; letter-spacing: -.5px; font-weight: 600; }
+.collection-copy p { font-size: 14px; color: var(--muted); }
+.collection-arrow { width: 18px; height: 18px; margin-left: auto; margin-right: 18px; color: var(--muted); }
+/* Original round social buttons, with the original icons served locally. */
+.social-links { display: flex; justify-content: center; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 32px; padding-top: 26px; border-top: 1px solid var(--line); }
+.social-btn { display: inline-flex; align-items: center; justify-content: center; width: 58px; height: 58px; background: #e8f7a6; color: #030303; text-decoration: none; border-radius: 50%; border: 2px solid #e8f7a6; transition: background .2s, border-color .2s, transform .2s; }
+.social-btn:hover, .social-btn:focus-visible { background: #f4f9c7; border-color: #f4f9c7; transform: translateY(-2px); }
+.social-btn img { display: block; width: 28px; height: 28px; object-fit: contain; }
 @media(min-width:1600px) {
     .player-dock { padding-left: max(32px,calc((100vw - 1440px) / 2)); padding-right: max(32px,calc((100vw - 1440px) / 2)); }
 }
@@ -126,6 +145,16 @@ input[type=range]:disabled { opacity: .4; cursor: default; }
     .now-playing { gap: 13px; }
 }
 @media(max-width:760px) {
+    .collections-section { gap: 12px; }
+    .collection-art { width: 94px; }
+    .collection-copy { padding: 14px; }
+    .collection-copy h2 { font-size: 18px; }
+    .collection-copy .eyebrow { font-size: 10px; letter-spacing: .6px; }
+    .collection-copy p { font-size: 13px; }
+    .collection-arrow { display: none; }
+    .techno-cover img { width: 74px; height: 74px; }
+    .art-label { font-size: 22px; left: 12px; }
+
     .site-header { padding: 0 24px; height: 82px; gap: 36px; }
     main { padding: 38px 24px calc(var(--dock-height) + 32px); }
     .page-heading { margin-bottom: 26px; }
@@ -140,6 +169,15 @@ input[type=range]:disabled { opacity: .4; cursor: default; }
     .player-options { display: none; }
 }
 @media(max-width:540px) {
+    .collections-section { margin-top: 16px; }
+    .collection-card { display: block; }
+    .collection-art { width: 100%; height: 100px; min-height: 0; }
+    .techno-cover img { width: 77px; height: 77px; }
+    .collection-copy { padding: 12px; }
+    .collection-copy h2 { font-size: 18px; }
+    .collection-copy p { font-size: 12px; }
+    .social-links { gap: 14px; margin-top: 25px; padding-top: 25px; }
+
     :root { --dock-height: 144px; }
     .site-header { height: 76px; padding: 0 20px; gap: 31px; }
     .brand { font-size: 35px; }
@@ -194,4 +232,5 @@ input[type=range]:disabled { opacity: .4; cursor: default; }
 }
 @media(prefers-reduced-motion:reduce) {
     .now-cover { animation: none; }
+    .collection-card, .social-btn { transition: none; }
 }

@@ -67,7 +67,7 @@
                 ]
             }
         </script>
-        <link rel="stylesheet" href="styles.css?v=20260906-minimal">
+        <link rel="stylesheet" href="styles.css?v=20260906-collections">
         <link rel="icon" type="image/png" href="assets/player-cover.png">
     </head>
     <body>
@@ -105,6 +105,18 @@
                 <div class="radio-copy"><h2 id="radio-title">NCC Radio</h2><p>Chill Music y Techno Freaks, en continuo.</p></div>
                 <button class="primary-button" id="radio-button" disabled><svg class="icon" aria-hidden="true"><use href="#i-play"/></svg><span>Escuchar radio</span></button>
             </section>
+            <section class="collections-section" id="collections-section" aria-label="Colecciones">
+                <a class="collection-card" href="#chill-out">
+                    <div class="collection-art chill-cover" aria-hidden="true"><span class="art-label">CHILL<br>MUSIC</span></div>
+                    <div class="collection-copy"><span class="eyebrow">BAJÁ UN CAMBIO</span><h2>Chill Music</h2><p>Para dejarse llevar.</p></div>
+                    <svg class="icon collection-arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
+                </a>
+                <a class="collection-card" href="#techno-freaks">
+                    <div class="collection-art techno-cover"><img src="assets/player-cover.png" alt=""></div>
+                    <div class="collection-copy"><span class="eyebrow">SUBÍ LA ENERGÍA</span><h2>Techno Freaks</h2><p>Directo a la pista.</p></div>
+                    <svg class="icon collection-arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
+                </a>
+            </section>
             <section class="sets-section" id="sets-section" aria-labelledby="sets-title">
                 <h2 id="sets-title" class="sr-only">Live sets</h2>
                 <div class="sets-toolbar">
@@ -119,6 +131,12 @@
                 <div id="playlist" class="playlist-groups"></div>
             </section>
                 <section class="about-section" id="about-section" hidden aria-labelledby="about-title"><div class="about-art"><img src="assets/player-cover.png" alt="Identidad visual de NCC"></div><div class="about-copy"><p class="eyebrow">DETRÁS DE LA MÚSICA</p><h2 id="about-title">Nicolás Cardú.</h2><p>Does it matter? I'm Nicølás Cardú.<br>Enjoy the music! x)</p><p>Sets en audio lossless, FLAC y WAV.</p><div class="about-links"><a href="https://www.soundcloud.com/nicolascardu" target="_blank" rel="noopener noreferrer">SoundCloud ↗</a><a href="https://www.instagram.com/ncc87l" target="_blank" rel="noopener noreferrer">Instagram ↗</a><a href="https://www.facebook.com/ncc87l" target="_blank" rel="noopener noreferrer">Facebook ↗</a><a href="https://t.me/nicolascardu" target="_blank" rel="noopener noreferrer">Descargar en Telegram ↗</a></div><a class="booking-link" href="mailto:bookings@ncc.ar">Bookings: bookings@ncc.ar</a></div></section>
+            <nav class="social-links" aria-label="Redes sociales de Nicolás Cardú">
+                <a href="https://www.soundcloud.com/nicolascardu" class="social-btn" title="SoundCloud" aria-label="SoundCloud" target="_blank" rel="noopener noreferrer"><img src="assets/icons/soundcloud.svg" alt="" aria-hidden="true"></a>
+                <a href="https://www.instagram.com/ncc87l" class="social-btn" title="Instagram" aria-label="Instagram" target="_blank" rel="noopener noreferrer"><img src="assets/icons/instagram.svg" alt="" aria-hidden="true"></a>
+                <a href="https://www.facebook.com/ncc87l" class="social-btn" title="Facebook" aria-label="Facebook" target="_blank" rel="noopener noreferrer"><img src="assets/icons/facebook.svg" alt="" aria-hidden="true"></a>
+                <a href="https://t.me/nicolascardu" class="social-btn" title="Telegram" aria-label="Telegram" target="_blank" rel="noopener noreferrer"><img src="assets/icons/telegram.svg" alt="" aria-hidden="true"></a>
+            </nav>
             <footer class="page-footer">
                 <span>© 2026 NCC Music</span>
                 <div><a href="https://t.me/nicolascardu" target="_blank" rel="noopener noreferrer">Descargas ↗</a><a href="#acerca">Info y contacto</a></div>
@@ -131,6 +149,6 @@
             <p id="player-message" class="player-message" role="status" hidden></p>
         </section>
         <audio id="audio-player" preload="metadata"></audio>
-        <script src="js/gdrive-player.js?v=20260906-minimal"></script>
+        <script src="js/gdrive-player.js?v=20260906-collections"></script>
     </body>
 </html>

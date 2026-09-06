@@ -276,6 +276,7 @@ function route() {
     playerState.filter = collection ? collection.id : 'all';
     $('page-title').textContent = collection?.title || ({ sets: 'Live sets', radio: 'Radio', acerca: 'NCC' })[view];
     $('radio-feature').hidden = view === 'acerca';
+    $('collections-section').hidden = view !== 'sets';
     $('sets-section').hidden = view === 'acerca';
     $('about-section').hidden = view !== 'acerca';
     $('sets-title').textContent = view === 'radio' ? 'En la radio' : collection ? 'Sets de la colección' : 'Live sets';
