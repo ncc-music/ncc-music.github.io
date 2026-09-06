@@ -10,7 +10,7 @@ const playlistSources = [
 const playerState = {
     playlists: playlistSources.map(source => ({ ...source, tracks: [], error: '' })),
     activePlaylistId: 'techno-freaks', currentTrackIndex: 0,
-    isPlaying: false, radio: false, filter: 'all', loaded: false, requestId: 0
+    isPlaying: false, isBuffering: false, radio: false, filter: 'all', loaded: false, requestId: 0
 };
 const waveformState = {
     canvas: null, status: null, peaks: [], cache: new Map(), requestId: 0,
@@ -85,10 +85,6 @@ function renderCatalogue() {
     const root = $('playlist');
     root.replaceChildren();
     $('playlist-count').textContent = getTotalTrackCount();
-    document.querySelectorAll('[data-collection-count]').forEach(el => {
-        const p = getPlaylistById(el.dataset.collectionCount);
-        el.textContent = p.error ? 'No disponible por ahora' : `${p.tracks.length} ${p.tracks.length === 1 ? 'set' : 'sets'} · Selección NCC`;
-    });
     const selected = playerState.playlists.filter(p => playerState.filter === 'all' || p.id === playerState.filter);
     const errors = selected.filter(p => p.error);
     if (errors.length) {
@@ -165,7 +161,8 @@ function syncPlaybackUI() {
     const radioPlaying = playerState.radio && playing;
     $('radio-button').innerHTML = `${icon(radioPlaying ? 'pause' : 'play')}<span>${radioPlaying ? 'Pausar radio' : playerState.radio ? 'Continuar radio' : 'Escuchar radio'}</span>`;
     document.body.dataset.radio = playerState.radio ? 'on' : 'off';
-    $('player-mode').textContent = playerState.radio ? 'NCC RADIO · SETS EN CONTINUO' : currentTrack() ? 'TU COLECCIÓN' : 'LISTO PARA ESCUCHAR';
+    document.body.dataset.playing = playing && !playerState.isBuffering ? 'true' : 'false';
+    $('player-mode').textContent = playerState.radio ? 'NCC RADIO' : currentTrack() ? 'LIVE SET' : 'LISTO PARA ESCUCHAR';
     syncActiveRows();
     if ('mediaSession' in navigator) navigator.mediaSession.playbackState = playing ? 'playing' : 'paused';
 }
@@ -175,10 +172,10 @@ function selectTrack(playlistId, index, radio = false) {
     playerState.requestId++;
     audio.pause();
     playerState.activePlaylistId = playlistId; playerState.currentTrackIndex = index;
-    playerState.radio = radio; playerState.isPlaying = false;
+    playerState.radio = radio; playerState.isPlaying = false; playerState.isBuffering = true;
     audio.src = track.url;
     $('track-name').textContent = track.name; $('track-artist').textContent = track.artist;
-    $('now-cover').src = track.cover; $('audio-quality').textContent = track.format;
+    $('audio-quality').textContent = track.format;
     $('duration').textContent = formatTrackDuration(track.duration); $('current-time').textContent = '0:00';
     $('seek-slider').value = 0; $('seek-slider').disabled = true; paintRange($('seek-slider'), 0);
     showMessage(''); resetWaveform(audio); syncPlaybackUI();
@@ -273,17 +270,15 @@ async function loadPlaylistDurations() {
     }
 }
 function route() {
-    const requested = location.hash.slice(1) || 'explorar';
+    const requested = location.hash.slice(1) || 'sets';
     const collection = playlistSources.find(p => p.id === requested);
-    const view = collection ? 'sets' : ['sets', 'radio', 'acerca'].includes(requested) ? requested : 'explorar';
+    const view = collection ? 'sets' : ['radio', 'acerca'].includes(requested) ? requested : 'sets';
     playerState.filter = collection ? collection.id : 'all';
-    $('page-title').textContent = collection?.title || ({ explorar: 'Explorar', sets: 'Mis sets', radio: 'NCC Radio', acerca: 'Acerca de NCC' })[view];
-    $('page-context').textContent = $('page-title').textContent;
-    $('radio-feature').hidden = !['explorar', 'radio'].includes(view);
-    $('collections-section').hidden = view !== 'explorar';
+    $('page-title').textContent = collection?.title || ({ sets: 'Live sets', radio: 'Radio', acerca: 'NCC' })[view];
+    $('radio-feature').hidden = view === 'acerca';
     $('sets-section').hidden = view === 'acerca';
     $('about-section').hidden = view !== 'acerca';
-    $('sets-title').textContent = view === 'radio' ? 'En la radio' : collection ? 'Sets de la colección' : 'Todos los sets';
+    $('sets-title').textContent = view === 'radio' ? 'En la radio' : collection ? 'Sets de la colección' : 'Live sets';
     document.querySelectorAll('[data-view]').forEach(link => {
         const active = link.dataset.view === view;
         link.classList.toggle('active', active);
@@ -304,6 +299,8 @@ function initPlayer() {
     $('radio-button').addEventListener('click', startRadio);
     audio.addEventListener('play', () => { playerState.isPlaying = true; showMessage(''); syncPlaybackUI(); });
     audio.addEventListener('pause', () => { playerState.isPlaying = false; syncPlaybackUI(); });
+    audio.addEventListener('waiting', () => { playerState.isBuffering = true; syncPlaybackUI(); });
+    audio.addEventListener('playing', () => { playerState.isPlaying = true; playerState.isBuffering = false; syncPlaybackUI(); });
     audio.addEventListener('ended', () => nextTrack());
     audio.addEventListener('timeupdate', updateProgress);
     audio.addEventListener('loadedmetadata', updateDuration);

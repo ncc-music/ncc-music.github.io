@@ -8,7 +8,7 @@ function setup() {
     const document = { addEventListener() {}, body: { dataset: {} }, getElementById(id) { if (!elements.has(id)) elements.set(id, element()); return elements.get(id); }, querySelectorAll() { return []; }, querySelector() { return null; } };
     const audio = { src: '', paused: true, currentTime: 0, duration: 100, pause() { this.paused = true; }, async play() { this.paused = false; }, getAttribute() { return this.src; }, removeAttribute() { this.src = ''; }, load() {} };
     const context = vm.createContext({ document, navigator: {}, location: { hostname: 'ncc.ar', origin: 'https://ncc.ar', href: 'https://ncc.ar/', hash: '' }, window: {}, URL, AbortController, console, setTimeout: () => 1, clearTimeout() {}, fetch: async () => { throw new Error('offline'); } });
-    vm.runInContext(fs.readFileSync('js/gdrive-player.js', 'utf8') + '\nglobalThis.app = { playerState, normalizeR2Playlist, radioQueue, playTrack, nextTrack, startRadio, startPlayback, selectTrack, loadCatalogue, route, safeMediaUrl }; resetWaveform = () => {}; loadWaveform = () => {}; renderCatalogue = () => {}; loadPlaylistDurations = () => {};', context);
+    vm.runInContext(fs.readFileSync('js/gdrive-player.js', 'utf8') + '\nglobalThis.app = { playerState, normalizeR2Playlist, radioQueue, playTrack, nextTrack, startRadio, startPlayback, selectTrack, loadCatalogue, route, safeMediaUrl, syncPlaybackUI }; resetWaveform = () => {}; loadWaveform = () => {}; renderCatalogue = () => {}; loadPlaylistDurations = () => {};', context);
     context.fakeAudio = audio; vm.runInContext('audio = fakeAudio;', context);
     const state = context.app.playerState;
     state.playlists.forEach(p => { p.tracks = [0, 1].map(i => ({ name: `${p.title} ${i}`, artist: 'NCC', url: `https://audio.example/${p.id}/${i}.flac`, duration: 100, playlistId: p.id, playlistTitle: p.title, cover: 'cover.jpg', format: 'FLAC' })); });
@@ -72,4 +72,23 @@ test('navigation and collection filters do not replace the playing set', async (
     context.location.hash = '#chill-out'; app.route();
     assert.equal(state.filter, 'chill-out'); assert.equal(state.activePlaylistId, 'techno-freaks');
     assert.equal(state.radio, true); assert.equal(audio.currentTime, 52);
+});
+
+test('NCC logo motion follows playback, buffering and pause without changing its image', () => {
+    const { app, state, context } = setup();
+    const logo = context.document.getElementById('now-cover');
+    logo.src = 'assets/player-cover.png';
+    app.selectTrack('chill-out', 0);
+    assert.equal(logo.src, 'assets/player-cover.png');
+    state.isPlaying = true;
+    state.isBuffering = false;
+    app.syncPlaybackUI();
+    assert.equal(context.document.body.dataset.playing, 'true');
+    state.isBuffering = true;
+    app.syncPlaybackUI();
+    assert.equal(context.document.body.dataset.playing, 'false');
+    state.isBuffering = false;
+    state.isPlaying = false;
+    app.syncPlaybackUI();
+    assert.equal(context.document.body.dataset.playing, 'false');
 });

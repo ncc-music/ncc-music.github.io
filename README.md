@@ -5,7 +5,7 @@ Un reproductor de audio moderno y elegante para archivos de alta calidad, incluy
 
 ## Reproductor NCC Music
 
-El sitio presenta una biblioteca oscura inspirada en reproductores de streaming, con navegación lateral en escritorio y navegación inferior en celular.
+El sitio presenta una interfaz oscura y minimalista: live sets, filtros de colección, acceso directo a la radio y un reproductor fijo. El logo de NCC gira durante la reproducción y se detiene al pausar o cargar el audio; respeta la preferencia de movimiento reducido del dispositivo.
 
 - **NCC Radio** alterna sets de Chill Music y Techno Freaks. Recorre todos los sets disponibles y vuelve al inicio. Es una reproducción continua por visitante, no una emisión en vivo sincronizada.
 - **Mis sets** permite filtrar por colección y reproducir un set puntual. Elegir un set sale del modo radio.
