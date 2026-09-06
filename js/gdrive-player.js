@@ -1,540 +1,357 @@
-// La web vive en GitHub Pages. Esta URL debe apuntar al Worker que lista R2.
-const playlistApiUrl = 'https://rapid-silence-8ef7.nc-music-87a.workers.dev/';
+// Keep the existing R2 catalogue as the single source of truth for all sets.
+const usesHostedProxy = location.hostname.endsWith('.chatgpt.site');
+const playlistApiUrl = usesHostedProxy
+    ? new URL('/api/playlist', location.origin).href
+    : 'https://rapid-silence-8ef7.nc-music-87a.workers.dev/';
 const playlistSources = [
-    {
-        id: 'chill-out',
-        title: 'Chill Music',
-        prefix: 'chill-out/'
-    },
-    {
-        id: 'techno-freaks',
-        title: 'Techno Freaks',
-        prefix: 'techno-freaks/'
-    }
+    { id: 'chill-out', title: 'Chill Music', prefix: 'chill-out/', cover: 'assets/chill-cover.jpg' },
+    { id: 'techno-freaks', title: 'Techno Freaks', prefix: 'techno-freaks/', cover: 'assets/player-cover.jpg' }
 ];
-
-// Estado del reproductor
 const playerState = {
-    isPlaying: false,
-    currentTrackIndex: 0,
-    activePlaylistId: 'techno-freaks',
-    playlist: [],
-    playlists: playlistSources.map(source => ({
-        ...source,
-        tracks: [],
-        error: ''
-    })),
+    playlists: playlistSources.map(source => ({ ...source, tracks: [], error: '' })),
+    activePlaylistId: 'techno-freaks', currentTrackIndex: 0,
+    isPlaying: false, isBuffering: false, radio: false, filter: 'all', loaded: false, requestId: 0
 };
-
 const waveformState = {
-    canvas: null,
-    status: null,
-    peaks: [],
-    cache: new Map(),
-    requestId: 0,
-    isSeeking: false,
-    hoverRatio: null,
-    audioContext: null,
+    canvas: null, status: null, peaks: [], cache: new Map(), requestId: 0,
+    isSeeking: false, hoverRatio: null, audioContext: null, controller: null
 };
+let audio, messageTimer, durationRequestId = 0;
+const $ = id => document.getElementById(id);
+const icon = name => `<svg class="icon" aria-hidden="true"><use href="#i-${name}"/></svg>`;
 
-let durationRequestId = 0;
-
-// Inicialización cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🎵 DOM cargado');
-    try {
-        initPlayer();
-    } catch (err) {
-        console.error('Error en initPlayer:', err);
-    }
-});
-
-function initPlayer() {
-    console.log('📍 Inicializando reproductor...');
-    
-    // Obtener elementos
-    const audio = document.getElementById('audio-player');
-    const playButton = document.getElementById('play-button');
-    const playlistEl = document.getElementById('playlist');
-    const loadingInitial = document.getElementById('loading-initial');
-    const waveformCanvas = document.getElementById('waveform-canvas');
-    const waveformStatus = document.getElementById('waveform-status');
-    
-    if (!audio) {
-        console.error('❌ audio-player no encontrado');
-        return;
-    }
-    if (!playButton) {
-        console.error('❌ play-button no encontrado');
-        return;
-    }
-    if (!playlistEl) {
-        console.error('❌ playlist no encontrado');
-        return;
-    }
-
-    console.log('✅ Elementos encontrados');
-
-    setupWaveform(audio, waveformCanvas, waveformStatus);
-    setupPlaylistThemeSwitch(audio, playButton, playlistEl);
-    
-    // Event listeners
-    audio.addEventListener('timeupdate', function() {
-        updateProgress(audio);
-    });
-    audio.addEventListener('loadedmetadata', function() {
-        updateDuration(audio);
-        drawWaveform(audio);
-    });
-    audio.addEventListener('ended', function() {
-        nextTrack(audio, playButton, playlistEl);
-    });
-
-    playButton.addEventListener('click', function() {
-        togglePlay(audio, playButton);
-    });
-    
-    document.getElementById('prev-button').addEventListener('click', function() {
-        previousTrack(audio, playButton, playlistEl);
-    });
-    
-    document.getElementById('next-button').addEventListener('click', function() {
-        nextTrack(audio, playButton, playlistEl);
-    });
-
-    document.getElementById('volume-slider').addEventListener('input', function(e) {
-        audio.volume = e.target.value / 100;
-        document.getElementById('volume-value').textContent = Math.round(e.target.value) + '%';
-    });
-
-    // Cargar desde R2
-    loadFromR2(audio, playButton, playlistEl, loadingInitial);
-}
-
-async function loadFromR2(audio, playButton, playlistEl, loadingInitial) {
-    console.log('🔄 Cargando desde Cloudflare R2...');
-
-    try {
-        if (!playlistApiUrl) {
-            throw new Error('Falta configurar playlistApiUrl con la URL del Worker.');
-        }
-
-        playerState.playlists = await Promise.all(playlistSources.map(loadPlaylistSource));
-        const preferredPlaylist = getPlaylistById(playerState.activePlaylistId);
-        const firstPlayablePlaylist = getFirstPlayablePlaylist();
-        const initialPlaylist = preferredPlaylist || firstPlayablePlaylist;
-
-        if (initialPlaylist) {
-            setActivePlaylist(initialPlaylist.id, 0);
-        } else {
-            setActivePlaylist(playerState.activePlaylistId || playlistSources[0].id, 0);
-            playerState.playlist = [];
-        }
-
-        playerState.isPlaying = false;
-
-        console.log('✅ Playlists cargadas:', playerState.playlists);
-
-        if (loadingInitial) {
-            loadingInitial.style.display = 'none';
-        }
-
-        updatePlaylistUI(playlistEl);
-
-        if (playerState.playlist.length > 0) {
-            selectTrack(0, audio, playButton, playlistEl, playerState.activePlaylistId);
-            loadPlaylistDurations();
-        } else if (getTotalTrackCount() > 0) {
-            loadPlaylistDurations();
-        } else {
-            const failedCount = playerState.playlists.filter(playlist => playlist.error).length;
-            const message = failedCount === playerState.playlists.length
-                ? 'No se pudieron cargar las playlists desde Cloudflare R2.'
-                : 'No se encontraron audios en las carpetas de R2.';
-            showLoadError(loadingInitial, message);
-        }
-    } catch (err) {
-        console.error('❌ Error cargando playlist desde R2:', err);
-        showLoadError(loadingInitial, 'No se pudo cargar la playlist desde Cloudflare R2.');
-    }
-}
-
-async function loadPlaylistSource(source) {
-    try {
-        const response = await fetch(buildPlaylistUrl(source.prefix));
-        if (!response.ok) {
-            throw new Error(`No se pudo cargar la playlist ${source.title} (${response.status})`);
-        }
-
-        const data = await response.json();
-        return {
-            ...source,
-            tracks: normalizeR2Playlist(data, source),
-            error: ''
-        };
-    } catch (err) {
-        console.error(`❌ Error cargando ${source.title}:`, err);
-        return {
-            ...source,
-            tracks: [],
-            error: 'No se pudo cargar esta playlist.'
-        };
-    }
-}
-
+function getPlaylistById(id) { return playerState.playlists.find(p => p.id === id); }
+function currentTrack() { return getPlaylistById(playerState.activePlaylistId)?.tracks[playerState.currentTrackIndex]; }
+function getTotalTrackCount() { return playerState.playlists.reduce((total, p) => total + p.tracks.length, 0); }
 function buildPlaylistUrl(prefix) {
     const url = new URL(playlistApiUrl);
-    url.searchParams.set('prefix', normalizePlaylistPrefix(prefix));
+    url.searchParams.set('prefix', prefix.replace(/^\/+/, '').replace(/\/?$/, '/'));
     return url.toString();
 }
-
-function normalizePlaylistPrefix(prefix) {
-    if (!prefix) return '';
-    return prefix.replace(/^\/+/, '').replace(/\/?$/, '/');
+function safeMediaUrl(value) {
+    try { const url = new URL(value); return ['https:', 'http:'].includes(url.protocol) ? url.href : ''; }
+    catch { return ''; }
 }
-
 function normalizeR2Playlist(data, source) {
-    const tracks = Array.isArray(data) ? data : data.tracks || [];
-
-    return tracks
-        .filter(track => track.name && (track.url || track.key))
-        .map(track => {
-            const waveformUrl = getWaveformUrl(track);
-
-            return {
-                name: track.name,
-                artist: track.artist || 'Nicolás Cardú',
-                url: track.url || waveformUrl,
-                waveformUrl,
-                duration: normalizeDuration(track.duration || track.durationSeconds || track.duration_seconds),
-                key: track.key || '',
-                playlistId: source.id,
-                playlistTitle: source.title
-            };
-        });
+    const tracks = Array.isArray(data) ? data : data?.tracks;
+    if (!Array.isArray(tracks)) throw new Error('Invalid catalogue');
+    return tracks.filter(track => typeof track.name === 'string' && track.name.trim()).map(track => {
+        const fallback = track.key ? new URL(`/audio/${encodePath(track.key)}`, playlistApiUrl).href : '';
+        const url = safeMediaUrl(track.url || fallback);
+        const extension = (track.key || url).split('?')[0].split('.').pop().toUpperCase();
+        return {
+            name: track.name, artist: track.artist || 'Nicolás Cardú', url,
+            waveformUrl: safeMediaUrl(usesHostedProxy ? fallback : (track.waveformUrl || track.waveform_url || fallback || url)),
+            duration: normalizeDuration(track.duration || track.durationSeconds || track.duration_seconds),
+            format: ['FLAC', 'WAV', 'MP3', 'OGG', 'M4A', 'AAC'].includes(extension) ? extension : 'AUDIO',
+            playlistId: source.id, playlistTitle: source.title, cover: source.cover
+        };
+    }).filter(track => track.url);
 }
-
-function setActivePlaylist(playlistId, trackIndex = 0) {
-    const playlist = getPlaylistById(playlistId) || getFirstPlayablePlaylist() || playerState.playlists[0];
-    if (!playlist) return null;
-
-    const lastTrackIndex = Math.max(playlist.tracks.length - 1, 0);
-    const safeTrackIndex = Math.min(Math.max(Number(trackIndex) || 0, 0), lastTrackIndex);
-
-    playerState.activePlaylistId = playlist.id;
-    playerState.playlist = playlist.tracks;
-    playerState.currentTrackIndex = safeTrackIndex;
-    applyPlaylistTheme(playlist.id);
-
-    return playlist;
-}
-
-function getPlaylistById(playlistId) {
-    return playerState.playlists.find(playlist => playlist.id === playlistId);
-}
-
-function getFirstPlayablePlaylist() {
-    return playerState.playlists.find(playlist => playlist.tracks.length > 0);
-}
-
-function getActivePlaylist() {
-    return getPlaylistById(playerState.activePlaylistId);
-}
-
-function getTotalTrackCount() {
-    return playerState.playlists.reduce((total, playlist) => total + playlist.tracks.length, 0);
-}
-
-function getWaveformUrl(track) {
-    if (track.waveformUrl || track.waveform_url || track.analysisUrl) {
-        return track.waveformUrl || track.waveform_url || track.analysisUrl;
+async function loadPlaylistSource(source) {
+    try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+        try {
+            const response = await fetch(buildPlaylistUrl(source.prefix), { signal: controller.signal });
+            if (!response.ok) throw new Error(`Catalogue: ${response.status}`);
+            return { ...source, tracks: normalizeR2Playlist(await response.json(), source), error: '' };
+        } finally { clearTimeout(timeout); }
+    } catch {
+        return { ...source, tracks: [], error: `No pudimos cargar ${source.title}.` };
     }
-
-    if (!track.key || !playlistApiUrl) {
-        return '';
+}
+async function loadCatalogue() {
+    $('loading-initial').hidden = false;
+    $('loading-initial').textContent = 'Cargando tus sets…';
+    const selected = currentTrack();
+    playerState.playlists = await Promise.all(playlistSources.map(loadPlaylistSource));
+    playerState.loaded = true;
+    $('loading-initial').hidden = true;
+    let retainedSelection = false;
+    if (selected) {
+        const index = getPlaylistById(selected.playlistId).tracks.findIndex(track => track.url === selected.url);
+        if (index >= 0) { playerState.currentTrackIndex = index; retainedSelection = true; }
+        else { audio.pause(); audio.removeAttribute('src'); audio.load(); }
     }
-
-    const workerUrl = new URL(playlistApiUrl);
-    workerUrl.pathname = `/audio/${encodePath(track.key)}`;
-    workerUrl.search = '';
-    workerUrl.hash = '';
-    return workerUrl.toString();
+    const first = getPlaylistById(playerState.activePlaylistId)?.tracks.length
+        ? getPlaylistById(playerState.activePlaylistId) : playerState.playlists.find(p => p.tracks.length);
+    if (!retainedSelection && first) selectTrack(first.id, 0, playerState.radio);
+    renderCatalogue();
+    syncPlaybackUI();
+    loadPlaylistDurations();
 }
-
-function showLoadError(loadingInitial, message) {
-    if (!loadingInitial) return;
-
-    loadingInitial.style.display = 'block';
-    loadingInitial.innerHTML = `<h3>${message}</h3>`;
-}
-
-function setupPlaylistThemeSwitch(audio, playButton, playlistEl) {
-    const themeSwitch = document.getElementById('playlist-theme-switch');
-
-    applyPlaylistTheme(playerState.activePlaylistId);
-
-    if (!themeSwitch) return;
-
-    themeSwitch.addEventListener('change', function() {
-        const playlistId = themeSwitch.checked ? 'techno-freaks' : 'chill-out';
-        applyPlaylistTheme(playlistId);
-        setActivePlaylist(playlistId, 0);
-
-        if (playerState.playlist.length > 0) {
-            selectTrack(0, audio, playButton, playlistEl, playlistId);
-        } else if (playlistEl) {
-            updatePlaylistUI(playlistEl);
+function renderCatalogue() {
+    const root = $('playlist');
+    root.replaceChildren();
+    $('playlist-count').textContent = getTotalTrackCount();
+    const selected = playerState.playlists.filter(p => playerState.filter === 'all' || p.id === playerState.filter);
+    const errors = selected.filter(p => p.error);
+    if (errors.length) {
+        const status = document.createElement('div');
+        status.className = 'empty-state';
+        const message = document.createElement('p');
+        message.textContent = errors.map(p => p.error).join(' ');
+        const retry = document.createElement('button');
+        retry.className = 'retry-button'; retry.textContent = 'Volver a intentar';
+        retry.addEventListener('click', () => { retry.disabled = true; loadCatalogue(); });
+        status.append(message, retry); root.append(status);
+    }
+    const tracks = selected.flatMap(p => p.tracks.map((track, index) => ({ track, index, playlist: p })));
+    if (!tracks.length) {
+        if (!errors.length) {
+            const empty = document.createElement('p'); empty.className = 'empty-state';
+            empty.textContent = playerState.loaded ? 'Todavía no hay sets en esta colección.' : 'Cargando tus sets…';
+            root.append(empty);
         }
-    });
-}
-
-function applyPlaylistTheme(playlistId) {
-    const safePlaylistId = playlistSources.some(source => source.id === playlistId)
-        ? playlistId
-        : playlistSources[0].id;
-    const themeSwitch = document.getElementById('playlist-theme-switch');
-    const themeLabels = document.querySelectorAll('[data-theme-option]');
-
-    document.body.dataset.playlistTheme = safePlaylistId;
-
-    if (themeSwitch) {
-        themeSwitch.checked = safePlaylistId === 'techno-freaks';
-    }
-
-    themeLabels.forEach(label => {
-        label.classList.toggle('active', label.dataset.themeOption === safePlaylistId);
-    });
-}
-
-function togglePlay(audio, playButton) {
-    if (playerState.playlist.length === 0) {
         return;
     }
-
-    if (playerState.isPlaying) {
-        audio.pause();
-        playerState.isPlaying = false;
-        playButton.textContent = '▶️';
-    } else {
-        if (audio.src === '') {
-            playTrack(playerState.currentTrackIndex, audio, playButton, null, playerState.activePlaylistId);
-        } else {
-            audio.play();
-        }
-        playerState.isPlaying = true;
-        playButton.textContent = '⏸️';
-    }
-}
-
-function playTrack(index, audio, playButton, playlistEl, playlistId = playerState.activePlaylistId) {
-    const track = selectTrack(index, audio, playButton, playlistEl, playlistId);
-    if (!track) return;
-
-    console.log('🎵 Reproduciendo:', track.name);
-
-    audio.play()
-        .then(() => {
-            playerState.isPlaying = true;
-            playButton.textContent = '⏸️';
-        })
-        .catch((err) => {
-            console.warn('El navegador bloqueó la reproducción automática:', err);
-            playerState.isPlaying = false;
-            playButton.textContent = '▶️';
+    const heading = document.createElement('div'); heading.className = 'track-table-head';
+    heading.setAttribute('aria-hidden', 'true');
+    heading.innerHTML = `<span>#</span><span>Título</span><span>Colección</span>${icon('clock')}`;
+    root.append(heading);
+    const list = document.createElement('ol'); list.className = 'track-list';
+    tracks.forEach(({ track, index, playlist }, order) => {
+        const li = document.createElement('li');
+        const button = document.createElement('button'); button.className = 'track-row';
+        button.dataset.playlistId = playlist.id; button.dataset.trackIndex = index;
+        button.setAttribute('aria-label', `Reproducir ${track.name}, ${playlist.title}`);
+        const number = document.createElement('span'); number.className = 'track-number';
+        number.textContent = String(order + 1).padStart(2, '0'); number.dataset.order = order + 1;
+        const main = document.createElement('span'); main.className = 'track-main';
+        const cover = document.createElement('img'); cover.className = 'track-thumb'; cover.src = track.cover; cover.alt = ''; cover.loading = 'lazy';
+        const copy = document.createElement('span'); copy.className = 'track-text';
+        const title = document.createElement('span'); title.className = 'track-title'; title.textContent = track.name;
+        const artist = document.createElement('span'); artist.className = 'track-artist'; artist.textContent = `${track.artist} · ${track.format}`;
+        copy.append(title, artist); main.append(cover, copy);
+        const collection = document.createElement('span'); collection.className = 'track-collection'; collection.textContent = playlist.title;
+        const duration = document.createElement('span'); duration.className = 'track-duration';
+        duration.dataset.playlistId = playlist.id; duration.dataset.trackDuration = index;
+        duration.textContent = formatTrackDuration(track.duration);
+        button.append(number, main, collection, duration);
+        button.addEventListener('click', () => {
+            if (!playerState.radio && currentTrack()?.url === track.url) togglePlay();
+            else playTrack(playlist.id, index, false);
         });
+        li.append(button); list.append(li);
+    });
+    root.append(list); syncActiveRows();
 }
-
-function selectTrack(index, audio, playButton, playlistEl, playlistId = playerState.activePlaylistId) {
-    const playlist = setActivePlaylist(playlistId, index);
-    if (!playlist || playlist.tracks.length === 0) return null;
-
-    const track = playerState.playlist[playerState.currentTrackIndex];
-    if (!track) return null;
-
-    audio.src = track.url;
-    document.getElementById('track-name').textContent = track.name;
-    document.getElementById('track-artist').textContent = track.artist || 'Nicolás Cardú';
-    document.getElementById('current-time').textContent = '0:00';
-    document.getElementById('duration').textContent = formatTrackDuration(track.duration);
-    playButton.textContent = '▶️';
-    playerState.isPlaying = false;
-    resetWaveform(audio);
-    loadWaveform(track, audio);
-
-    if (playlistEl) {
-        updatePlaylistUI(playlistEl);
-    }
-
-    return track;
-}
-
-function nextTrack(audio, playButton, playlistEl) {
-    if (playerState.playlist.length === 0) return;
-    const nextIndex = (playerState.currentTrackIndex + 1) % playerState.playlist.length;
-    playTrack(nextIndex, audio, playButton, playlistEl, playerState.activePlaylistId);
-}
-
-function previousTrack(audio, playButton, playlistEl) {
-    if (playerState.playlist.length === 0) return;
-    const prevIndex = playerState.currentTrackIndex === 0 
-        ? playerState.playlist.length - 1 
-        : playerState.currentTrackIndex - 1;
-    playTrack(prevIndex, audio, playButton, playlistEl, playerState.activePlaylistId);
-}
-
-function updateProgress(audio) {
-    const currentTimeEl = document.getElementById('current-time');
-    
-    if (currentTimeEl) {
-        currentTimeEl.textContent = formatTime(audio.currentTime);
-    }
-
-    updateWaveformAria(audio);
-    drawWaveform(audio);
-}
-
-function updateDuration(audio) {
-    const duration = normalizeDuration(audio.duration);
-    const durationEl = document.getElementById('duration');
-
-    if (duration > 0) {
-        const activePlaylist = getActivePlaylist();
-        const currentTrack = playerState.playlist[playerState.currentTrackIndex];
-        if (currentTrack) {
-            currentTrack.duration = duration;
-        }
-
-        if (activePlaylist) {
-            updatePlaylistDuration(activePlaylist.id, playerState.currentTrackIndex, duration);
-        }
-    }
-
-    if (durationEl) {
-        durationEl.textContent = formatTrackDuration(duration);
-    }
-}
-
-function updatePlaylistUI(playlistEl) {
-    playlistEl.innerHTML = '';
-    const playlistCount = document.getElementById('playlist-count');
-    
-    if (playlistCount) {
-        playlistCount.textContent = getTotalTrackCount();
-    }
-
-    playerState.playlists.forEach((playlist) => {
-        const group = document.createElement('section');
-        group.className = 'playlist-group';
-        if (playlist.id === playerState.activePlaylistId) {
-            group.classList.add('active');
-        }
-
-        const heading = document.createElement('div');
-        heading.className = 'playlist-group-heading';
-
-        const title = document.createElement('h4');
-        title.className = 'playlist-group-title';
-        title.textContent = playlist.title;
-
-        const count = document.createElement('span');
-        count.className = 'playlist-group-count';
-        count.textContent = `${playlist.tracks.length} ${playlist.tracks.length === 1 ? 'canción' : 'canciones'}`;
-
-        heading.appendChild(title);
-        heading.appendChild(count);
-        group.appendChild(heading);
-
-        if (playlist.error) {
-            const errorMessage = document.createElement('p');
-            errorMessage.className = 'playlist-group-status';
-            errorMessage.textContent = playlist.error;
-            group.appendChild(errorMessage);
-        }
-
-        const list = document.createElement('ul');
-        list.className = 'playlist-list';
-
-        const audio = document.getElementById('audio-player');
-        const playButton = document.getElementById('play-button');
-
-        if (playlist.tracks.length === 0 && !playlist.error) {
-            const emptyItem = document.createElement('li');
-            emptyItem.className = 'playlist-item playlist-item-empty';
-            emptyItem.textContent = 'Sin canciones por ahora';
-            list.appendChild(emptyItem);
-        }
-
-        playlist.tracks.forEach((track, index) => {
-            const li = document.createElement('li');
-            li.className = 'playlist-item';
-            li.dataset.playlistId = playlist.id;
-            li.dataset.trackIndex = index.toString();
-            if (playlist.id === playerState.activePlaylistId && index === playerState.currentTrackIndex) {
-                li.classList.add('active');
-            }
-
-            const nameSpan = document.createElement('span');
-            nameSpan.className = 'playlist-item-name';
-            nameSpan.textContent = track.name;
-
-            const durationSpan = document.createElement('span');
-            durationSpan.className = 'playlist-item-duration';
-            durationSpan.dataset.playlistId = playlist.id;
-            durationSpan.dataset.trackDuration = index.toString();
-            durationSpan.textContent = formatTrackDuration(track.duration);
-
-            li.appendChild(nameSpan);
-            li.appendChild(durationSpan);
-
-            li.addEventListener('click', function() {
-                playTrack(index, audio, playButton, playlistEl, playlist.id);
-            });
-
-            list.appendChild(li);
-        });
-
-        group.appendChild(list);
-        playlistEl.appendChild(group);
+function syncActiveRows() {
+    document.querySelectorAll('.track-row').forEach(row => {
+        const active = row.dataset.playlistId === playerState.activePlaylistId && Number(row.dataset.trackIndex) === playerState.currentTrackIndex;
+        row.classList.toggle('active', active);
+        row.setAttribute('aria-current', active ? 'true' : 'false');
+        const number = row.querySelector('.track-number');
+        if (active) number.innerHTML = icon(playerState.isPlaying ? 'wave' : 'play');
+        else number.textContent = String(number.dataset.order).padStart(2, '0');
     });
 }
-
-async function loadPlaylistDurations() {
-    const requestId = durationRequestId + 1;
-    durationRequestId = requestId;
-
-    for (const playlist of playerState.playlists) {
-        for (let index = 0; index < playlist.tracks.length; index++) {
-            if (requestId !== durationRequestId) return;
-
-            const track = playlist.tracks[index];
-            if (!track || track.duration > 0 || !track.url) continue;
-
-            try {
-                const duration = await readAudioDuration(track.url);
-                if (requestId !== durationRequestId) return;
-
-                track.duration = duration;
-                updatePlaylistDuration(playlist.id, index, duration);
-
-                if (playlist.id === playerState.activePlaylistId && index === playerState.currentTrackIndex) {
-                    const durationEl = document.getElementById('duration');
-                    if (durationEl) {
-                        durationEl.textContent = formatTrackDuration(duration);
-                    }
-                }
-            } catch (err) {
-                console.warn('No se pudo leer la duración del track:', track.name, err);
-            }
-        }
+function showMessage(message) {
+    clearTimeout(messageTimer); $('player-message').textContent = message; $('player-message').hidden = !message;
+    if (message) messageTimer = setTimeout(() => { $('player-message').hidden = true; }, 7000);
+}
+function syncPlaybackUI() {
+    const playing = playerState.isPlaying;
+    const available = getTotalTrackCount() > 0;
+    $('play-button').innerHTML = icon(playing ? 'pause' : 'play');
+    $('play-button').setAttribute('aria-label', playing ? 'Pausa' : 'Reproducir');
+    $('play-button').title = playing ? 'Pausa' : 'Reproducir';
+    ['play-button', 'prev-button', 'next-button', 'radio-button'].forEach(id => { $(id).disabled = !available; });
+    const radioPlaying = playerState.radio && playing;
+    $('radio-button').innerHTML = `${icon(radioPlaying ? 'pause' : 'play')}<span>${radioPlaying ? 'Pausar radio' : playerState.radio ? 'Continuar radio' : 'Escuchar radio'}</span>`;
+    document.body.dataset.radio = playerState.radio ? 'on' : 'off';
+    document.body.dataset.playing = playing && !playerState.isBuffering ? 'true' : 'false';
+    $('player-mode').textContent = playerState.radio ? 'NCC RADIO' : currentTrack() ? 'LIVE SET' : 'LISTO PARA ESCUCHAR';
+    syncActiveRows();
+    if ('mediaSession' in navigator) navigator.mediaSession.playbackState = playing ? 'playing' : 'paused';
+}
+function selectTrack(playlistId, index, radio = false) {
+    const playlist = getPlaylistById(playlistId), track = playlist?.tracks[index];
+    if (!track) return null;
+    playerState.requestId++;
+    audio.pause();
+    playerState.activePlaylistId = playlistId; playerState.currentTrackIndex = index;
+    playerState.radio = radio; playerState.isPlaying = false; playerState.isBuffering = true;
+    audio.src = track.url;
+    $('track-name').textContent = track.name; $('track-artist').textContent = track.artist;
+    $('audio-quality').textContent = track.format;
+    $('duration').textContent = formatTrackDuration(track.duration); $('current-time').textContent = '0:00';
+    $('seek-slider').value = 0; $('seek-slider').disabled = true; paintRange($('seek-slider'), 0);
+    showMessage(''); resetWaveform(audio); syncPlaybackUI();
+    if (!$('waveform-panel').hidden) loadWaveform(track, audio);
+    if ('mediaSession' in navigator && typeof MediaMetadata !== 'undefined') {
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: track.name, artist: track.artist, album: radio ? 'NCC Radio' : track.playlistTitle,
+            artwork: [{ src: new URL(track.cover, location.href).href, type: 'image/jpeg' }]
+        });
+    }
+    return track;
+}
+async function startPlayback() {
+    const requestId = playerState.requestId;
+    try { await audio.play(); }
+    catch (error) {
+        if (requestId !== playerState.requestId || error.name === 'AbortError') return;
+        playerState.isPlaying = false; syncPlaybackUI();
+        showMessage(error.name === 'NotAllowedError' ? 'Tocá reproducir para empezar a escuchar.' : 'No pudimos reproducir este set. Volvé a intentar o elegí otro.');
     }
 }
-
+function playTrack(playlistId, index, radio = false) {
+    if (selectTrack(playlistId, index, radio)) return startPlayback();
+}
+function togglePlay() {
+    if (!currentTrack()) return;
+    if (!audio.paused) audio.pause(); else startPlayback();
+}
+// Radio alternates collections, including every available set before repeating.
+function radioQueue() {
+    const queue = [], length = Math.max(0, ...playerState.playlists.map(p => p.tracks.length));
+    for (let index = 0; index < length; index++) {
+        for (const playlist of playerState.playlists) if (playlist.tracks[index]) queue.push({ playlistId: playlist.id, index });
+    }
+    return queue;
+}
+function nextTrack(direction = 1) {
+    if (!currentTrack()) return;
+    const queue = playerState.radio ? radioQueue() : getPlaylistById(playerState.activePlaylistId).tracks.map((_, index) => ({ playlistId: playerState.activePlaylistId, index }));
+    if (!queue.length) return;
+    const position = queue.findIndex(item => item.playlistId === playerState.activePlaylistId && item.index === playerState.currentTrackIndex);
+    const next = queue[(position + direction + queue.length) % queue.length];
+    playTrack(next.playlistId, next.index, playerState.radio);
+}
+function startRadio() {
+    if (!getTotalTrackCount()) return;
+    if (playerState.radio) { togglePlay(); return; }
+    // Keep the selected set and its position when joining radio mid-session.
+    playerState.radio = true; syncPlaybackUI();
+    if (currentTrack()) {
+        if ('mediaSession' in navigator && navigator.mediaSession.metadata) navigator.mediaSession.metadata.album = 'NCC Radio';
+        if (audio.paused) startPlayback();
+    } else {
+        const first = radioQueue()[0]; playTrack(first.playlistId, first.index, true);
+    }
+}
+function paintRange(input, value) { input.style.setProperty('--progress', `${value}%`); }
+function updateProgress() {
+    $('current-time').textContent = formatTime(audio.currentTime);
+    const seekable = isSeekable(audio);
+    $('seek-slider').disabled = !seekable;
+    const ratio = seekable ? (audio.currentTime / audio.duration) : 0;
+    $('seek-slider').value = Math.round(ratio * 1000); paintRange($('seek-slider'), ratio * 100);
+    $('seek-slider').setAttribute('aria-valuetext', `${formatTime(audio.currentTime)} de ${formatTrackDuration(audio.duration)}`);
+    if (!$('waveform-panel').hidden) { updateWaveformAria(audio); drawWaveform(audio); }
+}
+function updateDuration() {
+    const duration = normalizeDuration(audio.duration);
+    if (currentTrack() && duration) {
+        currentTrack().duration = duration;
+        $('duration').textContent = formatTrackDuration(duration);
+        updatePlaylistDuration(playerState.activePlaylistId, playerState.currentTrackIndex, duration);
+    }
+    updateProgress();
+}
 function updatePlaylistDuration(playlistId, index, duration) {
-    const durationEl = document.querySelector(`[data-playlist-id="${playlistId}"][data-track-duration="${index}"]`);
-    if (durationEl) {
-        durationEl.textContent = formatTrackDuration(duration);
+    const el = document.querySelector(`[data-playlist-id="${playlistId}"][data-track-duration="${index}"]`);
+    if (el) el.textContent = formatTrackDuration(duration);
+}
+async function loadPlaylistDurations() {
+    const requestId = ++durationRequestId;
+    for (const playlist of playerState.playlists) for (let index = 0; index < playlist.tracks.length; index++) {
+        if (requestId !== durationRequestId) return;
+        const track = playlist.tracks[index];
+        if (track.duration) continue;
+        try {
+            const duration = await readAudioDuration(track.url);
+            if (requestId !== durationRequestId) return;
+            track.duration = duration; updatePlaylistDuration(playlist.id, index, duration);
+            if (track === currentTrack()) $('duration').textContent = formatTrackDuration(duration);
+        } catch { /* Unknown metadata stays as --:--; playback remains available. */ }
     }
 }
+function route() {
+    const requested = location.hash.slice(1) || 'sets';
+    const collection = playlistSources.find(p => p.id === requested);
+    const view = collection ? 'sets' : ['radio', 'acerca'].includes(requested) ? requested : 'sets';
+    playerState.filter = collection ? collection.id : 'all';
+    $('page-title').textContent = collection?.title || ({ sets: 'Live sets', radio: 'Radio', acerca: 'NCC' })[view];
+    $('radio-feature').hidden = view === 'acerca';
+    $('collections-section').hidden = view !== 'sets';
+    $('sets-section').hidden = view === 'acerca';
+    $('about-section').hidden = view !== 'acerca';
+    $('sets-title').textContent = view === 'radio' ? 'En la radio' : collection ? 'Sets de la colección' : 'Live sets';
+    document.querySelectorAll('[data-view]').forEach(link => {
+        const active = link.dataset.view === view;
+        link.classList.toggle('active', active);
+        if (active) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current');
+    });
+    document.querySelectorAll('[data-filter]').forEach(button => {
+        const active = button.dataset.filter === playerState.filter;
+        button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active));
+    });
+    renderCatalogue();
+}
+function initPlayer() {
+    audio = $('audio-player'); audio.volume = .8;
+    setupWaveform(audio, $('waveform-canvas'), $('waveform-status'));
+    $('play-button').addEventListener('click', togglePlay);
+    $('next-button').addEventListener('click', () => nextTrack());
+    $('prev-button').addEventListener('click', () => nextTrack(-1));
+    $('radio-button').addEventListener('click', startRadio);
+    audio.addEventListener('play', () => { playerState.isPlaying = true; showMessage(''); syncPlaybackUI(); });
+    audio.addEventListener('pause', () => { playerState.isPlaying = false; syncPlaybackUI(); });
+    audio.addEventListener('waiting', () => { playerState.isBuffering = true; syncPlaybackUI(); });
+    audio.addEventListener('playing', () => { playerState.isPlaying = true; playerState.isBuffering = false; syncPlaybackUI(); });
+    audio.addEventListener('ended', () => nextTrack());
+    audio.addEventListener('timeupdate', updateProgress);
+    audio.addEventListener('loadedmetadata', updateDuration);
+    audio.addEventListener('durationchange', updateDuration);
+    audio.addEventListener('error', () => {
+        if (!audio.getAttribute('src')) return;
+        playerState.isPlaying = false; syncPlaybackUI();
+        showMessage('Este set no está disponible ahora. Probá de nuevo o elegí otro.');
+    });
+    $('seek-slider').addEventListener('input', event => {
+        if (isSeekable(audio)) { audio.currentTime = audio.duration * (Number(event.target.value) / 1000); updateProgress(); }
+    });
+    $('volume-slider').addEventListener('input', event => { audio.volume = Number(event.target.value) / 100; audio.muted = false; });
+    $('mute-button').addEventListener('click', () => { audio.muted = !audio.muted; });
+    audio.addEventListener('volumechange', () => {
+        const volume = audio.muted ? 0 : Math.round(audio.volume * 100);
+        $('volume-slider').value = volume; paintRange($('volume-slider'), volume);
+        $('volume-value').textContent = `${volume}%`;
+        $('mute-button').innerHTML = icon(volume ? 'volume' : 'muted');
+        $('mute-button').setAttribute('aria-label', volume ? 'Silenciar' : 'Activar sonido');
+    });
+    $('waveform-toggle').addEventListener('click', () => {
+        const open = $('waveform-panel').hidden;
+        $('waveform-panel').hidden = !open;
+        $('waveform-toggle').setAttribute('aria-expanded', String(open));
+        $('waveform-toggle').setAttribute('aria-label', open ? 'Ocultar forma de onda' : 'Mostrar forma de onda');
+        if (open && currentTrack()) loadWaveform(currentTrack(), audio);
+    });
+    document.querySelectorAll('[data-filter]').forEach(button => button.addEventListener('click', () => {
+        playerState.filter = button.dataset.filter;
+        document.querySelectorAll('[data-filter]').forEach(b => {
+            const active = b === button; b.classList.toggle('active', active); b.setAttribute('aria-pressed', String(active));
+        });
+        renderCatalogue();
+    }));
+    window.addEventListener('hashchange', () => { route(); window.scrollTo({ top: 0 }); $('main-content').focus({ preventScroll: true }); });
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') { $('waveform-panel').hidden = true; $('waveform-toggle').setAttribute('aria-expanded', 'false'); }
+        if (event.altKey || event.ctrlKey || event.metaKey || event.target.closest('input,button,a,textarea,select,[contenteditable="true"],[role="slider"]')) return;
+        if (event.code === 'Space') { event.preventDefault(); togglePlay(); }
+        if (event.key === 'ArrowRight') { event.preventDefault(); nextTrack(); }
+        if (event.key === 'ArrowLeft') { event.preventDefault(); nextTrack(-1); }
+    });
+    if ('mediaSession' in navigator) {
+        const handlers = { play: startPlayback, pause: () => audio.pause(), nexttrack: () => nextTrack(), previoustrack: () => nextTrack(-1), seekto: detail => { if (isSeekable(audio)) audio.currentTime = clamp(detail.seekTime, 0, audio.duration); } };
+        for (const [action, handler] of Object.entries(handlers)) try { navigator.mediaSession.setActionHandler(action, handler); } catch { /* Optional device support. */ }
+    }
+    route(); syncPlaybackUI(); loadCatalogue();
+}
+document.addEventListener('DOMContentLoaded', initPlayer);
 
 function readAudioDuration(url) {
     return new Promise((resolve, reject) => {
@@ -653,9 +470,10 @@ function setupWaveform(audio, canvas, status) {
 
 function resetWaveform(audio) {
     waveformState.requestId += 1;
+    waveformState.controller?.abort();
     waveformState.peaks = [];
     waveformState.hoverRatio = null;
-    setWaveformStatus('Loading waveform...');
+    setWaveformStatus('Cargando forma de onda…');
     drawWaveform(audio);
 }
 
@@ -667,7 +485,7 @@ async function loadWaveform(track, audio) {
     const requestId = waveformState.requestId;
 
     if (!waveformUrl) {
-        setWaveformStatus('Waveform unavailable');
+        setWaveformStatus('Forma de onda no disponible. Podés usar la barra de progreso.');
         drawWaveform(audio);
         return;
     }
@@ -682,7 +500,10 @@ async function loadWaveform(track, audio) {
     }
 
     try {
-        const response = await fetch(waveformUrl, { mode: 'cors' });
+        waveformState.controller?.abort();
+        const controller = new AbortController();
+        waveformState.controller = controller;
+        const response = await fetch(waveformUrl, { mode: 'cors', signal: controller.signal });
         if (!response.ok) {
             throw new Error(`Waveform fetch failed (${response.status})`);
         }
@@ -699,10 +520,10 @@ async function loadWaveform(track, audio) {
         waveformState.peaks = peaks;
         setWaveformStatus('');
     } catch (err) {
-        console.warn('No se pudo generar el waveform real:', err);
+        if (err.name === 'AbortError') return;
         if (requestId !== waveformState.requestId) return;
         waveformState.peaks = [];
-        setWaveformStatus('Waveform unavailable');
+        setWaveformStatus('Forma de onda no disponible. Podés usar la barra de progreso.');
     }
 
     drawWaveform(audio);
@@ -771,7 +592,7 @@ function drawWaveform(audio) {
     const progress = isSeekable(audio) ? audio.currentTime / audio.duration : 0;
     const peaks = waveformState.peaks.length > 0
         ? waveformState.peaks
-        : buildPlaceholderPeaks(160);
+        : Array(160).fill(0.04);
     const gap = width < 420 ? 1 : 2;
     const barWidth = width < 420 ? 2 : 3;
     const step = barWidth + gap;
@@ -790,7 +611,7 @@ function drawWaveform(audio) {
         const y = centerY - (barHeight / 2);
         const played = ratio <= progress;
 
-        ctx.fillStyle = played ? '#cbff3d' : 'rgba(78, 205, 196, 0.38)';
+        ctx.fillStyle = played ? '#c7f375' : 'rgba(190, 198, 193, 0.35)';
         ctx.fillRect(x, y, barWidth, barHeight);
     }
 
@@ -802,23 +623,12 @@ function drawWaveform(audio) {
 
     if (isSeekable(audio)) {
         const progressX = clamp(progress, 0, 1) * width;
-        ctx.fillStyle = '#cbff3d';
+        ctx.fillStyle = '#c7f375';
         ctx.fillRect(progressX - 1, 6, 2, height - 12);
         ctx.beginPath();
         ctx.arc(progressX, centerY, 5, 0, Math.PI * 2);
         ctx.fill();
     }
-}
-
-function buildPlaceholderPeaks(count) {
-    const peaks = [];
-
-    for (let i = 0; i < count; i++) {
-        const wave = Math.sin(i * 0.19) * 0.5 + Math.sin(i * 0.047) * 0.35;
-        peaks.push(0.16 + Math.abs(wave) * 0.42);
-    }
-
-    return peaks;
 }
 
 function samplePeak(peaks, ratio) {

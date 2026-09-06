@@ -3,6 +3,21 @@
 
 Un reproductor de audio moderno y elegante para archivos de alta calidad, incluyendo formatos FLAC y WAV, alojado en GitHub Pages.
 
+## Reproductor NCC Music
+
+El sitio presenta una interfaz oscura y minimalista: live sets, filtros de colección, acceso directo a la radio y un reproductor fijo. El logo de NCC gira durante la reproducción y se detiene al pausar o cargar el audio; respeta la preferencia de movimiento reducido del dispositivo.
+
+- **NCC Radio** alterna sets de Chill Music y Techno Freaks. Recorre todos los sets disponibles y vuelve al inicio. Es una reproducción continua por visitante, no una emisión en vivo sincronizada.
+- **Mis sets** permite filtrar por colección y reproducir un set puntual. Elegir un set sale del modo radio.
+- El reproductor permanece visible al navegar: pausa, anterior/siguiente, posición y volumen. En celulares el volumen se maneja con los controles del dispositivo.
+- La forma de onda se calcula a pedido desde el botón del reproductor en escritorio. La carga inicial sólo solicita metadatos, sin descargar el audio completo para analizarlo.
+- La tecla Espacio alterna reproducción y pausa. Las flechas izquierda/derecha cambian de set cuando el foco no está en otro control.
+- Se conservan las fuentes de audio de R2 y los enlaces oficiales de Nicolás Cardú.
+
+### Verificación y versión privada
+
+El proyecto sigue siendo HTML, CSS y JavaScript sin dependencias. `node --test tests/*.test.*` comprueba los flujos de reproducción. `node scripts/build-site.mjs` prepara una versión para Sites; el proxy de catálogo de esa versión evita cambiar la configuración del Worker original. GitHub Pages continúa usando el catálogo original directamente.
+
 ## 🌟 Características
 
 - ✅ **Soporte para múltiples formatos**: FLAC, WAV, MP3, OGG
@@ -14,7 +29,7 @@ Un reproductor de audio moderno y elegante para archivos de alta calidad, incluy
   - Barra de progreso interactiva
 
 - ✅ **Interfaz moderna**: Diseño responsive y atractivo
-- ✅ **Visualización**: Visualizador de disco giratorio
+- ✅ **Visualización**: Portadas de colección y forma de onda a pedido
 - ✅ **Atajos de teclado**:
   - `Espacio`: Play/Pause
   - `Flecha derecha`: Siguiente canción
