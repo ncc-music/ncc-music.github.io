@@ -67,7 +67,7 @@
                 ]
             }
         </script>
-        <link rel="stylesheet" href="styles.css?v=20260906-social-original">
+        <link rel="stylesheet" href="styles.css?v=20260906-header-social">
         <link rel="icon" type="image/png" href="assets/player-cover.png">
     </head>
     <body>
@@ -92,8 +92,14 @@
             <nav class="main-nav" aria-label="Escuchar">
                 <a class="nav-link active" href="#sets" data-view="sets" aria-current="page">Live sets</a>
                 <a class="nav-link" href="#radio" data-view="radio">Radio</a>
+                <a class="nav-link" href="#acerca" data-view="acerca">About us</a>
             </nav>
-            <a class="artist-link" href="#acerca" data-view="acerca">Nicolás Cardú</a>
+            <nav class="social-links" aria-label="Redes sociales de Nicolás Cardú">
+                <a href="https://www.soundcloud.com/nicolascardu" class="social-btn" title="SoundCloud" aria-label="SoundCloud" target="_blank" rel="noopener noreferrer"><img src="assets/icons/soundcloud.svg" alt="" aria-hidden="true"></a>
+                <a href="https://www.instagram.com/ncc87l" class="social-btn" title="Instagram" aria-label="Instagram" target="_blank" rel="noopener noreferrer"><img src="assets/icons/instagram.svg" alt="" aria-hidden="true"></a>
+                <a href="https://www.facebook.com/ncc87l" class="social-btn" title="Facebook" aria-label="Facebook" target="_blank" rel="noopener noreferrer"><img src="assets/icons/facebook.svg" alt="" aria-hidden="true"></a>
+                <a href="https://t.me/nicolascardu" class="social-btn" title="Telegram · Descargar sets" aria-label="Telegram · Descargar sets" target="_blank" rel="noopener noreferrer"><img src="assets/icons/telegram.svg" alt="" aria-hidden="true"></a>
+            </nav>
         </header>
         <main id="main-content" tabindex="-1">
             <div class="page-heading">
@@ -131,12 +137,6 @@
                 <div id="playlist" class="playlist-groups"></div>
             </section>
                 <section class="about-section" id="about-section" hidden aria-labelledby="about-title"><div class="about-art"><img src="assets/player-cover.png" alt="Identidad visual de NCC"></div><div class="about-copy"><p class="eyebrow">DETRÁS DE LA MÚSICA</p><h2 id="about-title">Nicolás Cardú.</h2><p>Does it matter? I'm Nicølás Cardú.<br>Enjoy the music! x)</p><p>Sets en audio lossless, FLAC y WAV.</p><a class="booking-link" href="mailto:bookings@ncc.ar">Bookings: bookings@ncc.ar</a></div></section>
-            <nav class="social-links" aria-label="Redes sociales de Nicolás Cardú">
-                <a href="https://www.soundcloud.com/nicolascardu" class="social-btn" title="SoundCloud" aria-label="SoundCloud" target="_blank" rel="noopener noreferrer"><img src="assets/icons/soundcloud.svg" alt="" aria-hidden="true"></a>
-                <a href="https://www.instagram.com/ncc87l" class="social-btn" title="Instagram" aria-label="Instagram" target="_blank" rel="noopener noreferrer"><img src="assets/icons/instagram.svg" alt="" aria-hidden="true"></a>
-                <a href="https://www.facebook.com/ncc87l" class="social-btn" title="Facebook" aria-label="Facebook" target="_blank" rel="noopener noreferrer"><img src="assets/icons/facebook.svg" alt="" aria-hidden="true"></a>
-                <a href="https://t.me/nicolascardu" class="social-btn" title="Telegram · Descargar sets" aria-label="Telegram · Descargar sets" target="_blank" rel="noopener noreferrer"><img src="assets/icons/telegram.svg" alt="" aria-hidden="true"></a>
-            </nav>
             <footer class="page-footer">
                 <span>© 2026 NCC Music</span>
                 <div><a href="#acerca">Info y contacto</a></div>
@@ -149,6 +149,6 @@
             <p id="player-message" class="player-message" role="status" hidden></p>
         </section>
         <audio id="audio-player" preload="metadata"></audio>
-        <script src="js/gdrive-player.js?v=20260906-social-original"></script>
+        <script src="js/gdrive-player.js?v=20260906-header-social"></script>
     </body>
 </html>

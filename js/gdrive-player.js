@@ -274,7 +274,7 @@ function route() {
     const collection = playlistSources.find(p => p.id === requested);
     const view = collection ? 'sets' : ['radio', 'acerca'].includes(requested) ? requested : 'sets';
     playerState.filter = collection ? collection.id : 'all';
-    $('page-title').textContent = collection?.title || ({ sets: 'Live sets', radio: 'Radio', acerca: 'NCC' })[view];
+    $('page-title').textContent = collection?.title || ({ sets: 'Live sets', radio: 'Radio', acerca: 'About us' })[view];
     $('radio-feature').hidden = view === 'acerca';
     $('collections-section').hidden = view !== 'sets';
     $('sets-section').hidden = view === 'acerca';
