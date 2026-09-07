@@ -26,10 +26,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, canvas:focus-visible
 .skip-link { position: fixed; top: -80px; left: 20px; z-index: 100; background: var(--accent); color: #111; padding: 12px; }
 .skip-link:focus { top: 15px; }
 .site-header { max-width: 1120px; padding: 0 40px; height: 100px; margin: 0 auto; display: flex; align-items: center; gap: 40px; border-bottom: 1px solid var(--line); }
-.brand { font-size: 40px; line-height: 1; font-weight: 800; letter-spacing: -3px; }
-.brand span { color: var(--accent); }
+.brand { position: relative; display: inline-block; flex-shrink: 0; padding-bottom: 13px; font-size: 44px; line-height: 1; font-weight: 800; letter-spacing: -3px; }
+.brand-wordmark { display: block; }
+.brand-dot { color: var(--accent); }
+.brand-music { position: absolute; z-index: 1; top: 49%; left: 50%; transform: translateX(-50%) rotate(-9deg); color: var(--accent); font-family: Georgia, serif; font-style: italic; font-size: .53em; font-weight: 700; letter-spacing: -1px; text-shadow: 0 2px 0 var(--bg), 0 -2px 0 var(--bg), 2px 0 0 var(--bg), -2px 0 0 var(--bg); }
 .main-nav { display: flex; align-items: center; gap: 30px; height: 100%; }
-.nav-link { position: relative; display: flex; align-items: center; height: 100%; color: var(--muted); font-size: 14px; }
+.nav-link { position: relative; display: flex; align-items: center; height: 100%; color: var(--muted); font-size: 14px; font-weight: 550; letter-spacing: .04em; white-space: nowrap; }
 .nav-link:hover { color: var(--text); }
 .nav-link.active { color: var(--text); }
 .nav-link.active::after { content: ""; position: absolute; bottom: -1px; height: 2px; left: 0; right: 0; background: var(--accent); }
@@ -232,4 +234,18 @@ input[type=range]:disabled { opacity: .4; cursor: default; }
 @media(prefers-reduced-motion:reduce) {
     .now-cover { animation: none; }
     .collection-card, .social-btn { transition: none; }
+}
+
+.tour-section { padding: 38px 0 48px; border-top: 1px solid var(--line); }
+.tour-section h2 { margin: 12px 0; font-size: 28px; font-weight: 550; letter-spacing: -.7px; }
+.tour-section > p:last-child { color: var(--muted); }
+@media (min-width: 541px) and (max-width: 900px) {
+    .site-header { flex-wrap: wrap; height: auto; padding-top: 22px; gap: 16px 24px; }
+    .social-links { margin-left: auto; }
+    .main-nav { order: 3; flex-basis: 100%; min-height: 48px; }
+    .nav-link { min-height: 48px; }
+}
+@media (max-width: 540px) {
+    .main-nav { justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+    .nav-link { font-size: 12px; letter-spacing: 0; }
 }

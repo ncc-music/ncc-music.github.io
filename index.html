@@ -67,7 +67,7 @@
                 ]
             }
         </script>
-        <link rel="stylesheet" href="styles.css?v=20260906-header-social">
+        <link rel="stylesheet" href="styles.css?v=20260907-ncc-music-nav">
         <link rel="icon" type="image/png" href="assets/player-cover.png">
     </head>
     <body>
@@ -88,11 +88,12 @@
         </defs></svg>
         <a class="skip-link" href="#main-content">Saltar al contenido</a>
         <header class="site-header">
-            <a href="#sets" class="brand" aria-label="NCC Music, inicio">ncc<span>.</span></a>
+            <a href="#sets" class="brand" aria-label="NCC Music, inicio"><span class="brand-wordmark" aria-hidden="true">NCC<span class="brand-dot">.</span></span><span class="brand-music" aria-hidden="true">Music</span></a>
             <nav class="main-nav" aria-label="Escuchar">
-                <a class="nav-link active" href="#sets" data-view="sets" aria-current="page">Live sets</a>
-                <a class="nav-link" href="#radio" data-view="radio">Radio</a>
-                <a class="nav-link" href="#acerca" data-view="acerca">About us</a>
+                <a class="nav-link active" href="#sets" data-view="sets" aria-current="page">[SETS]</a>
+                <a class="nav-link" href="#radio" data-view="radio">[RADIO]</a>
+                <a class="nav-link" href="#acerca" data-view="acerca">[ABOUT]</a>
+                <a class="nav-link" href="#tour-dates" data-view="tour-dates">[TOUR DATES]</a>
             </nav>
             <nav class="social-links" aria-label="Redes sociales de Nicolás Cardú">
                 <a href="https://www.soundcloud.com/nicolascardu" class="social-btn" title="SoundCloud" aria-label="SoundCloud" target="_blank" rel="noopener noreferrer"><img src="assets/icons/soundcloud.svg" alt="" aria-hidden="true"></a>
@@ -103,8 +104,8 @@
         </header>
         <main id="main-content" tabindex="-1">
             <div class="page-heading">
-                <h1 id="page-title">Live sets</h1>
-                <span class="quality-label">LOSSLESS</span>
+                <h1 id="page-title">SETS</h1>
+                <span class="quality-label" id="page-quality">LOSSLESS</span>
             </div>
             <section class="radio-feature" id="radio-feature" aria-labelledby="radio-title">
                 <svg class="icon radio-icon" aria-hidden="true"><use href="#i-radio"/></svg>
@@ -124,7 +125,7 @@
                 </a>
             </section>
             <section class="sets-section" id="sets-section" aria-labelledby="sets-title">
-                <h2 id="sets-title" class="sr-only">Live sets</h2>
+                <h2 id="sets-title" class="sr-only">SETS</h2>
                 <div class="sets-toolbar">
                     <div class="collection-filters" role="group" aria-label="Filtrar por colección">
                         <button class="filter-button active" data-filter="all" aria-pressed="true">Todos</button>
@@ -137,6 +138,11 @@
                 <div id="playlist" class="playlist-groups"></div>
             </section>
                 <section class="about-section" id="about-section" hidden aria-labelledby="about-title"><div class="about-art"><img src="assets/player-cover.png" alt="Identidad visual de NCC"></div><div class="about-copy"><p class="eyebrow">DETRÁS DE LA MÚSICA</p><h2 id="about-title">Nicolás Cardú.</h2><p>Does it matter? I'm Nicølás Cardú.<br>Enjoy the music! x)</p><p>Sets en audio lossless, FLAC y WAV.</p><a class="booking-link" href="mailto:bookings@ncc.ar">Bookings: bookings@ncc.ar</a></div></section>
+            <section class="tour-section" id="tour-section" hidden aria-labelledby="tour-title">
+                <p class="eyebrow">EN VIVO</p>
+                <h2 id="tour-title">Próximas fechas</h2>
+                <p>Las nuevas fechas se anunciarán acá.</p>
+            </section>
             <footer class="page-footer">
                 <span>© 2026 NCC Music</span>
                 <div><a href="#acerca">Info y contacto</a></div>
@@ -149,6 +155,6 @@
             <p id="player-message" class="player-message" role="status" hidden></p>
         </section>
         <audio id="audio-player" preload="metadata"></audio>
-        <script src="js/gdrive-player.js?v=20260906-header-social"></script>
+        <script src="js/gdrive-player.js?v=20260907-ncc-music-nav"></script>
     </body>
 </html>

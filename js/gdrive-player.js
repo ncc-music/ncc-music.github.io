@@ -272,14 +272,16 @@ async function loadPlaylistDurations() {
 function route() {
     const requested = location.hash.slice(1) || 'sets';
     const collection = playlistSources.find(p => p.id === requested);
-    const view = collection ? 'sets' : ['radio', 'acerca'].includes(requested) ? requested : 'sets';
+    const view = collection ? 'sets' : ['radio', 'acerca', 'tour-dates'].includes(requested) ? requested : 'sets';
     playerState.filter = collection ? collection.id : 'all';
-    $('page-title').textContent = collection?.title || ({ sets: 'Live sets', radio: 'Radio', acerca: 'About us' })[view];
-    $('radio-feature').hidden = view === 'acerca';
+    $('page-title').textContent = collection?.title || ({ sets: 'SETS', radio: 'RADIO', acerca: 'ABOUT', 'tour-dates': 'TOUR DATES' })[view];
+    $('radio-feature').hidden = view === 'acerca' || view === 'tour-dates';
     $('collections-section').hidden = view !== 'sets';
-    $('sets-section').hidden = view === 'acerca';
+    $('sets-section').hidden = view === 'acerca' || view === 'tour-dates';
     $('about-section').hidden = view !== 'acerca';
-    $('sets-title').textContent = view === 'radio' ? 'En la radio' : collection ? 'Sets de la colección' : 'Live sets';
+    $('tour-section').hidden = view !== 'tour-dates';
+    $('page-quality').hidden = view === 'acerca' || view === 'tour-dates';
+    $('sets-title').textContent = view === 'radio' ? 'En la radio' : collection ? 'Sets de la colección' : 'SETS';
     document.querySelectorAll('[data-view]').forEach(link => {
         const active = link.dataset.view === view;
         link.classList.toggle('active', active);
