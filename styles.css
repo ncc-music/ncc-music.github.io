@@ -254,28 +254,24 @@ input[type=range]:disabled { opacity: .4; cursor: default; }
 
 .mix-signature {
     max-width: 1040px;
-    min-height: 64px;
+    height: 96px;
     margin: 18px auto 0;
-    padding: 12px 24px;
+    padding: 2px 16px;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
-    border-block: 1px solid #75ff9b20;
-    background: repeating-linear-gradient(0deg, transparent 0 3px, #75ff9b04 3px 4px), linear-gradient(90deg, transparent, #16332155, transparent);
 }
-.mix-signature span {
-    color: #9bffae;
-    font-family: "Brush Script MT", "Segoe Print", "Bradley Hand", cursive;
-    font-size: clamp(25px, 4vw, 34px);
-    font-weight: 700;
-    font-style: italic;
-    line-height: 1.3;
-    letter-spacing: .015em;
-    text-align: center;
-    transform: rotate(-2deg);
-    text-shadow: 0 0 14px #52ff7b38;
+.mix-signature img {
+    display: block;
+    width: auto;
+    height: 92px;
+    max-width: 100%;
+    object-fit: contain;
+    mix-blend-mode: screen;
 }
 @media (max-width: 1120px) { .mix-signature { margin-inline: 40px; } }
 @media (max-width: 800px) { .mix-signature { margin-inline: 24px; } }
-@media (max-width: 540px) { .mix-signature { margin: 14px 20px 0; padding: 10px 8px; min-height: 58px; } }
+@media (max-width: 540px) {
+    .mix-signature { margin: 14px 20px 0; height: 88px; padding: 2px 8px; }
+    .mix-signature img { height: 84px; }
+}
