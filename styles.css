@@ -239,7 +239,7 @@ input[type=range]:disabled { opacity: .4; cursor: default; }
 .tour-section { padding: 38px 0 48px; border-top: 1px solid var(--line); }
 .tour-section h2 { margin: 12px 0; font-size: 28px; font-weight: 550; letter-spacing: -.7px; }
 .tour-section > p:last-child { color: var(--muted); }
-@media (min-width: 541px) and (max-width: 900px) {
+@media (min-width: 541px) and (max-width: 1050px) {
     .site-header { flex-wrap: wrap; height: auto; padding-top: 22px; gap: 16px 24px; }
     .social-links { margin-left: auto; }
     .main-nav { order: 3; flex-basis: 100%; min-height: 48px; }

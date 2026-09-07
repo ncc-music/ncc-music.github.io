@@ -67,7 +67,7 @@
                 ]
             }
         </script>
-        <link rel="stylesheet" href="styles.css?v=20260907-collections-radio">
+        <link rel="stylesheet" href="styles.css?v=20260907-tracklists">
         <link rel="icon" type="image/png" href="assets/player-cover.png">
     </head>
     <body>
@@ -91,6 +91,7 @@
             <a href="#sets" class="brand" aria-label="NCC Music, inicio"><span class="brand-wordmark" aria-hidden="true">NCC<span class="brand-dot">.</span></span><span class="brand-music" aria-hidden="true">Music</span></a>
             <nav class="main-nav" aria-label="Escuchar">
                 <a class="nav-link active" href="#sets" data-view="sets" aria-current="page">[SETS]</a>
+                <a class="nav-link" href="#tracklists" data-view="tracklists">[TRACKLISTS]</a>
                 <a class="nav-link" href="#radio" data-view="radio">[RADIO]</a>
                 <a class="nav-link" href="#acerca" data-view="acerca">[ABOUT]</a>
                 <a class="nav-link" href="#tour-dates" data-view="tour-dates">[TOUR DATES]</a>
@@ -107,7 +108,7 @@
                 <h1 id="page-title">SETS</h1>
                 <span class="quality-label" id="page-quality">LOSSLESS</span>
             </div>
-            <section class="radio-feature" id="radio-feature" aria-labelledby="radio-title">
+            <section class="radio-feature" id="radio-feature" hidden aria-labelledby="radio-title">
                 <svg class="icon radio-icon" aria-hidden="true"><use href="#i-radio"/></svg>
                 <div class="radio-copy"><h2 id="radio-title">NCC Radio</h2><p>A personal collection for after-hours grooving.</p></div>
                 <button class="primary-button" id="radio-button" disabled><svg class="icon" aria-hidden="true"><use href="#i-play"/></svg><span>Escuchar radio</span></button>
@@ -120,7 +121,7 @@
                 </a>
                 <a class="collection-card" href="#techno-freaks">
                     <div class="collection-art techno-cover"><img src="assets/player-cover.png" alt=""></div>
-                    <div class="collection-copy"><h2>TECHNO</h2><p class="collection-genres">[Experimental / Techno]</p><p>Music for Freaks.</p></div>
+                    <div class="collection-copy"><h2>TECHNO</h2><p class="collection-genres">[Industrial Techno / Experimental]</p><p>Music for Freaks.</p></div>
                     <svg class="icon collection-arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
                 </a>
             </section>
@@ -137,6 +138,9 @@
                 <div id="playlist" class="playlist-groups"></div>
             </section>
                 <section class="about-section" id="about-section" hidden aria-labelledby="about-title"><div class="about-art"><img src="assets/player-cover.png" alt="Identidad visual de NCC"></div><div class="about-copy"><p class="eyebrow">DETRÁS DE LA MÚSICA</p><h2 id="about-title">Nicolás Cardú.</h2><p>Does it matter? I'm Nicølás Cardú.<br>Enjoy the music! x)</p><p>Sets en audio lossless, FLAC y WAV.</p><a class="booking-link" href="mailto:bookings@ncc.ar">Bookings: bookings@ncc.ar</a></div></section>
+            <section class="tracklists-section" id="tracklists-section" hidden aria-label="Tracklists">
+                <p class="empty-state">Todavía no hay tracklists publicadas.</p>
+            </section>
             <section class="tour-section" id="tour-section" hidden aria-labelledby="tour-title">
                 <p class="eyebrow">EN VIVO</p>
                 <h2 id="tour-title">Próximas fechas</h2>
@@ -154,6 +158,6 @@
             <p id="player-message" class="player-message" role="status" hidden></p>
         </section>
         <audio id="audio-player" preload="metadata"></audio>
-        <script src="js/gdrive-player.js?v=20260907-collections-radio"></script>
+        <script src="js/gdrive-player.js?v=20260907-tracklists"></script>
     </body>
 </html>

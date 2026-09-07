@@ -264,16 +264,17 @@ async function loadPlaylistDurations() {
 function route() {
     const requested = location.hash.slice(1) || 'sets';
     const collection = playlistSources.find(p => p.id === requested && p.id !== 'radio');
-    const view = collection ? 'sets' : ['radio', 'acerca', 'tour-dates'].includes(requested) ? requested : 'sets';
+    const view = collection ? 'sets' : ['radio', 'tracklists', 'acerca', 'tour-dates'].includes(requested) ? requested : 'sets';
     playerState.filter = view === 'radio' ? 'radio' : collection ? collection.id : 'chill-out';
     $('collection-filters').hidden = view !== 'sets';
-    $('page-title').textContent = collection?.title || ({ sets: 'SETS', radio: 'RADIO', acerca: 'ABOUT', 'tour-dates': 'TOUR DATES' })[view];
-    $('radio-feature').hidden = view === 'acerca' || view === 'tour-dates';
+    $('page-title').textContent = collection?.title || ({ sets: 'SETS', radio: 'RADIO', tracklists: 'TRACKLISTS', acerca: 'ABOUT', 'tour-dates': 'TOUR DATES' })[view];
+    $('radio-feature').hidden = view !== 'radio';
     $('collections-section').hidden = view !== 'sets';
-    $('sets-section').hidden = view === 'acerca' || view === 'tour-dates';
+    $('sets-section').hidden = !['sets', 'radio'].includes(view);
+    $('tracklists-section').hidden = view !== 'tracklists';
     $('about-section').hidden = view !== 'acerca';
     $('tour-section').hidden = view !== 'tour-dates';
-    $('page-quality').hidden = view === 'acerca' || view === 'tour-dates';
+    $('page-quality').hidden = !['sets', 'radio'].includes(view);
     $('sets-title').textContent = view === 'radio' ? 'En la radio' : collection ? 'Sets de la colección' : 'SETS';
     document.querySelectorAll('[data-view]').forEach(link => {
         const active = link.dataset.view === view;
