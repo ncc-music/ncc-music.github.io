@@ -7,7 +7,7 @@ Un reproductor de audio moderno y elegante para archivos de alta calidad, incluy
 
 El sitio presenta una interfaz oscura y minimalista: live sets, filtros de colección, acceso directo a la radio y un reproductor fijo. El logo de NCC gira durante la reproducción y se detiene al pausar o cargar el audio; respeta la preferencia de movimiento reducido del dispositivo.
 
-- **NCC Radio** alterna sets de Chill Music y Techno Freaks. Recorre todos los sets disponibles y vuelve al inicio. Es una reproducción continua por visitante, no una emisión en vivo sincronizada.
+- **NCC Radio** reproduce únicamente su catálogo independiente de `radio/`. No incluye las colecciones MUSIC ni TECHNO.
 - **Mis sets** permite filtrar por colección y reproducir un set puntual. Elegir un set sale del modo radio.
 - El reproductor permanece visible al navegar: pausa, anterior/siguiente, posición y volumen. En celulares el volumen se maneja con los controles del dispositivo.
 - La forma de onda se calcula a pedido desde el botón del reproductor en escritorio. La carga inicial sólo solicita metadatos, sin descargar el audio completo para analizarlo.
@@ -82,8 +82,8 @@ npx http-server
 La web se aloja en GitHub Pages y los archivos de audio se alojan en Cloudflare R2. Para que la playlist se genere sola, un Worker mínimo lista los archivos del bucket y devuelve JSON al reproductor.
 
 1. **Subir audios a R2**
-   - Subí tus archivos de audio al bucket dentro de las carpetas `chill-out/` y `techno-freaks/`.
-   - La web muestra esas carpetas como las playlists **Chill Music** y **Techno Freaks**.
+   - Subí tus archivos de audio al bucket dentro de las carpetas `chill-out/` (MUSIC), `techno-freaks/` (TECHNO) y `radio/` (NCC Radio).
+   - La web muestra esas carpetas como las playlists **MUSIC** y **TECHNO**.
    - El bucket debe permitir acceso público a los archivos que use el reproductor.
 
 2. **Crear un Worker en Cloudflare**
@@ -101,7 +101,7 @@ La web se aloja en GitHub Pages y los archivos de audio se alojan en Cloudflare 
    - `R2_PUBLIC_URL`: opcional si cambiás la URL pública del bucket.
    - `ALLOWED_ORIGINS`: `https://www.ncc.ar,https://ncc.ar,https://ncc-music.github.io`.
    - `ALLOWED_ORIGIN`: opcional si sólo querés permitir un único origen.
-   - `AUDIO_PREFIX`: opcional. La web ya pide `chill-out/` y `techno-freaks/` con el parámetro `prefix`.
+   - `AUDIO_PREFIX`: opcional. La web ya pide `chill-out/` (MUSIC), `techno-freaks/` (TECHNO) y `radio/` (NCC Radio) con el parámetro `prefix`.
 
 5. **Conectar GitHub Pages con el Worker**
    - Copiá la URL del Worker.

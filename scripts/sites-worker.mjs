@@ -1,7 +1,7 @@
 // Private Sites preview: serve the catalogue through the same origin.
 // GitHub Pages continues to use the existing public Worker directly.
 const UPSTREAM = 'https://rapid-silence-8ef7.nc-music-87a.workers.dev';
-const PREFIXES = new Set(['chill-out/', 'techno-freaks/']);
+const PREFIXES = new Set(['chill-out/', 'techno-freaks/', 'radio/']);
 export default {
     async fetch(request, env) {
         const url = new URL(request.url);

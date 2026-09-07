@@ -4,7 +4,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>NCC Music | Lossless DJ Mixes by Nicolás Cardú</title>
-        <meta name="description" content="NCC Music es el sitio oficial de Nicolás Cardú: mixes lossless, playlists de Chill Music y Techno Freaks, audio FLAC/WAV y links oficiales.">
+        <meta name="description" content="NCC Music es el sitio oficial de Nicolás Cardú: mixes lossless, playlists de MUSIC, TECHNO y NCC Radio, audio FLAC/WAV y links oficiales.">
         <meta name="author" content="Nicolás Cardú">
         <meta name="robots" content="index, follow, max-image-preview:large">
         <meta name="googlebot" content="index, follow">
@@ -16,12 +16,12 @@
         <meta property="og:type" content="website">
         <meta property="og:site_name" content="NCC Music">
         <meta property="og:title" content="NCC Music | Lossless DJ Mixes by Nicolás Cardú">
-        <meta property="og:description" content="Mixes lossless, playlists Chill Music y Techno Freaks, audio FLAC/WAV y links oficiales de Nicolás Cardú.">
+        <meta property="og:description" content="Mixes lossless, playlists MUSIC, TECHNO y NCC Radio, audio FLAC/WAV y links oficiales de Nicolás Cardú.">
         <meta property="og:url" content="https://ncc.ar/">
         <meta property="og:locale" content="es_AR">
         <meta name="twitter:card" content="summary">
         <meta name="twitter:title" content="NCC Music | Lossless DJ Mixes by Nicolás Cardú">
-        <meta name="twitter:description" content="Mixes lossless, playlists Chill Music y Techno Freaks, audio FLAC/WAV y links oficiales de Nicolás Cardú.">
+        <meta name="twitter:description" content="Mixes lossless, playlists MUSIC, TECHNO y NCC Radio, audio FLAC/WAV y links oficiales de Nicolás Cardú.">
         <script type="application/ld+json">
             {
                 "@context": "https://schema.org",
@@ -54,7 +54,7 @@
                         "@id": "https://ncc.ar/#webpage",
                         "url": "https://ncc.ar/",
                         "name": "NCC Music | Lossless DJ Mixes by Nicolás Cardú",
-                        "description": "Sitio oficial de Nicolás Cardú con mixes lossless, playlists Chill Music y Techno Freaks, audio FLAC/WAV y links oficiales.",
+                        "description": "Sitio oficial de Nicolás Cardú con mixes lossless, playlists MUSIC, TECHNO y NCC Radio, audio FLAC/WAV y links oficiales.",
                         "isPartOf": {
                             "@id": "https://ncc.ar/#website"
                         },
@@ -67,7 +67,7 @@
                 ]
             }
         </script>
-        <link rel="stylesheet" href="styles.css?v=20260906-header-social">
+        <link rel="stylesheet" href="styles.css?v=20260907-underground-wordmark">
         <link rel="icon" type="image/png" href="assets/player-cover.png">
     </head>
     <body>
@@ -88,11 +88,13 @@
         </defs></svg>
         <a class="skip-link" href="#main-content">Saltar al contenido</a>
         <header class="site-header">
-            <a href="#sets" class="brand" aria-label="NCC Music, inicio">ncc<span>.</span></a>
+            <a href="#sets" class="brand" aria-label="NCC Music, inicio"><span class="brand-wordmark" aria-hidden="true">NCC<span class="brand-dot">.</span></span><span class="brand-music" aria-hidden="true">Music</span></a>
             <nav class="main-nav" aria-label="Escuchar">
-                <a class="nav-link active" href="#sets" data-view="sets" aria-current="page">Live sets</a>
-                <a class="nav-link" href="#radio" data-view="radio">Radio</a>
-                <a class="nav-link" href="#acerca" data-view="acerca">About us</a>
+                <a class="nav-link active" href="#sets" data-view="sets" aria-current="page">[SETS]</a>
+                <a class="nav-link" href="#tracklists" data-view="tracklists">[TRACKLISTS]</a>
+                <a class="nav-link" href="#radio" data-view="radio">[RADIO]</a>
+                <a class="nav-link" href="#acerca" data-view="acerca">[ABOUT]</a>
+                <a class="nav-link" href="#tour-dates" data-view="tour-dates">[TOUR DATES]</a>
             </nav>
             <nav class="social-links" aria-label="Redes sociales de Nicolás Cardú">
                 <a href="https://www.soundcloud.com/nicolascardu" class="social-btn" title="SoundCloud" aria-label="SoundCloud" target="_blank" rel="noopener noreferrer"><img src="assets/icons/soundcloud.svg" alt="" aria-hidden="true"></a>
@@ -103,33 +105,32 @@
         </header>
         <main id="main-content" tabindex="-1">
             <div class="page-heading">
-                <h1 id="page-title">Live sets</h1>
-                <span class="quality-label">LOSSLESS</span>
+                <h1 id="page-title">SETS</h1>
+                <span class="quality-label" id="page-quality">LOSSLESS</span>
             </div>
-            <section class="radio-feature" id="radio-feature" aria-labelledby="radio-title">
+            <section class="radio-feature" id="radio-feature" hidden aria-labelledby="radio-title">
                 <svg class="icon radio-icon" aria-hidden="true"><use href="#i-radio"/></svg>
-                <div class="radio-copy"><h2 id="radio-title">NCC Radio</h2><p>Chill Music y Techno Freaks, en continuo.</p></div>
+                <div class="radio-copy"><h2 id="radio-title">NCC Radio</h2><p>A personal collection for after-hours grooving.</p></div>
                 <button class="primary-button" id="radio-button" disabled><svg class="icon" aria-hidden="true"><use href="#i-play"/></svg><span>Escuchar radio</span></button>
             </section>
             <section class="collections-section" id="collections-section" aria-label="Colecciones">
                 <a class="collection-card" href="#chill-out">
-                    <div class="collection-art chill-cover" aria-hidden="true"><span class="art-label">CHILL<br>MUSIC</span></div>
-                    <div class="collection-copy"><span class="eyebrow">BAJÁ UN CAMBIO</span><h2>Chill Music</h2><p>Para dejarse llevar.</p></div>
+                    <div class="collection-art chill-cover" aria-hidden="true"><span class="art-label">MUSIC</span></div>
+                    <div class="collection-copy"><h2>NC MUSIC</h2><p class="collection-genres">[Electrónica / Progressive]</p><p>MUSIC 4 NORMAL PEOPLE.</p></div>
                     <svg class="icon collection-arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
                 </a>
                 <a class="collection-card" href="#techno-freaks">
                     <div class="collection-art techno-cover"><img src="assets/player-cover.png" alt=""></div>
-                    <div class="collection-copy"><span class="eyebrow">SUBÍ LA ENERGÍA</span><h2>Techno Freaks</h2><p>Directo a la pista.</p></div>
+                    <div class="collection-copy"><h2>TECHNO</h2><p class="collection-genres">[Experimental / Industrial]</p><p>MUSIC 4 FREAKS.</p></div>
                     <svg class="icon collection-arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
                 </a>
             </section>
             <section class="sets-section" id="sets-section" aria-labelledby="sets-title">
-                <h2 id="sets-title" class="sr-only">Live sets</h2>
+                <h2 id="sets-title" class="sr-only">SETS</h2>
                 <div class="sets-toolbar">
-                    <div class="collection-filters" role="group" aria-label="Filtrar por colección">
-                        <button class="filter-button active" data-filter="all" aria-pressed="true">Todos</button>
-                        <button class="filter-button" data-filter="chill-out" aria-pressed="false">Chill Music</button>
-                        <button class="filter-button" data-filter="techno-freaks" aria-pressed="false">Techno Freaks</button>
+                    <div class="collection-filters" id="collection-filters" role="group" aria-label="Filtrar por colección">
+                        <button class="filter-button active" data-filter="chill-out" aria-pressed="true">MUSIC</button>
+                        <button class="filter-button" data-filter="techno-freaks" aria-pressed="false">TECHNO</button>
                     </div>
                     <span class="set-count"><span id="playlist-count">0</span> sets</span>
                 </div>
@@ -137,6 +138,14 @@
                 <div id="playlist" class="playlist-groups"></div>
             </section>
                 <section class="about-section" id="about-section" hidden aria-labelledby="about-title"><div class="about-art"><img src="assets/player-cover.png" alt="Identidad visual de NCC"></div><div class="about-copy"><p class="eyebrow">DETRÁS DE LA MÚSICA</p><h2 id="about-title">Nicolás Cardú.</h2><p>Does it matter? I'm Nicølás Cardú.<br>Enjoy the music! x)</p><p>Sets en audio lossless, FLAC y WAV.</p><a class="booking-link" href="mailto:bookings@ncc.ar">Bookings: bookings@ncc.ar</a></div></section>
+            <section class="tracklists-section" id="tracklists-section" hidden aria-label="Tracklists">
+                <p class="empty-state">Todavía no hay tracklists publicadas.</p>
+            </section>
+            <section class="tour-section" id="tour-section" hidden aria-labelledby="tour-title">
+                <p class="eyebrow">EN VIVO</p>
+                <h2 id="tour-title">Próximas fechas</h2>
+                <p>Las nuevas fechas se anunciarán acá.</p>
+            </section>
             <footer class="page-footer">
                 <span>© 2026 NCC Music</span>
                 <div><a href="#acerca">Info y contacto</a></div>
@@ -149,6 +158,6 @@
             <p id="player-message" class="player-message" role="status" hidden></p>
         </section>
         <audio id="audio-player" preload="metadata"></audio>
-        <script src="js/gdrive-player.js?v=20260906-header-social"></script>
+        <script src="js/gdrive-player.js?v=20260907-tracklists"></script>
     </body>
 </html>
