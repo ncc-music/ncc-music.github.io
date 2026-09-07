@@ -253,25 +253,25 @@ input[type=range]:disabled { opacity: .4; cursor: default; }
 .collection-copy .collection-genres { margin: 8px 0; color: var(--text); font-size: 12px; }
 
 .mix-signature {
-    max-width: 1040px;
-    height: 96px;
-    margin: 18px auto 0;
-    padding: 2px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    position: relative;
+    width: 85%;
+    max-width: 952px;
+    aspect-ratio: 5 / 1;
+    margin: 12px auto 0;
+    overflow: hidden;
 }
 .mix-signature img {
+    position: absolute;
     display: block;
-    width: auto;
-    height: 92px;
-    max-width: 100%;
-    object-fit: contain;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: auto;
+    transform: translateY(-50%);
     mix-blend-mode: screen;
 }
-@media (max-width: 1120px) { .mix-signature { margin-inline: 40px; } }
-@media (max-width: 800px) { .mix-signature { margin-inline: 24px; } }
+.mix-signature + main { padding-top: 10px; }
 @media (max-width: 540px) {
-    .mix-signature { margin: 14px 20px 0; height: 88px; padding: 2px 8px; }
-    .mix-signature img { height: 84px; }
+    .mix-signature { margin-top: 10px; }
+    .mix-signature + main { padding-top: 8px; }
 }
