@@ -251,3 +251,27 @@ input[type=range]:disabled { opacity: .4; cursor: default; }
 }
 
 .collection-copy .collection-genres { margin: 8px 0; color: var(--text); font-size: 12px; }
+
+.mix-signature {
+    position: relative;
+    width: 85%;
+    max-width: 952px;
+    aspect-ratio: 5 / 1;
+    margin: 12px auto 0;
+    overflow: hidden;
+}
+.mix-signature img {
+    position: absolute;
+    display: block;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: auto;
+    transform: translateY(-50%);
+    mix-blend-mode: screen;
+}
+.mix-signature + main { padding-top: 10px; }
+@media (max-width: 540px) {
+    .mix-signature { margin-top: 10px; }
+    .mix-signature + main { padding-top: 8px; }
+}
