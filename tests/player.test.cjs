@@ -14,29 +14,39 @@ function setup() {
     state.playlists.forEach(p => { p.tracks = [0, 1].map(i => ({ name: `${p.title} ${i}`, artist: 'NCC', url: `https://audio.example/${p.id}/${i}.flac`, duration: 100, playlistId: p.id, playlistTitle: p.title, cover: 'cover.jpg', format: 'FLAC' })); });
     return { context, app: context.app, state, audio, elements };
 }
-test('radio crosses collections, visits every set and loops', async () => {
+test('radio loops only its own tracks in both directions', async () => {
     const { app, state } = setup();
-    await app.playTrack('chill-out', 0, true);
-    const order = [];
-    for (let i = 0; i < 5; i++) { order.push(`${state.activePlaylistId}:${state.currentTrackIndex}`); app.nextTrack(); }
-    assert.deepEqual(order, ['chill-out:0', 'techno-freaks:0', 'chill-out:1', 'techno-freaks:1', 'chill-out:0']);
+    await app.playTrack('radio', 0);
+    app.nextTrack(-1);
+    assert.equal(state.activePlaylistId, 'radio'); assert.equal(state.currentTrackIndex, 1);
+    app.nextTrack();
+    assert.equal(state.activePlaylistId, 'radio'); assert.equal(state.currentTrackIndex, 0);
     assert.equal(state.radio, true);
+    assert.deepEqual(Array.from(app.radioQueue(), q => q.playlistId), ['radio', 'radio']);
 });
-test('radio includes all tracks when collections have different sizes', () => {
+test('starting radio switches away from DJ sets; selecting MUSIC exits radio', async () => {
     const { app, state } = setup();
-    state.playlists[1].tracks.pop();
-    assert.deepEqual(Array.from(app.radioQueue(), q => `${q.playlistId}:${q.index}`), ['chill-out:0', 'techno-freaks:0', 'chill-out:1']);
+    await app.playTrack('techno-freaks', 1);
+    app.startRadio();
+    assert.equal(state.activePlaylistId, 'radio'); assert.equal(state.radio, true);
+    await app.playTrack('chill-out', 0);
+    app.nextTrack();
+    assert.equal(state.activePlaylistId, 'chill-out'); assert.equal(state.radio, false);
 });
-test('entering radio retains current audio position; direct selection exits radio', async () => {
-    const { app, state, audio } = setup();
-    await app.playTrack('techno-freaks', 1); audio.currentTime = 37;
-    app.startRadio(); assert.equal(audio.currentTime, 37); assert.equal(state.radio, true);
-    await app.playTrack('chill-out', 0); assert.equal(state.radio, false);
-    app.nextTrack(); assert.equal(state.activePlaylistId, 'chill-out'); assert.equal(state.currentTrackIndex, 1);
+test('empty radio stays disabled even when DJ collections contain sets', () => {
+    const { app, state, elements } = setup();
+    state.playlists.find(p => p.id === 'radio').tracks = [];
+    app.syncPlaybackUI(); app.startRadio();
+    assert.equal(elements.get('radio-button').disabled, true);
+    assert.equal(state.radio, false);
+    assert.equal(state.activePlaylistId, 'techno-freaks');
 });
-test('previous in radio crosses collection boundaries and wraps', async () => {
-    const { app, state } = setup(); await app.playTrack('chill-out', 0, true); app.nextTrack(-1);
-    assert.equal(state.activePlaylistId, 'techno-freaks'); assert.equal(state.currentTrackIndex, 1);
+test('radio route isolates catalogue and hides DJ filters, sets defaults to MUSIC', () => {
+    const { app, context, state, elements } = setup();
+    context.location.hash = '#radio'; app.route();
+    assert.equal(state.filter, 'radio'); assert.equal(elements.get('collection-filters').hidden, true);
+    context.location.hash = '#sets'; app.route();
+    assert.equal(state.filter, 'chill-out'); assert.equal(elements.get('collection-filters').hidden, false);
 });
 test('a rejected play request leaves a stopped player with a retry message', async () => {
     const { app, audio, state, elements } = setup();
@@ -71,7 +81,7 @@ test('navigation and collection filters do not replace the playing set', async (
     await app.playTrack('techno-freaks', 1, true); audio.currentTime = 52;
     context.location.hash = '#chill-out'; app.route();
     assert.equal(state.filter, 'chill-out'); assert.equal(state.activePlaylistId, 'techno-freaks');
-    assert.equal(state.radio, true); assert.equal(audio.currentTime, 52);
+    assert.equal(state.radio, false); assert.equal(audio.currentTime, 52);
 });
 
 test('NCC logo motion follows playback, buffering and pause without changing its image', () => {

@@ -249,3 +249,5 @@ input[type=range]:disabled { opacity: .4; cursor: default; }
     .main-nav { justify-content: space-between; gap: 8px; flex-wrap: wrap; }
     .nav-link { font-size: 12px; letter-spacing: 0; }
 }
+
+.collection-copy .collection-genres { margin: 8px 0; color: var(--text); font-size: 12px; }

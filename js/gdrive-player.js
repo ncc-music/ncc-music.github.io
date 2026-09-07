@@ -4,13 +4,14 @@ const playlistApiUrl = usesHostedProxy
     ? new URL('/api/playlist', location.origin).href
     : 'https://rapid-silence-8ef7.nc-music-87a.workers.dev/';
 const playlistSources = [
-    { id: 'chill-out', title: 'Chill Music', prefix: 'chill-out/', cover: 'assets/chill-cover.jpg' },
-    { id: 'techno-freaks', title: 'Techno Freaks', prefix: 'techno-freaks/', cover: 'assets/player-cover.jpg' }
+    { id: 'chill-out', title: 'MUSIC', prefix: 'chill-out/', cover: 'assets/chill-cover.jpg' },
+    { id: 'techno-freaks', title: 'TECHNO', prefix: 'techno-freaks/', cover: 'assets/player-cover.jpg' },
+    { id: 'radio', title: 'NCC Radio', prefix: 'radio/', cover: 'assets/player-cover.png' }
 ];
 const playerState = {
     playlists: playlistSources.map(source => ({ ...source, tracks: [], error: '' })),
     activePlaylistId: 'techno-freaks', currentTrackIndex: 0,
-    isPlaying: false, isBuffering: false, radio: false, filter: 'all', loaded: false, requestId: 0
+    isPlaying: false, isBuffering: false, radio: false, filter: 'chill-out', loaded: false, requestId: 0
 };
 const waveformState = {
     canvas: null, status: null, peaks: [], cache: new Map(), requestId: 0,
@@ -84,8 +85,8 @@ async function loadCatalogue() {
 function renderCatalogue() {
     const root = $('playlist');
     root.replaceChildren();
-    $('playlist-count').textContent = getTotalTrackCount();
-    const selected = playerState.playlists.filter(p => playerState.filter === 'all' || p.id === playerState.filter);
+    const selected = playerState.playlists.filter(p => p.id === playerState.filter);
+    $('playlist-count').textContent = selected.reduce((total, p) => total + p.tracks.length, 0);
     const errors = selected.filter(p => p.error);
     if (errors.length) {
         const status = document.createElement('div');
@@ -130,7 +131,7 @@ function renderCatalogue() {
         duration.textContent = formatTrackDuration(track.duration);
         button.append(number, main, collection, duration);
         button.addEventListener('click', () => {
-            if (!playerState.radio && currentTrack()?.url === track.url) togglePlay();
+            if (currentTrack()?.url === track.url) togglePlay();
             else playTrack(playlist.id, index, false);
         });
         li.append(button); list.append(li);
@@ -157,7 +158,8 @@ function syncPlaybackUI() {
     $('play-button').innerHTML = icon(playing ? 'pause' : 'play');
     $('play-button').setAttribute('aria-label', playing ? 'Pausa' : 'Reproducir');
     $('play-button').title = playing ? 'Pausa' : 'Reproducir';
-    ['play-button', 'prev-button', 'next-button', 'radio-button'].forEach(id => { $(id).disabled = !available; });
+    ['play-button', 'prev-button', 'next-button'].forEach(id => { $(id).disabled = !available; });
+    $('radio-button').disabled = !getPlaylistById('radio')?.tracks.length;
     const radioPlaying = playerState.radio && playing;
     $('radio-button').innerHTML = `${icon(radioPlaying ? 'pause' : 'play')}<span>${radioPlaying ? 'Pausar radio' : playerState.radio ? 'Continuar radio' : 'Escuchar radio'}</span>`;
     document.body.dataset.radio = playerState.radio ? 'on' : 'off';
@@ -172,7 +174,7 @@ function selectTrack(playlistId, index, radio = false) {
     playerState.requestId++;
     audio.pause();
     playerState.activePlaylistId = playlistId; playerState.currentTrackIndex = index;
-    playerState.radio = radio; playerState.isPlaying = false; playerState.isBuffering = true;
+    playerState.radio = playlistId === 'radio'; playerState.isPlaying = false; playerState.isBuffering = true;
     audio.src = track.url;
     $('track-name').textContent = track.name; $('track-artist').textContent = track.artist;
     $('audio-quality').textContent = track.format;
@@ -182,7 +184,7 @@ function selectTrack(playlistId, index, radio = false) {
     if (!$('waveform-panel').hidden) loadWaveform(track, audio);
     if ('mediaSession' in navigator && typeof MediaMetadata !== 'undefined') {
         navigator.mediaSession.metadata = new MediaMetadata({
-            title: track.name, artist: track.artist, album: radio ? 'NCC Radio' : track.playlistTitle,
+            title: track.name, artist: track.artist, album: playerState.radio ? 'NCC Radio' : track.playlistTitle,
             artwork: [{ src: new URL(track.cover, location.href).href, type: 'image/jpeg' }]
         });
     }
@@ -204,13 +206,9 @@ function togglePlay() {
     if (!currentTrack()) return;
     if (!audio.paused) audio.pause(); else startPlayback();
 }
-// Radio alternates collections, including every available set before repeating.
+// NCC Radio has its own catalogue and never includes the DJ collections.
 function radioQueue() {
-    const queue = [], length = Math.max(0, ...playerState.playlists.map(p => p.tracks.length));
-    for (let index = 0; index < length; index++) {
-        for (const playlist of playerState.playlists) if (playlist.tracks[index]) queue.push({ playlistId: playlist.id, index });
-    }
-    return queue;
+    return (getPlaylistById('radio')?.tracks || []).map((_, index) => ({ playlistId: 'radio', index }));
 }
 function nextTrack(direction = 1) {
     if (!currentTrack()) return;
@@ -221,16 +219,10 @@ function nextTrack(direction = 1) {
     playTrack(next.playlistId, next.index, playerState.radio);
 }
 function startRadio() {
-    if (!getTotalTrackCount()) return;
+    const first = radioQueue()[0];
+    if (!first) return;
     if (playerState.radio) { togglePlay(); return; }
-    // Keep the selected set and its position when joining radio mid-session.
-    playerState.radio = true; syncPlaybackUI();
-    if (currentTrack()) {
-        if ('mediaSession' in navigator && navigator.mediaSession.metadata) navigator.mediaSession.metadata.album = 'NCC Radio';
-        if (audio.paused) startPlayback();
-    } else {
-        const first = radioQueue()[0]; playTrack(first.playlistId, first.index, true);
-    }
+    playTrack(first.playlistId, first.index, true);
 }
 function paintRange(input, value) { input.style.setProperty('--progress', `${value}%`); }
 function updateProgress() {
@@ -271,9 +263,10 @@ async function loadPlaylistDurations() {
 }
 function route() {
     const requested = location.hash.slice(1) || 'sets';
-    const collection = playlistSources.find(p => p.id === requested);
+    const collection = playlistSources.find(p => p.id === requested && p.id !== 'radio');
     const view = collection ? 'sets' : ['radio', 'acerca', 'tour-dates'].includes(requested) ? requested : 'sets';
-    playerState.filter = collection ? collection.id : 'all';
+    playerState.filter = view === 'radio' ? 'radio' : collection ? collection.id : 'chill-out';
+    $('collection-filters').hidden = view !== 'sets';
     $('page-title').textContent = collection?.title || ({ sets: 'SETS', radio: 'RADIO', acerca: 'ABOUT', 'tour-dates': 'TOUR DATES' })[view];
     $('radio-feature').hidden = view === 'acerca' || view === 'tour-dates';
     $('collections-section').hidden = view !== 'sets';
