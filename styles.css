@@ -116,6 +116,7 @@ input[type=range]:disabled { opacity: .4; cursor: default; }
 .player-message { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #292a2e; border: 1px solid #ffffff20; padding: 12px 20px; width: max-content; max-width: 90vw; border-radius: 6px; font-size: 14px; box-shadow: 0 4px 20px #0005; }
 /* Collection shortcuts retain the artwork from the first redesign. */
 .collections-section { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; margin-top: 22px; }
+.collections-section:has(> .collection-card[hidden]) { grid-template-columns: minmax(0,1fr); }
 .collection-card { display: flex; align-items: center; min-height: 140px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; transition: background .2s; }
 .collection-card:hover { background: #222427; }
 .collection-art { width: 128px; min-height: 140px; align-self: stretch; flex-shrink: 0; position: relative; overflow: hidden; }
@@ -239,7 +240,7 @@ input[type=range]:disabled { opacity: .4; cursor: default; }
 .tour-section { padding: 38px 0 48px; border-top: 1px solid var(--line); }
 .tour-section h2 { margin: 12px 0; font-size: 28px; font-weight: 550; letter-spacing: -.7px; }
 .tour-section > p:last-child { color: var(--muted); }
-@media (min-width: 541px) and (max-width: 1050px) {
+@media (min-width: 541px) and (max-width: 1200px) {
     .site-header { flex-wrap: wrap; height: auto; padding-top: 22px; gap: 16px 24px; }
     .social-links { margin-left: auto; }
     .main-nav { order: 3; flex-basis: 100%; min-height: 48px; }
@@ -274,4 +275,112 @@ input[type=range]:disabled { opacity: .4; cursor: default; }
 @media (max-width: 540px) {
     .mix-signature { margin-top: 10px; }
     .mix-signature + main { padding-top: 8px; }
+}
+
+/* Keep the playlist close to the navigation; collections act as compact headings. */
+body:has(#collections-section:not([hidden])) .mix-signature {
+    width: min(62%, 440px);
+    margin-top: 8px;
+}
+main:has(#collections-section:not([hidden])) .page-heading { margin-bottom: 12px; }
+main:has(#collections-section:not([hidden])) .page-heading h1 {
+    font-size: 18px;
+    letter-spacing: .04em;
+}
+.collections-section { margin-top: 0; gap: 12px; }
+.collection-card { display: flex; min-height: 76px; border-radius: 4px; }
+.collection-art { width: 76px; height: auto; min-height: 76px; }
+.techno-cover img { width: 54px; height: 54px; }
+.collection-copy { padding: 10px 16px; }
+.collection-copy h2 { margin: 0 0 3px; font-size: 18px; }
+.collection-copy p { display: inline; font-size: 12px; }
+.collection-copy .collection-genres { margin: 0 12px 0 0; font-size: 12px; }
+.art-label { font-size: 17px; left: 7px; bottom: 12px; }
+.collections-section:not([hidden]) ~ .sets-section { margin-top: 12px; }
+.collections-section:not([hidden]) ~ .sets-section .sets-toolbar { margin-bottom: 4px; }
+.collection-filters:not(:has(.filter-button:not([hidden]) ~ .filter-button:not([hidden]))) { display: none; }
+.sets-toolbar { justify-content: flex-end; }
+.collection-filters { margin-right: auto; }
+@media (max-width: 540px) {
+    body:has(#collections-section:not([hidden])) .mix-signature { width: min(70%, 300px); margin-top: 4px; }
+    .collection-card { min-height: 72px; }
+    .collection-art { width: 64px; min-height: 72px; }
+    .techno-cover img { width: 46px; height: 46px; }
+    .collection-copy { padding: 9px 12px; }
+    .collection-copy h2 { font-size: 16px; }
+    .collection-copy p { display: block; font-size: 11px; }
+    .collection-copy .collection-genres { margin: 0 0 2px; font-size: 11px; }
+    .sets-section .set-count { display: inline; }
+}
+
+.collection-header { width: fit-content; max-width: 100%; justify-self: center; }
+.collection-header:hover { background: var(--surface); }
+.collection-play-button {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    margin: 0 16px 0 24px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--bg);
+}
+.collection-play-button:hover:not(:disabled) { background: #def8a8; }
+.collection-play-button .icon { width: 24px; height: 24px; }
+@media (max-width: 540px) {
+    .collection-header .collection-copy { padding-right: 6px; }
+    .collection-play-button { margin: 0 10px 0 auto; }
+}
+
+/* Manifesto: rave-flyer typography with generous, readable body copy. */
+.manifesto-section { max-width: 740px; margin: 0 auto; padding-top: 8px; }
+.manifesto-languages { display: flex; gap: 8px; margin-bottom: 32px; }
+.manifesto-languages .filter-button {
+    border: 1px solid #ffffff35;
+    border-radius: 0;
+    padding: 10px 18px;
+    font-family: "Courier New", monospace;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: .06em;
+}
+.manifesto-languages .filter-button.active { color: var(--bg); background: var(--accent); border-color: var(--accent); }
+.manifesto-section article { border-top: 4px solid var(--accent); padding-top: 24px; }
+.manifesto-section h2 {
+    max-width: 18ch;
+    font-family: Impact, Haettenschweiler, "Arial Narrow", sans-serif;
+    font-size: clamp(36px, 6vw, 56px);
+    font-weight: 400;
+    line-height: 1.08;
+    letter-spacing: .025em;
+    text-transform: uppercase;
+}
+.manifesto-section .manifesto-author {
+    margin: 16px 0 36px;
+    font-family: "Courier New", monospace;
+    font-size: 14px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+.manifesto-section article > p:not(.manifesto-author) {
+    margin: 0 0 32px;
+    font-size: 20px;
+    line-height: 1.8;
+    color: #dedfe0;
+}
+.manifesto-section .manifesto-author + p { color: var(--text); font-weight: 550; }
+.manifesto-section article > p:last-child {
+    border-left: 3px solid var(--accent);
+    padding-left: 24px;
+    color: var(--text);
+}
+@media (max-width: 540px) {
+    .main-nav { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); height: auto; gap: 0 8px; }
+    .nav-link { justify-content: center; }
+    .manifesto-languages { margin-bottom: 24px; }
+    .manifesto-section article { padding-top: 20px; }
+    .manifesto-section article > p:not(.manifesto-author) { font-size: 18px; line-height: 1.8; margin-bottom: 28px; }
+    .manifesto-section article > p:last-child { padding-left: 16px; }
 }

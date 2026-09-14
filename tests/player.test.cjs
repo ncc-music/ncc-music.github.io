@@ -24,14 +24,14 @@ test('radio loops only its own tracks in both directions', async () => {
     assert.equal(state.radio, true);
     assert.deepEqual(Array.from(app.radioQueue(), q => q.playlistId), ['radio', 'radio']);
 });
-test('starting radio switches away from DJ sets; selecting MUSIC exits radio', async () => {
+test('starting radio switches away from DJ sets; selecting TECHNO exits radio', async () => {
     const { app, state } = setup();
     await app.playTrack('techno-freaks', 1);
     app.startRadio();
     assert.equal(state.activePlaylistId, 'radio'); assert.equal(state.radio, true);
-    await app.playTrack('chill-out', 0);
+    await app.playTrack('techno-freaks', 0);
     app.nextTrack();
-    assert.equal(state.activePlaylistId, 'chill-out'); assert.equal(state.radio, false);
+    assert.equal(state.activePlaylistId, 'techno-freaks'); assert.equal(state.radio, false);
 });
 test('empty radio stays disabled even when DJ collections contain sets', () => {
     const { app, state, elements } = setup();
@@ -41,17 +41,17 @@ test('empty radio stays disabled even when DJ collections contain sets', () => {
     assert.equal(state.radio, false);
     assert.equal(state.activePlaylistId, 'techno-freaks');
 });
-test('radio route isolates catalogue and hides DJ filters, sets defaults to MUSIC', () => {
+test('radio route isolates catalogue and hides DJ filters, sets defaults to TECHNO', () => {
     const { app, context, state, elements } = setup();
     context.location.hash = '#radio'; app.route();
     assert.equal(state.filter, 'radio'); assert.equal(elements.get('collection-filters').hidden, true);
     context.location.hash = '#sets'; app.route();
-    assert.equal(state.filter, 'chill-out'); assert.equal(elements.get('collection-filters').hidden, false);
+    assert.equal(state.filter, 'techno-freaks'); assert.equal(elements.get('collection-filters').hidden, false);
 });
 test('a rejected play request leaves a stopped player with a retry message', async () => {
     const { app, audio, state, elements } = setup();
     audio.play = async () => { throw Object.assign(new Error('blocked'), { name: 'NotAllowedError' }); };
-    await app.playTrack('chill-out', 0);
+    await app.playTrack('techno-freaks', 0);
     assert.equal(state.isPlaying, false);
     assert.match(elements.get('player-message').textContent, /Tocá reproducir/);
     assert.equal(elements.get('play-button').disabled, false);
@@ -59,8 +59,8 @@ test('a rejected play request leaves a stopped player with a retry message', asy
 test('an old rejected request cannot overwrite the newly selected track', async () => {
     const { app, audio, state, elements } = setup(); let reject;
     audio.play = () => new Promise((_, r) => { reject = r; });
-    const pending = app.playTrack('chill-out', 0);
-    app.selectTrack('techno-freaks', 0);
+    const pending = app.playTrack('techno-freaks', 0);
+    app.selectTrack('techno-freaks', 1);
     reject(new Error('old failure')); await pending;
     assert.equal(state.activePlaylistId, 'techno-freaks'); assert.equal(elements.get('player-message').textContent, '');
 });
@@ -80,7 +80,7 @@ test('navigation and collection filters do not replace the playing set', async (
     const { app, state, context, audio } = setup();
     await app.playTrack('techno-freaks', 1, true); audio.currentTime = 52;
     context.location.hash = '#chill-out'; app.route();
-    assert.equal(state.filter, 'chill-out'); assert.equal(state.activePlaylistId, 'techno-freaks');
+    assert.equal(state.filter, 'techno-freaks'); assert.equal(state.activePlaylistId, 'techno-freaks');
     assert.equal(state.radio, false); assert.equal(audio.currentTime, 52);
 });
 
@@ -88,7 +88,7 @@ test('NCC logo motion follows playback, buffering and pause without changing its
     const { app, state, context } = setup();
     const logo = context.document.getElementById('now-cover');
     logo.src = 'assets/player-cover.png';
-    app.selectTrack('chill-out', 0);
+    app.selectTrack('techno-freaks', 0);
     assert.equal(logo.src, 'assets/player-cover.png');
     state.isPlaying = true;
     state.isBuffering = false;
