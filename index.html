@@ -67,7 +67,7 @@
                 ]
             }
         </script>
-        <link rel="stylesheet" href="styles.css?v=20260914-brand-nav">
+        <link rel="stylesheet" href="styles.css?v=20260914-favorites">
         <link rel="icon" type="image/png" href="assets/player-cover.png">
     </head>
     <body>
@@ -84,6 +84,8 @@
             <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
             <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></symbol>
             <symbol id="i-wave" viewBox="0 0 24 24"><path d="M3 10v4m4-8v12m5-16v20m5-16v12m4-8v4"/></symbol>
+            <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></symbol>
+            <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9Z"/></symbol>
             <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
         </defs></svg>
         <a class="skip-link" href="#main-content">Saltar al contenido</a>
@@ -95,7 +97,7 @@
                 <a class="nav-link" href="#tracklists" data-view="tracklists">[TRACKLISTS]</a>
                 <a class="nav-link" href="#tour-dates" data-view="tour-dates">[TOUR DATES]</a>
                 <a class="nav-link" href="#acerca" data-view="acerca">[ABOUT]</a>
-                <a class="nav-link" href="#manifesto" data-view="manifesto">[MANIFEST]</a>
+                <a class="nav-link" href="#manifesto" data-view="manifesto">[MANIFESTO]</a>
             </nav>
             <nav class="social-links" aria-label="Redes sociales de Nicolás Cardú">
                 <a href="https://www.soundcloud.com/nicolascardu" class="social-btn" title="SoundCloud" aria-label="SoundCloud" target="_blank" rel="noopener noreferrer"><img src="assets/icons/soundcloud.svg" alt="" aria-hidden="true"></a>
@@ -137,6 +139,7 @@
                         <button class="filter-button" data-filter="chill-out" aria-pressed="false" hidden>MUSIC</button>
                         <button class="filter-button active" data-filter="techno-freaks" aria-pressed="true">CARDÚ</button>
                     </div>
+                    <button type="button" class="filter-button favorites-filter" id="favorites-filter" aria-pressed="false" title="Favoritos guardados en este navegador"><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg> Favoritos</button>
                     <span class="set-count"><span id="playlist-count">0</span> sets</span>
                 </div>
                 <div id="loading-initial" class="load-status" role="status">Cargando sets…</div>
@@ -190,7 +193,7 @@
             <p id="player-message" class="player-message" role="status" hidden></p>
         </section>
         <audio id="audio-player" preload="metadata"></audio>
-        <script src="js/gdrive-player.js?v=20260914-signature-routes"></script>
+        <script src="js/gdrive-player.js?v=20260914-favorites"></script>
         <script src="js/visits.js?v=20260914"></script>
     </body>
 </html>

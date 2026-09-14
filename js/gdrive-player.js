@@ -14,7 +14,7 @@ const defaultCollectionId = 'techno-freaks';
 const playerState = {
     playlists: enabledPlaylistSources.map(source => ({ ...source, tracks: [], error: '' })),
     activePlaylistId: defaultCollectionId, currentTrackIndex: 0,
-    isPlaying: false, isBuffering: false, radio: false, filter: defaultCollectionId, loaded: false, requestId: 0
+    isPlaying: false, isBuffering: false, radio: false, filter: defaultCollectionId, favoritesOnly: false, loaded: false, requestId: 0
 };
 const waveformState = {
     canvas: null, status: null, peaks: [], cache: new Map(), requestId: 0,
@@ -44,7 +44,7 @@ function normalizeR2Playlist(data, source) {
         const url = safeMediaUrl(track.url || fallback);
         const extension = (track.key || url).split('?')[0].split('.').pop().toUpperCase();
         return {
-            name: track.name, artist: track.artist || 'Nicolás Cardú', url,
+            key: track.key || '', name: track.name, artist: track.artist || 'Nicolás Cardú', url,
             waveformUrl: safeMediaUrl(usesHostedProxy ? fallback : (track.waveformUrl || track.waveform_url || fallback || url)),
             duration: normalizeDuration(track.duration || track.durationSeconds || track.duration_seconds),
             format: ['FLAC', 'WAV', 'MP3', 'OGG', 'M4A', 'AAC'].includes(extension) ? extension : 'AUDIO',
@@ -89,7 +89,11 @@ function renderCatalogue() {
     const root = $('playlist');
     root.replaceChildren();
     const selected = playerState.playlists.filter(p => p.id === playerState.filter);
-    $('playlist-count').textContent = selected.reduce((total, p) => total + p.tracks.length, 0);
+    const tracks = selected.flatMap(p => p.tracks.map((track, index) => ({ track, index, playlist: p })))
+        .filter(({ track }) => !playerState.favoritesOnly || playerState.filter === 'radio' || setPreferences.favorites.has(setPreferenceId(track)));
+    $('playlist-count').textContent = tracks.length;
+    $('favorites-filter').classList.toggle('active', playerState.favoritesOnly);
+    $('favorites-filter').setAttribute('aria-pressed', String(playerState.favoritesOnly));
     const errors = selected.filter(p => p.error);
     if (errors.length) {
         const status = document.createElement('div');
@@ -101,11 +105,10 @@ function renderCatalogue() {
         retry.addEventListener('click', () => { retry.disabled = true; loadCatalogue(); });
         status.append(message, retry); root.append(status);
     }
-    const tracks = selected.flatMap(p => p.tracks.map((track, index) => ({ track, index, playlist: p })));
     if (!tracks.length) {
         if (!errors.length) {
             const empty = document.createElement('p'); empty.className = 'empty-state';
-            empty.textContent = playerState.loaded ? 'Todavía no hay sets en esta colección.' : 'Cargando tus sets…';
+            empty.textContent = !playerState.loaded ? 'Cargando tus sets…' : playerState.favoritesOnly && playerState.filter !== 'radio' ? 'Todavía no guardaste favoritos en esta colección.' : 'Todavía no hay sets en esta colección.';
             root.append(empty);
         }
         return;
@@ -116,7 +119,7 @@ function renderCatalogue() {
     root.append(heading);
     const list = document.createElement('ol'); list.className = 'track-list';
     tracks.forEach(({ track, index, playlist }, order) => {
-        const li = document.createElement('li');
+        const li = document.createElement('li'); li.className = 'track-entry';
         const button = document.createElement('button'); button.className = 'track-row';
         button.dataset.playlistId = playlist.id; button.dataset.trackIndex = index;
         button.setAttribute('aria-label', `Reproducir ${track.name}, ${playlist.title}`);
@@ -137,7 +140,7 @@ function renderCatalogue() {
             if (currentTrack()?.url === track.url) togglePlay();
             else playTrack(playlist.id, index, false);
         });
-        li.append(button); list.append(li);
+        li.append(button, createTrackActions(track)); list.append(li);
     });
     root.append(list); syncActiveRows();
 }
@@ -271,6 +274,7 @@ function route() {
     const view = collection ? 'sets' : ['radio', 'tracklists', 'manifesto', 'acerca', 'tour-dates'].includes(requested) ? requested : 'sets';
     playerState.filter = view === 'radio' ? 'radio' : collection ? collection.id : defaultCollectionId;
     $('collection-filters').hidden = view !== 'sets';
+    $('favorites-filter').hidden = view !== 'sets';
     $('page-title').textContent = collection?.title || ({ sets: 'SETS', radio: 'RADIO', tracklists: 'TRACKLISTS', manifesto: 'MANIFESTO', acerca: 'ABOUT', 'tour-dates': 'TOUR DATES' })[view];
     $('radio-feature').hidden = view !== 'radio';
     $('collections-section').hidden = view !== 'sets';
@@ -301,6 +305,15 @@ function initPlayer() {
     audio = $('audio-player'); audio.volume = .8;
     setupWaveform(audio, $('waveform-canvas'), $('waveform-status'));
     $('play-button').addEventListener('click', togglePlay);
+    $('favorites-filter').addEventListener('click', () => {
+        playerState.favoritesOnly = !playerState.favoritesOnly;
+        renderCatalogue();
+    });
+    window.addEventListener('storage', event => {
+        if (event.key === setPreferencesKey || event.key === null) {
+            setPreferences = readSetPreferences(); renderCatalogue();
+        }
+    });
     $('next-button').addEventListener('click', () => nextTrack());
     $('prev-button').addEventListener('click', () => nextTrack(-1));
     $('radio-button').addEventListener('click', startRadio);
@@ -712,4 +725,54 @@ function formatTime(seconds) {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+// Personal likes and favorites are saved in this browser, without an account.
+const setPreferencesKey = 'ncc-set-preferences-v1';
+function readSetPreferences() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(setPreferencesKey) || '{}');
+        return {
+            likes: new Set(Array.isArray(saved.likes) ? saved.likes.filter(value => typeof value === 'string') : []),
+            favorites: new Set(Array.isArray(saved.favorites) ? saved.favorites.filter(value => typeof value === 'string') : [])
+        };
+    } catch { return { likes: new Set(), favorites: new Set() }; }
+}
+let setPreferences = readSetPreferences();
+function setPreferenceId(track) { return track.key || track.url; }
+function toggleSetPreference(track, kind) {
+    const id = setPreferenceId(track);
+    const updated = { likes: new Set(setPreferences.likes), favorites: new Set(setPreferences.favorites) };
+    if (updated[kind].has(id)) updated[kind].delete(id); else updated[kind].add(id);
+    try {
+        localStorage.setItem(setPreferencesKey, JSON.stringify({ likes: [...updated.likes], favorites: [...updated.favorites] }));
+    } catch {
+        showMessage('El navegador no permite guardar tus preferencias. Revisá su configuración de almacenamiento.');
+        return false;
+    }
+    setPreferences = updated;
+    return true;
+}
+function createTrackActions(track) {
+    const actions = document.createElement('div');
+    actions.className = 'track-actions';
+    for (const [kind, symbol, label] of [['likes', 'heart', 'Me gusta'], ['favorites', 'star', 'Favorito']]) {
+        const button = document.createElement('button');
+        button.type = 'button'; button.className = 'track-action';
+        button.dataset.preference = kind; button.dataset.preferenceId = setPreferenceId(track);
+        const selected = setPreferences[kind].has(setPreferenceId(track));
+        button.setAttribute('aria-pressed', String(selected));
+        button.setAttribute('aria-label', (selected ? 'Quitar ' : '') + label + ': ' + track.name);
+        button.title = (selected ? 'Quitar ' : '') + label + ' · Guardado en este navegador';
+        button.innerHTML = icon(symbol) + '<span>' + label + '</span>';
+        button.addEventListener('click', () => {
+            if (!toggleSetPreference(track, kind)) return;
+            renderCatalogue();
+            const replacement = [...document.querySelectorAll('[data-preference]')].find(item =>
+                item.dataset.preference === kind && item.dataset.preferenceId === setPreferenceId(track));
+            (replacement || $('favorites-filter')).focus({ preventScroll: true });
+        });
+        actions.append(button);
+    }
+    return actions;
 }

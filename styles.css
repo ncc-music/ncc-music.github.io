@@ -258,7 +258,7 @@ input[type=range]:disabled { opacity: .4; cursor: default; }
     position: relative;
     width: 85%;
     max-width: 952px;
-    aspect-ratio: 4 / 1;
+    aspect-ratio: 4.6 / 1;
     margin: 12px auto 0;
     overflow: hidden;
 }
@@ -269,7 +269,7 @@ input[type=range]:disabled { opacity: .4; cursor: default; }
     left: 0;
     width: 100%;
     height: auto;
-    transform: translateY(-50%) scaleY(1.2);
+    transform: translateY(-50%) scaleY(1.05);
     mix-blend-mode: screen;
 }
 .mix-signature + main { padding-top: 10px; }
@@ -485,4 +485,26 @@ main:has(.radio-upcoming:not([hidden])) #page-quality { display: none; }
 }
 @media (max-width: 540px) {
     .brand { font-size: 48px; padding-bottom: 14px; }
+}
+
+.favorites-filter { display: inline-flex; align-items: center; gap: 7px; margin-right: auto; }
+.favorites-filter .icon { width: 17px; height: 17px; }
+.favorites-filter[aria-pressed=true] { color: var(--accent); }
+.favorites-filter[aria-pressed=true] .icon { fill: currentColor; }
+.track-entry { display: flex; align-items: stretch; border-bottom: 1px solid var(--line); }
+.track-entry .track-row { flex: 1; min-width: 0; border-bottom: 0; }
+.track-table-head { padding-right: 118px; }
+.track-actions { display: flex; align-items: center; gap: 4px; padding: 0 10px; }
+.track-action { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 40px; min-height: 44px; padding: 8px; border-radius: 3px; background: transparent; color: var(--muted); }
+.track-action .icon { width: 19px; height: 19px; }
+.track-action span { display: none; font-size: 12px; }
+.track-action:hover { color: var(--text); background: #ffffff08; }
+.track-action[aria-pressed=true] { color: var(--accent); }
+.track-action[aria-pressed=true] .icon { fill: currentColor; }
+@media (max-width: 540px) {
+    .track-entry { flex-wrap: wrap; }
+    .track-entry .track-row { flex-basis: 100%; }
+    .track-actions { width: 100%; justify-content: flex-end; padding: 0 4px 6px; }
+    .track-action span { display: inline; }
+    .favorites-filter { margin-right: auto; }
 }
