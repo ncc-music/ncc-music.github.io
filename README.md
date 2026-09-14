@@ -200,3 +200,7 @@ El pie de página muestra un contador global con la fuente local Road Rage (lice
 Para activarlo en producción, publicar también la versión actualizada de `cloudflare-worker.js` en el Worker existente. Utiliza el binding R2 existente (`MY_BUCKET` o `MUSIC_BUCKET`) y guarda el total en `__site/visits.json`, sin modificar los audios. `GET /visits` consulta; `POST /visits` incrementa usando escrituras condicionales para evitar perder incrementos simultáneos. El conteo empieza en cero al activarlo; no reconstruye visitas anteriores. Si el servicio falla se muestra «—», nunca un total inventado.
 
 La vista previa local utiliza un contador SQLite separado en el servidor de edición. Las vistas previas de Sites solo consultan el total público y no lo incrementan.
+
+## Me gusta y favoritos
+
+Cada set tiene un corazón para marcar «Me gusta» y una estrella para guardarlo como favorito. Son preferencias personales guardadas en el navegador, sin cuenta ni recuento público de likes. El filtro «Favoritos» permite volver a los sets guardados. Las preferencias persisten al recargar y se sincronizan entre pestañas del mismo navegador; no se transfieren entre dispositivos. Si se bloquea el almacenamiento, el sitio avisa y no indica que se haya guardado.
