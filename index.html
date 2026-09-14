@@ -67,7 +67,7 @@
                 ]
             }
         </script>
-        <link rel="stylesheet" href="styles.css?v=20260913-manifesto-underground">
+        <link rel="stylesheet" href="styles.css?v=20260914-brand-nav">
         <link rel="icon" type="image/png" href="assets/player-cover.png">
     </head>
     <body>
@@ -91,11 +91,11 @@
             <a href="#sets" class="brand" aria-label="NCC Music, inicio"><span class="brand-wordmark" aria-hidden="true">NCC<span class="brand-dot">.</span></span><span class="brand-music" aria-hidden="true">Music</span></a>
             <nav class="main-nav" aria-label="Escuchar">
                 <a class="nav-link active" href="#sets" data-view="sets" aria-current="page">[SETS]</a>
-                <a class="nav-link" href="#tracklists" data-view="tracklists">[TRACKLISTS]</a>
                 <a class="nav-link" href="#radio" data-view="radio">[RADIO]</a>
-                <a class="nav-link" href="#acerca" data-view="acerca">[ABOUT]</a>
+                <a class="nav-link" href="#tracklists" data-view="tracklists">[TRACKLISTS]</a>
                 <a class="nav-link" href="#tour-dates" data-view="tour-dates">[TOUR DATES]</a>
-                <a class="nav-link" href="#manifesto" data-view="manifesto">[MANIFESTO]</a>
+                <a class="nav-link" href="#acerca" data-view="acerca">[ABOUT]</a>
+                <a class="nav-link" href="#manifesto" data-view="manifesto">[MANIFEST]</a>
             </nav>
             <nav class="social-links" aria-label="Redes sociales de Nicolás Cardú">
                 <a href="https://www.soundcloud.com/nicolascardu" class="social-btn" title="SoundCloud" aria-label="SoundCloud" target="_blank" rel="noopener noreferrer"><img src="assets/icons/soundcloud.svg" alt="" aria-hidden="true"></a>
@@ -104,16 +104,19 @@
                 <a href="https://t.me/nicolascardu" class="social-btn" title="Telegram · Descargar sets" aria-label="Telegram · Descargar sets" target="_blank" rel="noopener noreferrer"><img src="assets/icons/telegram.svg" alt="" aria-hidden="true"></a>
             </nav>
         </header>
-        <div class="mix-signature"><img src="assets/mixed-by-single-line.png" alt="Mixed by Nicolás Cardú" width="2172" height="724"></div>
+        <div class="mix-signature" id="mix-signature"><img src="assets/mixed-by-single-line.png" alt="Mixed by Nicolás Cardú" width="2172" height="724"></div>
         <main id="main-content" tabindex="-1">
             <div class="page-heading">
                 <h1 id="page-title">SETS</h1>
                 <span class="quality-label" id="page-quality">LOSSLESS</span>
             </div>
-            <section class="radio-feature" id="radio-feature" hidden aria-labelledby="radio-title">
-                <svg class="icon radio-icon" aria-hidden="true"><use href="#i-radio"/></svg>
-                <div class="radio-copy"><h2 id="radio-title">NCC Radio</h2><p>A personal collection for after-hours grooving.</p></div>
-                <button class="primary-button" id="radio-button" disabled><svg class="icon" aria-hidden="true"><use href="#i-play"/></svg><span>Escuchar radio</span></button>
+            <section class="radio-feature radio-upcoming" id="radio-feature" hidden aria-labelledby="radio-title">
+                <p class="radio-coming-soon"><span aria-hidden="true">///</span> COMING SOON <span aria-hidden="true">///</span></p>
+                <div class="radio-player-content">
+                    <svg class="icon radio-icon" aria-hidden="true"><use href="#i-radio"/></svg>
+                    <div class="radio-copy"><h2 id="radio-title">NCC RADIO</h2><p>A personal collection for after-hours grooving.</p></div>
+                    <button class="primary-button" id="radio-button" disabled><svg class="icon" aria-hidden="true"><use href="#i-play"/></svg><span>Escuchar radio</span></button>
+                </div>
             </section>
             <section class="collections-section" id="collections-section" aria-label="Colecciones">
                 <a class="collection-card" href="#chill-out" data-collection="chill-out" hidden>
@@ -176,7 +179,8 @@
             </section>
             <footer class="page-footer">
                 <span>© 2026 NCC Music</span>
-                <div><a href="#acerca">Info y contacto</a></div>
+                <div class="visit-counter" id="visit-counter" aria-label="Contador de visitas"><span class="visit-label">VISITAS</span><span id="visit-count">—</span></div>
+                <a class="footer-about" href="#acerca">[ ABOUT ]</a>
             </footer>
         </main>
         <section class="player-dock" aria-label="Reproductor de música"><div class="now-playing"><img id="now-cover" src="assets/player-cover.png" alt="Logo NCC" class="now-cover"><div class="now-info"><span id="player-mode" class="player-mode">LISTO PARA ESCUCHAR</span><h2 id="track-name">Elegí un set</h2><p id="track-artist">Nicolás Cardú</p></div></div>
@@ -186,6 +190,7 @@
             <p id="player-message" class="player-message" role="status" hidden></p>
         </section>
         <audio id="audio-player" preload="metadata"></audio>
-        <script src="js/gdrive-player.js?v=20260913-manifesto"></script>
+        <script src="js/gdrive-player.js?v=20260914-signature-routes"></script>
+        <script src="js/visits.js?v=20260914"></script>
     </body>
 </html>

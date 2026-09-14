@@ -5,6 +5,15 @@ const PREFIXES = new Set(['chill-out/', 'techno-freaks/', 'radio/']);
 export default {
     async fetch(request, env) {
         const url = new URL(request.url);
+        if (url.pathname === '/api/visits') {
+            if (request.method !== 'GET') return new Response('Method not allowed', { status: 405 });
+            try {
+                const response = await fetch(new URL('/visits', UPSTREAM), { signal: AbortSignal.timeout(8000) });
+                return new Response(response.body, { status: response.status, headers: {
+                    'Content-Type': 'application/json', 'Cache-Control': 'no-store'
+                } });
+            } catch { return Response.json({ error: 'Counter unavailable' }, { status: 503 }); }
+        }
         if (url.pathname !== '/api/playlist' && !url.pathname.startsWith('/audio/')) {
             return env.ASSETS.fetch(request);
         }

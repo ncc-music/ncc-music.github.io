@@ -279,6 +279,7 @@ function route() {
     $('about-section').hidden = view !== 'acerca';
     $('tour-section').hidden = view !== 'tour-dates';
     $('manifesto-section').hidden = view !== 'manifesto';
+    $('mix-signature').hidden = !['sets', 'tracklists', 'radio'].includes(view);
     $('page-quality').hidden = !['sets', 'radio'].includes(view);
     $('sets-title').textContent = view === 'radio' ? 'En la radio' : collection ? 'Sets de la colección' : 'SETS';
     document.querySelectorAll('[data-view]').forEach(link => {

@@ -192,3 +192,11 @@ Este proyecto está bajo la licencia MIT.
 Hecho con ❤️ para los amantes del audio de calidad.
 
 **[🎵 Visita el sitio](https://www.ncc.ar)**
+
+## Contador de visitas
+
+El pie de página muestra un contador global con la fuente local Road Rage (licencia OFL incluida). Cuenta cargas y recargas de página, no personas únicas; cambiar entre solapas no suma visitas. No guarda direcciones IP ni identificadores de visitantes.
+
+Para activarlo en producción, publicar también la versión actualizada de `cloudflare-worker.js` en el Worker existente. Utiliza el binding R2 existente (`MY_BUCKET` o `MUSIC_BUCKET`) y guarda el total en `__site/visits.json`, sin modificar los audios. `GET /visits` consulta; `POST /visits` incrementa usando escrituras condicionales para evitar perder incrementos simultáneos. El conteo empieza en cero al activarlo; no reconstruye visitas anteriores. Si el servicio falla se muestra «—», nunca un total inventado.
+
+La vista previa local utiliza un contador SQLite separado en el servidor de edición. Las vistas previas de Sites solo consultan el total público y no lo incrementan.
