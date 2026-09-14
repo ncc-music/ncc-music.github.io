@@ -14,6 +14,8 @@ export default {
             return new Response(null, { headers: corsHeaders(request, env) });
         }
 
+        if (url.pathname === "/visits") return handleVisits(request, env);
+
         if (request.method !== "GET") {
             return jsonResponse({ error: "Method not allowed" }, request, env, 405);
         }
@@ -169,7 +171,7 @@ function corsHeaders(request, env) {
 
     return new Headers({
         "Access-Control-Allow-Origin": allowedOrigin,
-        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type, Range",
         "Access-Control-Expose-Headers": "Content-Length, Content-Type, ETag",
         "Vary": "Origin",
@@ -178,4 +180,37 @@ function corsHeaders(request, env) {
 
 function isLocalOrigin(origin) {
     return /^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(origin);
+}
+
+// Global page-view count; no IP addresses, cookies or visitor identifiers are stored.
+async function handleVisits(request, env) {
+    const headers = { "Cache-Control": "no-store" };
+    if (!["GET", "POST"].includes(request.method)) {
+        return jsonResponse({ error: "Method not allowed" }, request, env, 405, headers);
+    }
+    const allowed = [...DEFAULT_ALLOWED_ORIGINS, ...[env.ALLOWED_ORIGINS, env.ALLOWED_ORIGIN]
+        .filter(Boolean).flatMap(value => value.split(",").map(item => item.trim()))];
+    if (request.method === "POST" && !allowed.includes(request.headers.get("Origin"))) {
+        return jsonResponse({ error: "Origin not allowed" }, request, env, 403, headers);
+    }
+    const bucket = env.MY_BUCKET || env.MUSIC_BUCKET;
+    if (!bucket) return jsonResponse({ error: "Counter unavailable" }, request, env, 503, headers);
+    try {
+        const key = "__site/visits.json";
+        for (let attempt = 0; attempt < 8; attempt++) {
+            const current = await bucket.get(key);
+            const count = current ? (await current.json()).count : 0;
+            if (!Number.isSafeInteger(count) || count < 0) throw new Error("Invalid stored counter");
+            if (request.method === "GET") return jsonResponse({ count }, request, env, 200, headers);
+            if (!Number.isSafeInteger(count + 1)) throw new Error("Counter limit");
+            const saved = await bucket.put(key, JSON.stringify({ count: count + 1 }), {
+                onlyIf: current ? { etagMatches: current.etag } : new Headers({ "If-None-Match": "*" }),
+                httpMetadata: { contentType: "application/json" }
+            });
+            if (saved) return jsonResponse({ count: count + 1 }, request, env, 200, headers);
+        }
+        throw new Error("Counter busy");
+    } catch {
+        return jsonResponse({ error: "Counter unavailable" }, request, env, 503, headers);
+    }
 }

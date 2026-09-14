@@ -1,4 +1,5 @@
 :root {
+    scrollbar-gutter: stable;
     color-scheme: dark;
     --bg: #101112;
     --surface: #18191b;
@@ -257,7 +258,7 @@ input[type=range]:disabled { opacity: .4; cursor: default; }
     position: relative;
     width: 85%;
     max-width: 952px;
-    aspect-ratio: 5 / 1;
+    aspect-ratio: 4 / 1;
     margin: 12px auto 0;
     overflow: hidden;
 }
@@ -268,20 +269,17 @@ input[type=range]:disabled { opacity: .4; cursor: default; }
     left: 0;
     width: 100%;
     height: auto;
-    transform: translateY(-50%);
+    transform: translateY(-50%) scaleY(1.2);
     mix-blend-mode: screen;
 }
 .mix-signature + main { padding-top: 10px; }
+.mix-signature[hidden] + main { padding-top: 32px; }
 @media (max-width: 540px) {
     .mix-signature { margin-top: 10px; }
     .mix-signature + main { padding-top: 8px; }
 }
 
 /* Keep the playlist close to the navigation; collections act as compact headings. */
-body:has(#collections-section:not([hidden])) .mix-signature {
-    width: min(62%, 440px);
-    margin-top: 8px;
-}
 main:has(#collections-section:not([hidden])) .page-heading { margin-bottom: 12px; }
 main:has(#collections-section:not([hidden])) .page-heading h1 {
     font-size: 18px;
@@ -302,7 +300,6 @@ main:has(#collections-section:not([hidden])) .page-heading h1 {
 .sets-toolbar { justify-content: flex-end; }
 .collection-filters { margin-right: auto; }
 @media (max-width: 540px) {
-    body:has(#collections-section:not([hidden])) .mix-signature { width: min(70%, 300px); margin-top: 4px; }
     .collection-card { min-height: 72px; }
     .collection-art { width: 64px; min-height: 72px; }
     .techno-cover img { width: 46px; height: 46px; }
@@ -383,4 +380,109 @@ main:has(#collections-section:not([hidden])) .page-heading h1 {
     .manifesto-section article { padding-top: 20px; }
     .manifesto-section article > p:not(.manifesto-author) { font-size: 18px; line-height: 1.8; margin-bottom: 28px; }
     .manifesto-section article > p:last-child { padding-left: 16px; }
+}
+
+/* A crossed industrial tape marks the radio's upcoming launch. */
+.radio-upcoming {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0,1fr);
+    place-items: center;
+    min-height: 220px;
+    gap: 26px;
+    padding: 26px;
+    overflow: hidden;
+    isolation: isolate;
+    border: 1px solid #ffffff1c;
+    border-radius: 0;
+    background: repeating-linear-gradient(0deg, #ffffff03 0 1px, transparent 1px 5px), #101112;
+}
+.radio-player-content { display: flex; align-items: center; gap: 20px; width: 100%; }
+.radio-upcoming .radio-copy { flex: 1; min-width: 0; text-align: left; }
+.radio-player-content .primary-button { flex-shrink: 0; }
+.radio-upcoming .radio-copy h2 {
+    margin: 0 0 8px;
+    color: #72776b;
+    font-family: Impact, Haettenschweiler, "Arial Narrow", sans-serif;
+    font-size: clamp(24px, 3vw, 32px);
+    font-weight: 400;
+    letter-spacing: .16em;
+    line-height: 1;
+}
+.radio-upcoming .radio-copy p { max-width: none; margin: 0; font-size: 13px; color: #a7ab9f; }
+.radio-coming-soon {
+    position: relative;
+    width: min(78%, 400px);
+    margin: 14px 0;
+    transform: rotate(-4deg);
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    padding: 8px 0;
+    border-top: 1px dashed #ffffff75;
+    border-bottom: 1px dashed #ffffff75;
+    outline: 1px solid #ffffff20;
+    outline-offset: 4px;
+    background: repeating-linear-gradient(176deg, #ffffff12 0 1px, transparent 1px 7px), #ffffff08;
+    color: #fff;
+    text-shadow: 2px 2px 0 #000b, -1px 0 0 #ffffff30;
+    box-shadow: inset 0 0 18px #ffffff06, 0 8px 20px #0005;
+    font-family: Impact, Haettenschweiler, "Arial Narrow", sans-serif;
+    font-size: clamp(24px, 4vw, 36px);
+    line-height: 1;
+    letter-spacing: .055em;
+    white-space: nowrap;
+}
+.radio-coming-soon > span { font-size: .65em; letter-spacing: -.08em; }
+main:has(.radio-upcoming:not([hidden])) #page-quality { display: none; }
+@media (max-width: 540px) {
+    .radio-upcoming { min-height: 220px; padding: 22px 12px; }
+    .radio-player-content { display: grid; grid-template-columns: 24px minmax(0,1fr); gap: 16px; }
+    .radio-player-content .primary-button { grid-column: 1 / -1; justify-self: stretch; margin-top: 0; }
+    .radio-upcoming .radio-copy h2 { margin-bottom: 8px; }
+    .radio-upcoming .radio-copy p { font-size: 11px; }
+    .radio-coming-soon { font-size: clamp(22px, 6.5vw, 28px); gap: 12px; padding-block: 8px; }
+}
+
+@font-face {
+    font-family: "Road Rage";
+    src: url("assets/fonts/RoadRage-Regular.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+.page-footer { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 20px; }
+.page-footer .footer-about { justify-self: end; color: var(--text); font-weight: 550; letter-spacing: .06em; white-space: nowrap; }
+.page-footer .visit-counter { display: flex; align-items: baseline; justify-content: center; gap: 12px; color: #fff; transform: rotate(-3deg); }
+.visit-counter span { font-family: "Road Rage", Impact, sans-serif; font-weight: 400; line-height: 1; }
+.visit-counter .visit-label { font-size: 27px; letter-spacing: .035em; }
+#visit-count { font-size: 38px; min-width: 4ch; text-align: right; }
+@media (max-width: 540px) {
+    .page-footer { grid-template-columns: 1fr auto; gap: 24px 14px; }
+    .page-footer .visit-counter { grid-column: 1 / -1; grid-row: 1; }
+    .page-footer .footer-about { grid-column: 2; }
+}
+
+/* Rough lettering keeps the compact, two-line NCC MUSIC signature. */
+.brand {
+    padding-bottom: 17px;
+    font-family: "Road Rage", Impact, sans-serif;
+    font-size: 64px;
+    font-weight: 400;
+    line-height: .8;
+    letter-spacing: -1px;
+}
+.brand-wordmark { transform: rotate(-4deg) skewX(-5deg); }
+.brand-music {
+    top: 59%;
+    font-family: "Road Rage", Impact, sans-serif;
+    font-size: .48em;
+    font-weight: 400;
+    letter-spacing: .015em;
+    transform: translateX(-50%) rotate(-9deg);
+}
+@media (max-width: 540px) {
+    .brand { font-size: 48px; padding-bottom: 14px; }
 }
