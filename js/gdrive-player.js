@@ -4,14 +4,17 @@ const playlistApiUrl = usesHostedProxy
     ? new URL('/api/playlist', location.origin).href
     : 'https://rapid-silence-8ef7.nc-music-87a.workers.dev/';
 const playlistSources = [
-    { id: 'chill-out', title: 'MUSIC', prefix: 'chill-out/', cover: 'assets/chill-cover.jpg' },
-    { id: 'techno-freaks', title: 'TECHNO', prefix: 'techno-freaks/', cover: 'assets/player-cover.jpg' },
+    // Set enabled to true to show MUSIC again; its catalogue and artwork are preserved.
+    { id: 'chill-out', enabled: false, title: 'MUSIC', prefix: 'chill-out/', cover: 'assets/chill-cover.jpg' },
+    { id: 'techno-freaks', title: 'CARDÚ', prefix: 'techno-freaks/', cover: 'assets/player-cover.jpg' },
     { id: 'radio', title: 'NCC Radio', prefix: 'radio/', cover: 'assets/player-cover.png' }
 ];
+const enabledPlaylistSources = playlistSources.filter(source => source.enabled !== false);
+const defaultCollectionId = 'techno-freaks';
 const playerState = {
-    playlists: playlistSources.map(source => ({ ...source, tracks: [], error: '' })),
-    activePlaylistId: 'techno-freaks', currentTrackIndex: 0,
-    isPlaying: false, isBuffering: false, radio: false, filter: 'chill-out', loaded: false, requestId: 0
+    playlists: enabledPlaylistSources.map(source => ({ ...source, tracks: [], error: '' })),
+    activePlaylistId: defaultCollectionId, currentTrackIndex: 0,
+    isPlaying: false, isBuffering: false, radio: false, filter: defaultCollectionId, loaded: false, requestId: 0
 };
 const waveformState = {
     canvas: null, status: null, peaks: [], cache: new Map(), requestId: 0,
@@ -66,7 +69,7 @@ async function loadCatalogue() {
     $('loading-initial').hidden = false;
     $('loading-initial').textContent = 'Cargando tus sets…';
     const selected = currentTrack();
-    playerState.playlists = await Promise.all(playlistSources.map(loadPlaylistSource));
+    playerState.playlists = await Promise.all(enabledPlaylistSources.map(loadPlaylistSource));
     playerState.loaded = true;
     $('loading-initial').hidden = true;
     let retainedSelection = false;
@@ -160,6 +163,7 @@ function syncPlaybackUI() {
     $('play-button').title = playing ? 'Pausa' : 'Reproducir';
     ['play-button', 'prev-button', 'next-button'].forEach(id => { $(id).disabled = !available; });
     $('radio-button').disabled = !getPlaylistById('radio')?.tracks.length;
+    $('collection-play-button').disabled = !getPlaylistById('techno-freaks')?.tracks.length;
     const radioPlaying = playerState.radio && playing;
     $('radio-button').innerHTML = `${icon(radioPlaying ? 'pause' : 'play')}<span>${radioPlaying ? 'Pausar radio' : playerState.radio ? 'Continuar radio' : 'Escuchar radio'}</span>`;
     document.body.dataset.radio = playerState.radio ? 'on' : 'off';
@@ -263,17 +267,18 @@ async function loadPlaylistDurations() {
 }
 function route() {
     const requested = location.hash.slice(1) || 'sets';
-    const collection = playlistSources.find(p => p.id === requested && p.id !== 'radio');
-    const view = collection ? 'sets' : ['radio', 'tracklists', 'acerca', 'tour-dates'].includes(requested) ? requested : 'sets';
-    playerState.filter = view === 'radio' ? 'radio' : collection ? collection.id : 'chill-out';
+    const collection = enabledPlaylistSources.find(p => p.id === requested && p.id !== 'radio');
+    const view = collection ? 'sets' : ['radio', 'tracklists', 'manifesto', 'acerca', 'tour-dates'].includes(requested) ? requested : 'sets';
+    playerState.filter = view === 'radio' ? 'radio' : collection ? collection.id : defaultCollectionId;
     $('collection-filters').hidden = view !== 'sets';
-    $('page-title').textContent = collection?.title || ({ sets: 'SETS', radio: 'RADIO', tracklists: 'TRACKLISTS', acerca: 'ABOUT', 'tour-dates': 'TOUR DATES' })[view];
+    $('page-title').textContent = collection?.title || ({ sets: 'SETS', radio: 'RADIO', tracklists: 'TRACKLISTS', manifesto: 'MANIFESTO', acerca: 'ABOUT', 'tour-dates': 'TOUR DATES' })[view];
     $('radio-feature').hidden = view !== 'radio';
     $('collections-section').hidden = view !== 'sets';
     $('sets-section').hidden = !['sets', 'radio'].includes(view);
     $('tracklists-section').hidden = view !== 'tracklists';
     $('about-section').hidden = view !== 'acerca';
     $('tour-section').hidden = view !== 'tour-dates';
+    $('manifesto-section').hidden = view !== 'manifesto';
     $('page-quality').hidden = !['sets', 'radio'].includes(view);
     $('sets-title').textContent = view === 'radio' ? 'En la radio' : collection ? 'Sets de la colección' : 'SETS';
     document.querySelectorAll('[data-view]').forEach(link => {
@@ -281,7 +286,11 @@ function route() {
         link.classList.toggle('active', active);
         if (active) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current');
     });
+    document.querySelectorAll('[data-collection]').forEach(card => {
+        card.hidden = !enabledPlaylistSources.some(source => source.id === card.dataset.collection);
+    });
     document.querySelectorAll('[data-filter]').forEach(button => {
+        button.hidden = !enabledPlaylistSources.some(source => source.id === button.dataset.filter);
         const active = button.dataset.filter === playerState.filter;
         button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active));
     });
@@ -294,6 +303,7 @@ function initPlayer() {
     $('next-button').addEventListener('click', () => nextTrack());
     $('prev-button').addEventListener('click', () => nextTrack(-1));
     $('radio-button').addEventListener('click', startRadio);
+    $('collection-play-button').addEventListener('click', () => playTrack('techno-freaks', 0));
     audio.addEventListener('play', () => { playerState.isPlaying = true; showMessage(''); syncPlaybackUI(); });
     audio.addEventListener('pause', () => { playerState.isPlaying = false; syncPlaybackUI(); });
     audio.addEventListener('waiting', () => { playerState.isBuffering = true; syncPlaybackUI(); });
@@ -345,6 +355,18 @@ function initPlayer() {
         const handlers = { play: startPlayback, pause: () => audio.pause(), nexttrack: () => nextTrack(), previoustrack: () => nextTrack(-1), seekto: detail => { if (isSeekable(audio)) audio.currentTime = clamp(detail.seekTime, 0, audio.duration); } };
         for (const [action, handler] of Object.entries(handlers)) try { navigator.mediaSession.setActionHandler(action, handler); } catch { /* Optional device support. */ }
     }
+    document.querySelectorAll('[data-manifesto-lang]').forEach(button => {
+        button.addEventListener('click', () => {
+            const language = button.dataset.manifestoLang;
+            $('manifesto-en').hidden = language !== 'en';
+            $('manifesto-es').hidden = language !== 'es';
+            document.querySelectorAll('[data-manifesto-lang]').forEach(option => {
+                const active = option === button;
+                option.classList.toggle('active', active);
+                option.setAttribute('aria-pressed', String(active));
+            });
+        });
+    });
     route(); syncPlaybackUI(); loadCatalogue();
 }
 document.addEventListener('DOMContentLoaded', initPlayer);

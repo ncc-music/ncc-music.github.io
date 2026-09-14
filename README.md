@@ -14,6 +14,14 @@ El sitio presenta una interfaz oscura y minimalista: live sets, filtros de colec
 - La tecla Espacio alterna reproducción y pausa. Las flechas izquierda/derecha cambian de set cuando el foco no está en otro control.
 - Se conservan las fuentes de audio de R2 y los enlaces oficiales de Nicolás Cardú.
 
+El botón de reproducción del encabezado **CARDÚ** inicia siempre el primer set de esa colección y permanece deshabilitado mientras no haya sets disponibles.
+
+### Colecciones activas
+
+Por el momento, SETS muestra únicamente **CARDÚ**. **NC MUSIC** queda oculta y su catálogo no se carga; sus archivos, portada y configuración se conservan. Los enlaces anteriores a `#chill-out` muestran TECHNO. NCC Radio sigue disponible en su sección.
+
+Para reactivar NC MUSIC, cambiá `enabled: false` por `enabled: true` en la fuente `chill-out` de `js/gdrive-player.js`. Su tarjeta y filtro vuelven a mostrarse automáticamente. Actualizá también la versión del script en `index.html` para renovar la caché y las descripciones del sitio si querés volver a mencionar MUSIC.
+
 ### Verificación y versión privada
 
 El proyecto sigue siendo HTML, CSS y JavaScript sin dependencias. `node --test tests/*.test.*` comprueba los flujos de reproducción. `node scripts/build-site.mjs` prepara una versión para Sites; el proxy de catálogo de esa versión evita cambiar la configuración del Worker original. GitHub Pages continúa usando el catálogo original directamente.
@@ -83,7 +91,7 @@ La web se aloja en GitHub Pages y los archivos de audio se alojan en Cloudflare 
 
 1. **Subir audios a R2**
    - Subí tus archivos de audio al bucket dentro de las carpetas `chill-out/` (MUSIC), `techno-freaks/` (TECHNO) y `radio/` (NCC Radio).
-   - La web muestra esas carpetas como las playlists **MUSIC** y **TECHNO**.
+   - La web muestra **CARDÚ**; **MUSIC** queda preparada para reactivarse.
    - El bucket debe permitir acceso público a los archivos que use el reproductor.
 
 2. **Crear un Worker en Cloudflare**
