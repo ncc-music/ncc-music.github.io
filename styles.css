@@ -256,10 +256,10 @@ input[type=range]:disabled { opacity: .4; cursor: default; }
 
 .mix-signature {
     position: relative;
-    width: 85%;
-    max-width: 952px;
+    width: min(85vw, 952px);
+    max-width: 100%;
     aspect-ratio: 4.6 / 1;
-    margin: 12px auto 0;
+    margin: 32px auto 0;
     overflow: hidden;
 }
 .mix-signature img {
@@ -272,11 +272,9 @@ input[type=range]:disabled { opacity: .4; cursor: default; }
     transform: translateY(-50%) scaleY(1.05);
     mix-blend-mode: screen;
 }
-.mix-signature + main { padding-top: 10px; }
-.mix-signature[hidden] + main { padding-top: 32px; }
+main { padding-top: 32px; }
 @media (max-width: 540px) {
-    .mix-signature { margin-top: 10px; }
-    .mix-signature + main { padding-top: 8px; }
+    .mix-signature { margin-top: 24px; }
 }
 
 /* Keep the playlist close to the navigation; collections act as compact headings. */
