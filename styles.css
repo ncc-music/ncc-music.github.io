@@ -130,11 +130,12 @@ input[type=range]:disabled { opacity: .4; cursor: default; }
 .collection-copy h2 { margin: 5px 0; font-size: 21px; letter-spacing: -.5px; font-weight: 600; }
 .collection-copy p { font-size: 14px; color: var(--muted); }
 .collection-arrow { width: 18px; height: 18px; margin-left: auto; margin-right: 18px; color: var(--muted); }
-/* Original round social buttons, with the original icons served locally. */
+/* Circular social logos use the same monochrome brushwork as the banner. */
 .social-links { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0; }
-.social-btn { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; background: #e8f7a6; color: #030303; text-decoration: none; border-radius: 50%; border: 2px solid #e8f7a6; transition: background .2s, border-color .2s, transform .2s; }
-.social-btn:hover, .social-btn:focus-visible { background: #f4f9c7; border-color: #f4f9c7; transform: translateY(-2px); }
-.social-btn img { display: block; width: 22px; height: 22px; object-fit: contain; }
+.social-btn { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%; color: #fff; background: transparent; transition: transform .2s; }
+.social-btn img { display: block; width: 100%; height: auto; mix-blend-mode: screen; }
+.social-btn:hover, .social-btn:focus-visible { color: #fff; transform: translateY(-2px); }
+.social-btn:focus-visible { outline-color: #fff; }
 @media(min-width:1600px) {
     .player-dock { padding-left: max(32px,calc((100vw - 1440px) / 2)); padding-right: max(32px,calc((100vw - 1440px) / 2)); }
 }
@@ -258,8 +259,8 @@ input[type=range]:disabled { opacity: .4; cursor: default; }
     position: relative;
     width: min(85vw, 952px);
     max-width: 100%;
-    aspect-ratio: 4.6 / 1;
-    margin: 32px auto 0;
+    aspect-ratio: 8 / 1;
+    margin: 0 auto 24px;
     overflow: hidden;
 }
 .mix-signature img {
@@ -269,12 +270,12 @@ input[type=range]:disabled { opacity: .4; cursor: default; }
     left: 0;
     width: 100%;
     height: auto;
-    transform: translateY(-50%) scaleY(1.05);
+    transform: translateY(-50%) scaleY(.62);
     mix-blend-mode: screen;
 }
 main { padding-top: 32px; }
 @media (max-width: 540px) {
-    .mix-signature { margin-top: 24px; }
+    .mix-signature { margin-bottom: 22px; }
 }
 
 /* Keep the playlist close to the navigation; collections act as compact headings. */
@@ -485,7 +486,7 @@ main:has(.radio-upcoming:not([hidden])) #page-quality { display: none; }
     .brand { font-size: 48px; padding-bottom: 14px; }
 }
 
-.favorites-filter { display: inline-flex; align-items: center; gap: 7px; margin-right: auto; }
+.favorites-filter { display: inline-flex; align-items: center; gap: 7px; margin-left: auto; }
 .favorites-filter .icon { width: 17px; height: 17px; }
 .favorites-filter[aria-pressed=true] { color: var(--accent); }
 .favorites-filter[aria-pressed=true] .icon { fill: currentColor; }
@@ -504,5 +505,34 @@ main:has(.radio-upcoming:not([hidden])) #page-quality { display: none; }
     .track-entry .track-row { flex-basis: 100%; }
     .track-actions { width: 100%; justify-content: flex-end; padding: 0 4px 6px; }
     .track-action span { display: inline; }
-    .favorites-filter { margin-right: auto; }
+    .favorites-filter { margin-left: auto; }
+}
+
+/* Keep the current set's preferences within reach at every screen size. */
+.player-dock { grid-template-columns: minmax(0,1fr) minmax(250px,1.15fr) auto; }
+.player-options .quality-label { display: inline-block; }
+.player-preferences { display: flex; align-items: center; gap: 2px; }
+.player-preferences .track-action { flex-shrink: 0; }
+@media (min-width: 1201px) {
+    .site-header { gap: 18px; }
+    .main-nav { gap: 14px; }
+    .social-links { gap: 8px; }
+}
+@media (max-width: 760px) {
+    :root { --dock-height: 164px; }
+    .main-nav { gap: 12px; justify-content: space-between; }
+    .nav-link { font-size: 12px; }
+    .player-dock { grid-template-columns: minmax(0,1fr) minmax(235px,1fr); gap: 8px 22px; }
+    .player-options { display: flex; grid-column: 1 / -1; grid-row: 2; gap: 10px; }
+    .player-options .quality-label { display: inline-block; margin-right: auto; }
+    #waveform-toggle, #mute-button, #volume-slider { display: none; }
+    .player-preferences .track-action span { display: inline; }
+}
+@media (max-width: 540px) {
+    :root { --dock-height: 190px; }
+    .player-dock { grid-template-columns: minmax(0,1fr) 128px; }
+    .player-options { grid-row: 3; }
+}
+@media (max-width: 370px) {
+    .player-dock { grid-template-columns: minmax(0,1fr) 76px; }
 }

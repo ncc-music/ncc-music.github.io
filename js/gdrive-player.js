@@ -86,6 +86,7 @@ async function loadCatalogue() {
     loadPlaylistDurations();
 }
 function renderCatalogue() {
+    syncPlayerPreferences();
     const root = $('playlist');
     root.replaceChildren();
     const selected = playerState.playlists.filter(p => p.id === playerState.filter);
@@ -173,6 +174,7 @@ function syncPlaybackUI() {
     document.body.dataset.playing = playing && !playerState.isBuffering ? 'true' : 'false';
     $('player-mode').textContent = playerState.radio ? 'NCC RADIO' : currentTrack() ? 'LIVE SET' : 'LISTO PARA ESCUCHAR';
     syncActiveRows();
+    syncPlayerPreferences();
     if ('mediaSession' in navigator) navigator.mediaSession.playbackState = playing ? 'playing' : 'paused';
 }
 function selectTrack(playlistId, index, radio = false) {
@@ -184,7 +186,7 @@ function selectTrack(playlistId, index, radio = false) {
     playerState.radio = playlistId === 'radio'; playerState.isPlaying = false; playerState.isBuffering = true;
     audio.src = track.url;
     $('track-name').textContent = track.name; $('track-artist').textContent = track.artist;
-    $('audio-quality').textContent = track.format;
+    $('audio-quality').textContent = ['FLAC', 'WAV'].includes(track.format) ? 'Lossless' : track.format;
     $('duration').textContent = formatTrackDuration(track.duration); $('current-time').textContent = '0:00';
     $('seek-slider').value = 0; $('seek-slider').disabled = true; paintRange($('seek-slider'), 0);
     showMessage(''); resetWaveform(audio); syncPlaybackUI();
@@ -305,6 +307,8 @@ function initPlayer() {
     audio = $('audio-player'); audio.volume = .8;
     setupWaveform(audio, $('waveform-canvas'), $('waveform-status'));
     $('play-button').addEventListener('click', togglePlay);
+    $('player-like').addEventListener('click', () => toggleCurrentTrackPreference('likes'));
+    $('player-favorite').addEventListener('click', () => toggleCurrentTrackPreference('favorites'));
     $('favorites-filter').addEventListener('click', () => {
         playerState.favoritesOnly = !playerState.favoritesOnly;
         renderCatalogue();
@@ -740,6 +744,21 @@ function readSetPreferences() {
 }
 let setPreferences = readSetPreferences();
 function setPreferenceId(track) { return track.key || track.url; }
+function syncPlayerPreferences() {
+    const track = currentTrack();
+    for (const [id, kind, label] of [['player-like', 'likes', 'Me gusta'], ['player-favorite', 'favorites', 'Favorito']]) {
+        const button = $(id);
+        const selected = Boolean(track && setPreferences[kind].has(setPreferenceId(track)));
+        button.disabled = !track;
+        button.setAttribute('aria-pressed', String(selected));
+        button.setAttribute('aria-label', (selected ? 'Quitar ' : '') + label + (track ? ': ' + track.name : ''));
+        button.title = track ? (selected ? 'Quitar ' : '') + label + ' · Guardado en este navegador' : 'Elegí un set';
+    }
+}
+function toggleCurrentTrackPreference(kind) {
+    const track = currentTrack();
+    if (track && toggleSetPreference(track, kind)) renderCatalogue();
+}
 function toggleSetPreference(track, kind) {
     const id = setPreferenceId(track);
     const updated = { likes: new Set(setPreferences.likes), favorites: new Set(setPreferences.favorites) };
