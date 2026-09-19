@@ -44,7 +44,7 @@ function normalizeR2Playlist(data, source) {
         const url = safeMediaUrl(track.url || fallback);
         const extension = (track.key || url).split('?')[0].split('.').pop().toUpperCase();
         return {
-            key: track.key || '', name: track.name, artist: track.artist || 'Nicolás Cardú', url,
+            id: track.id, slug: track.slug, date: track.date || '', tracklist: track.tracklist || [], likes: track.likes ?? null, peaks: track.peaks || null, size: track.size, version: track.version || 0, published: track.published !== false, key: track.key || '', name: track.name, artist: track.artist || 'Nicolás Cardú', url,
             waveformUrl: safeMediaUrl(usesHostedProxy ? fallback : (track.waveformUrl || track.waveform_url || fallback || url)),
             duration: normalizeDuration(track.duration || track.durationSeconds || track.duration_seconds),
             format: ['FLAC', 'WAV', 'MP3', 'OGG', 'M4A', 'AAC'].includes(extension) ? extension : 'AUDIO',
@@ -121,15 +121,15 @@ function renderCatalogue() {
     const list = document.createElement('ol'); list.className = 'track-list';
     tracks.forEach(({ track, index, playlist }, order) => {
         const li = document.createElement('li'); li.className = 'track-entry';
-        const button = document.createElement('button'); button.className = 'track-row';
+        const button = document.createElement('div'); button.className = 'track-row'; button.setAttribute('role', 'group');
         button.dataset.playlistId = playlist.id; button.dataset.trackIndex = index;
         button.setAttribute('aria-label', `Reproducir ${track.name}, ${playlist.title}`);
-        const number = document.createElement('span'); number.className = 'track-number';
+        const number = document.createElement('button'); number.type = 'button'; number.className = 'track-number'; number.setAttribute('aria-label', `Reproducir ${track.name}`);
         number.textContent = String(order + 1).padStart(2, '0'); number.dataset.order = order + 1;
         const main = document.createElement('span'); main.className = 'track-main';
         const cover = document.createElement('img'); cover.className = 'track-thumb'; cover.src = track.cover; cover.alt = ''; cover.loading = 'lazy';
         const copy = document.createElement('span'); copy.className = 'track-text';
-        const title = document.createElement('span'); title.className = 'track-title'; title.textContent = track.name;
+        const title = document.createElement('a'); title.className = 'track-title'; title.textContent = track.name; title.href = track.slug ? '/set/' + track.slug : '#tracklists'; title.addEventListener('click', event => { event.stopPropagation(); if (window.NCCSets && track.slug) { event.preventDefault(); window.NCCSets.open(track); } });
         const artist = document.createElement('span'); artist.className = 'track-artist'; artist.textContent = `${track.artist} · ${track.format}`;
         copy.append(title, artist); main.append(cover, copy);
         const collection = document.createElement('span'); collection.className = 'track-collection'; collection.textContent = playlist.title;
@@ -190,7 +190,7 @@ function selectTrack(playlistId, index, radio = false) {
     $('duration').textContent = formatTrackDuration(track.duration); $('current-time').textContent = '0:00';
     $('seek-slider').value = 0; $('seek-slider').disabled = true; paintRange($('seek-slider'), 0);
     showMessage(''); resetWaveform(audio); syncPlaybackUI();
-    if (!$('waveform-panel').hidden) loadWaveform(track, audio);
+    if (!$('waveform-panel').hidden && !window.NCCSets) loadWaveform(track, audio);
     if ('mediaSession' in navigator && typeof MediaMetadata !== 'undefined') {
         navigator.mediaSession.metadata = new MediaMetadata({
             title: track.name, artist: track.artist, album: playerState.radio ? 'NCC Radio' : track.playlistTitle,
@@ -307,7 +307,7 @@ function initPlayer() {
     audio = $('audio-player'); audio.volume = .8;
     setupWaveform(audio, $('waveform-canvas'), $('waveform-status'));
     $('play-button').addEventListener('click', togglePlay);
-    $('player-like').addEventListener('click', () => toggleCurrentTrackPreference('likes'));
+    $('player-like').addEventListener('click', () => window.NCCSets ? window.NCCSets.toggleLike(currentTrack()) : toggleCurrentTrackPreference('likes'));
     $('player-favorite').addEventListener('click', () => toggleCurrentTrackPreference('favorites'));
     $('favorites-filter').addEventListener('click', () => {
         playerState.favoritesOnly = !playerState.favoritesOnly;
@@ -348,6 +348,7 @@ function initPlayer() {
         $('mute-button').setAttribute('aria-label', volume ? 'Silenciar' : 'Activar sonido');
     });
     $('waveform-toggle').addEventListener('click', () => {
+        if (window.NCCSets) { window.NCCSets.open(currentTrack()); return; }
         const open = $('waveform-panel').hidden;
         $('waveform-panel').hidden = !open;
         $('waveform-toggle').setAttribute('aria-expanded', String(open));
@@ -518,6 +519,7 @@ async function loadWaveform(track, audio) {
     if (!canvas || !track) return;
 
     const waveformUrl = track.waveformUrl || track.url;
+    if (Array.isArray(track.peaks) && track.peaks.length) { waveformState.peaks = track.peaks; setWaveformStatus(''); drawWaveform(audio); return; }
     const requestId = waveformState.requestId;
 
     if (!waveformUrl) {
@@ -539,6 +541,15 @@ async function loadWaveform(track, audio) {
         waveformState.controller?.abort();
         const controller = new AbortController();
         waveformState.controller = controller;
+        if (track.format === 'FLAC' && typeof analyzeFLAC === 'function') {
+            const peaks = await analyzeFLAC(track, controller.signal, progress => {
+                if (requestId === waveformState.requestId) setWaveformStatus(`Cargando forma de onda… ${progress}%`);
+            });
+            if (requestId !== waveformState.requestId) return;
+            waveformState.cache.set(waveformUrl, peaks); waveformState.peaks = peaks;
+            setWaveformStatus(''); drawWaveform(audio); return;
+        }
+        if (track.size > 100 * 1024 * 1024) throw new Error('Publish precomputed peaks for large non-FLAC audio');
         const response = await fetch(waveformUrl, { mode: 'cors', signal: controller.signal });
         if (!response.ok) {
             throw new Error(`Waveform fetch failed (${response.status})`);
@@ -633,8 +644,8 @@ function drawWaveform(audio) {
     const barWidth = width < 420 ? 2 : 3;
     const step = barWidth + gap;
     const barCount = Math.max(24, Math.floor(width / step));
-    const centerY = height / 2;
-    const maxBarHeight = Math.max(8, height - 18);
+    const centerY = height * .72;
+    const maxBarHeight = Math.max(8, height * .66);
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
     ctx.fillRect(0, centerY - 1, width, 2);
@@ -644,11 +655,14 @@ function drawWaveform(audio) {
         const peak = samplePeak(peaks, ratio);
         const barHeight = Math.max(3, peak * maxBarHeight);
         const x = i * step;
-        const y = centerY - (barHeight / 2);
+        const y = centerY - barHeight;
         const played = ratio <= progress;
 
         ctx.fillStyle = played ? '#c7f375' : 'rgba(190, 198, 193, 0.35)';
         ctx.fillRect(x, y, barWidth, barHeight);
+        ctx.globalAlpha = .35;
+        ctx.fillRect(x, centerY + 3, barWidth, barHeight * .34);
+        ctx.globalAlpha = 1;
     }
 
     if (waveformState.hoverRatio !== null && isSeekable(audio)) {
