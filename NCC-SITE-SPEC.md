@@ -35,4 +35,13 @@ Documentación de rutas: https://developers.cloudflare.com/workers/configuration
 
 Las pruebas locales del servicio, la edición de About con recarga, los likes, la copia del enlace y la continuidad del audio al navegar están verificadas. La imagen social se entrega en el HTML estático y en las fichas del Worker.
 
-En la comprobación de producción, `/api/sets` devolvió un 404 de GitHub Pages; el Worker no tenía rutas de dominio, variables de administración ni binding D1. Existe una base denominada `ncc-site` en Cloudflare. La conexión de esa base fue bloqueada por la revisión automática de permisos y requiere autorización explícita. Falta también confirmar el correo administrador. Estos cambios no deben describirse como activados en producción hasta completar y verificar los pasos anteriores.
+Revisión del 20 de septiembre de 2026, posterior a la publicación parcial:
+
+- La portada publicada incluye el panel y los metadatos de la calavera. La imagen social responde correctamente. Las 29 pruebas locales pasan.
+- El Worker tiene los bindings `MUSIC_BUCKET` y `SITE_DB`. La tarea anterior conectó la base `ncdata`; no reconectar otra base ni sustituir datos sin revisar la existente. Consultado directamente con el origen `https://ncc.ar`, devuelve el catálogo, los totales de likes y los textos del sitio.
+- Ya existen las rutas `ncc.ar/api/*` y `ncc.ar/set/*`. Los cuatro registros A del dominio siguen en `DNS only`, apuntando a GitHub Pages; por eso `/api/sets` y `/api/content` aún devuelven 404 en el dominio. El CNAME `www` también está en `DNS only`.
+- Zero Trust Free está activo. Existe la aplicación `NCC Administración` para `ncc.ar/api/admin/*`, pero todavía no tiene una política asociada. El Worker tampoco tiene las variables `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD` y `ADMIN_EMAIL`. El correo elegido en la conversación anterior es `ncardu@proton.me`.
+- Falta activar el proxy DNS del dominio, terminar la política exclusiva del propietario y configurar las variables de validación. Revisar la redirección de `www` y su cobertura antes de dar por terminada la publicación. La revisión automática bloqueó el cambio del proxy y el ingreso del correo en la política; ambos quedaron pendientes de autorización específica en esta tarea.
+- El catálogo consultado no contiene audios de Radio. El set público actual todavía no tiene fecha, tracklist ni waveform guardado; esos contenidos deben cargarse con datos reales.
+
+No describir el panel, los likes ni los enlaces individuales como plenamente operativos en `ncc.ar` hasta verificar las rutas públicas, el rechazo de acceso anónimo y el ingreso y guardado del administrador.
