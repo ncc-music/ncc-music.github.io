@@ -97,6 +97,25 @@ function validSetInput(value) {
         && typeof value.published === 'boolean' && Number.isSafeInteger(value.version) && value.version >= 0
         && (value.peaks === undefined || value.peaks === null || Array.isArray(value.peaks) && value.peaks.length >= 50 && value.peaks.length <= 2000 && value.peaks.every(p => Number.isFinite(p) && p >= 0 && p <= 1));
 }
+const DEFAULT_CONTENT = {
+    sets: { title: 'CARDÚ', genres: '[Experimental / Industrial]', description: 'MUSIC 4 FREAKS.' },
+    about: { title: 'Nicølás Cardú', body: 'Does it matter?\nEnjoy the music! x)\n\nSets en audio lossless, FLAC y WAV.', bookingEmail: 'bookings@ncc.ar' },
+    tour: { title: 'Próximas fechas', body: 'Las nuevas fechas se anunciarán acá.' }
+};
+async function siteContent(env) {
+    if (!env.SITE_DB) return { content: DEFAULT_CONTENT, version: 0 };
+    const rows = (await env.SITE_DB.prepare("SELECT content, version FROM site_content WHERE id = 'main'").all()).results;
+    return rows.length ? { content: JSON.parse(rows[0].content), version: rows[0].version } : { content: DEFAULT_CONTENT, version: 0 };
+}
+function validContent(value) {
+    if (!value || !Number.isSafeInteger(value.version) || value.version < 0) return false;
+    const c = value.content;
+    const string = (v, max, required = true) => typeof v === 'string' && v.length <= max && (!required || v.trim().length > 0);
+    return c && string(c.sets?.title, 120) && string(c.sets?.genres, 200, false) && string(c.sets?.description, 500, false)
+        && string(c.about?.title, 120) && string(c.about?.body, 10000, false)
+        && string(c.about?.bookingEmail, 254, false) && (!c.about.bookingEmail || /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(c.about.bookingEmail))
+        && string(c.tour?.title, 120) && string(c.tour?.body, 10000, false);
+}
 async function handleSetService(request, env) {
     const url = new URL(request.url);
     const path = url.pathname.replace(/^\/api/, '');
@@ -112,7 +131,20 @@ async function handleSetService(request, env) {
             if (request.method === 'GET' && path === '/admin/login') return Response.redirect(`${ORIGIN}/#tracklists`, 302);
             if (request.method === 'GET' && path === '/admin/session') return reply({ admin: true });
             if (request.method === 'GET' && path === '/admin/sets') return reply({ tracks: await catalogue(env, url.origin, true) });
-            if (request.method === 'GET' && path === '/admin/export') return reply({ sets: (await env.SITE_DB.prepare('SELECT * FROM sets').all()).results });
+            if (request.method === 'GET' && path === '/admin/export') return reply({ sets: (await env.SITE_DB.prepare('SELECT * FROM sets').all()).results, site: await siteContent(env) });
+            if (path === '/admin/content') {
+                if (request.method === 'GET') return reply(await siteContent(env));
+                if (request.method !== 'PUT') return reply({ error: 'Método no permitido.' }, 405);
+                if (!writeOriginAllowed(request, env)) return reply({ error: 'Origin not allowed' }, 403);
+                let input;
+                try { input = await readSmallJSON(request); if (!validContent(input)) throw new Error(); }
+                catch { return reply({ error: 'Revisá los textos y el correo de contacto.' }, 400); }
+                const result = input.version === 0
+                    ? await env.SITE_DB.prepare("INSERT OR IGNORE INTO site_content (id,content) VALUES ('main',?)").bind(JSON.stringify(input.content)).run()
+                    : await env.SITE_DB.prepare("UPDATE site_content SET content = ?, version = version + 1, updated_at = datetime('now') WHERE id = 'main' AND version = ?").bind(JSON.stringify(input.content), input.version).run();
+                if (result.meta.changes !== 1) return reply({ error: 'El contenido cambió en otra ventana. Cerrá el editor y volvé a abrirlo.' }, 409);
+                return reply({ saved: true, version: input.version + 1 });
+            }
             if (request.method !== 'PUT' || !/^\/admin\/sets\/[a-f0-9]{20}$/.test(path)) return reply({ error: 'Not found' }, 404);
             if (!writeOriginAllowed(request, env)) return reply({ error: 'Origin not allowed' }, 403);
             let input;
@@ -133,6 +165,7 @@ async function handleSetService(request, env) {
             if (result.meta.changes !== 1) return reply({ error: 'El set cambió en otra ventana. Volvé a abrirlo antes de guardar.' }, 409);
             return reply({ saved: true, version: input.version + 1, slug: track.slug });
         }
+        if (path === '/content' && request.method === 'GET') return reply(await siteContent(env));
         if (path === '/sets' && request.method === 'GET') return reply({ tracks: await catalogue(env, url.origin) });
         const match = path.match(/^\/sets\/([a-f0-9]{20})\/likes$/);
         if (match && ['GET', 'PUT'].includes(request.method)) {
@@ -165,7 +198,9 @@ async function handleSetPage(request, env) {
     try { track = (await catalogue(env, url.origin)).find(item => `/set/${item.slug}` === url.pathname.replace(/\/$/, '')); }
     catch { return new Response('No pudimos cargar el set. Volvé a intentar.', { status: 503 }); }
     // GitHub Pages remains the origin. Only /set/* and /api/* route through this Worker.
-    const response = await fetch('https://ncc-music.github.io/index.html', { signal: AbortSignal.timeout(10000) });
+    let response;
+    try { response = await fetch('https://ncc-music.github.io/index.html', { signal: AbortSignal.timeout(10000) }); }
+    catch { return new Response('Página no disponible', { status: 502 }); }
     if (!response.ok) return new Response('Página no disponible', { status: 502 });
     let html = await response.text();
     const title = track ? `${track.name} | NCC Music` : 'Set no encontrado | NCC Music';
@@ -173,6 +208,7 @@ async function handleSetPage(request, env) {
     html = html.replace(/<title>[^<]*<\/title>/, `<title>${escapeHTML(title)}</title>`);
     html = html.replace(/<meta (?:name="(?:description|twitter:title|twitter:description)"|property="(?:og:title|og:description|og:url)")[^>]*>/g, '');
     html = html.replace(/<link rel="(?:canonical|alternate)"[^>]*>/g, '');
+    if (!track) html = html.replace(/<meta name="(?:robots|googlebot)"[^>]*>/g, '');
     html = html.replace('</head>', `<link rel="canonical" href="${ORIGIN}${escapeHTML(url.pathname)}"><meta name="description" content="${escapeHTML(description)}"><meta property="og:title" content="${escapeHTML(title)}"><meta property="og:description" content="${escapeHTML(description)}"><meta property="og:url" content="${ORIGIN}${escapeHTML(url.pathname)}"><meta name="twitter:title" content="${escapeHTML(title)}"><meta name="twitter:description" content="${escapeHTML(description)}">${track ? '' : '<meta name="robots" content="noindex">'}</head>`);
     return new Response(request.method === 'HEAD' ? null : html, { status: track ? 200 : 404, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
 }

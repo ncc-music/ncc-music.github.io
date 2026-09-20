@@ -73,8 +73,41 @@ test('signed admin saves validate JWT, preserve slug and reject stale updates', 
         const saved = (await tracks(environment))[0]; assert.equal(saved.name, 'Renamed'); assert.equal(saved.slug, track.slug); assert.equal(saved.version, 1);
         assert.equal((await worker.fetch(req('/admin/sets/'+track.id, 'PUT', input, headers), environment)).status, 409);
         assert.equal((await worker.fetch(req('/admin/sets/'+track.id, 'PUT', { ...input, version:1, date:'2026-02-31' }, headers), environment)).status, 400);
+        const originalContent = await (await worker.fetch(req('/content'), environment)).json();
+        assert.equal(originalContent.version, 0);
+        const content = structuredClone(originalContent.content); content.about.body = 'Una biografía editada'; content.tour.body = '20.10.2026 · Buenos Aires';
+        const update = { content, version: 0 };
+        assert.equal((await worker.fetch(req('/admin/content', 'PUT', update), environment)).status, 401);
+        assert.equal((await worker.fetch(req('/admin/content', 'PUT', update, { ...headers, Origin: 'https://foreign.example' }), environment)).status, 403);
+        assert.equal((await worker.fetch(req('/admin/content', 'PUT', update, headers), environment)).status, 200);
+        assert.deepEqual(await (await worker.fetch(req('/content'), environment)).json(), { content, version: 1 });
+        assert.equal((await worker.fetch(req('/admin/content', 'PUT', update, headers), environment)).status, 409);
+        const invalid = structuredClone(content); invalid.about.bookingEmail = 'javascript:alert(1)';
+        assert.equal((await worker.fetch(req('/admin/content', 'PUT', { content: invalid, version: 1 }, headers), environment)).status, 400);
+        assert.deepEqual((await (await worker.fetch(req('/admin/export', 'GET', null, headers), environment)).json()).site.content, content);
         for (const override of [{ exp: 1 }, { email: 'other@example.com' }, { aud:['other'] }]) {
             assert.equal((await worker.fetch(req('/admin/sets', 'GET', null, { 'Cf-Access-Jwt-Assertion': await tokenFor({...claims,...override}) }), environment)).status, 401);
         }
+    } finally { globalThis.fetch = originalFetch; }
+});
+
+test('shared pages include the original skull and escaped set metadata without JavaScript', async () => {
+    const environment = env(), [track] = await tracks(environment);
+    await environment.SITE_DB.prepare('INSERT INTO sets (id,audio_key,slug,title) VALUES (?,?,?,?)').bind(track.id, track.key, track.slug, 'Set <special> "NCC"').run();
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () => new Response(readFileSync('index.html', 'utf8'));
+    try {
+        const response = await worker.fetch(new Request('https://ncc.ar/set/' + track.slug), environment);
+        assert.equal(response.status, 200);
+        const html = await response.text();
+        assert.match(html, /property="og:image" content="https:\/\/ncc.ar\/assets\/player-cover.jpg"/);
+        assert.match(html, /name="twitter:image" content="https:\/\/ncc.ar\/assets\/player-cover.jpg"/);
+        assert.match(html, /Set &lt;special&gt; &quot;NCC&quot;/);
+        assert.ok(html.includes('rel="canonical" href="https://ncc.ar/set/' + track.slug + '"'));
+        const missing = await worker.fetch(new Request('https://ncc.ar/set/missing'), environment);
+        assert.equal(missing.status, 404);
+        const missingHTML = await missing.text(); assert.match(missingHTML, /name="robots" content="noindex"/); assert.doesNotMatch(missingHTML, /content="index, follow/);
+        const head = await worker.fetch(new Request('https://ncc.ar/set/' + track.slug, { method: 'HEAD' }), environment);
+        assert.equal(head.status, 200); assert.equal(await head.text(), '');
     } finally { globalThis.fetch = originalFetch; }
 });

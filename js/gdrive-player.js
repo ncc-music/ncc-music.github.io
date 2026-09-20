@@ -186,7 +186,6 @@ function selectTrack(playlistId, index, radio = false) {
     playerState.radio = playlistId === 'radio'; playerState.isPlaying = false; playerState.isBuffering = true;
     audio.src = track.url;
     $('track-name').textContent = track.name; $('track-artist').textContent = track.artist;
-    $('audio-quality').textContent = ['FLAC', 'WAV'].includes(track.format) ? 'Lossless' : track.format;
     $('duration').textContent = formatTrackDuration(track.duration); $('current-time').textContent = '0:00';
     $('seek-slider').value = 0; $('seek-slider').disabled = true; paintRange($('seek-slider'), 0);
     showMessage(''); resetWaveform(audio); syncPlaybackUI();

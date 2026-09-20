@@ -600,3 +600,6 @@ main { padding-bottom: calc(var(--dock-height) + 64px); }
     .track-actions { gap: 6px; }
     .set-dialog { padding: 20px; }
 }
+
+.content-paragraph { white-space: pre-line; overflow-wrap: anywhere; }
+.admin-toolbar .edit-set { margin-left: 0; }

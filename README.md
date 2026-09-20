@@ -10,7 +10,7 @@ El sitio presenta una interfaz oscura y minimalista: live sets, filtros de colec
 - **NCC Radio** reproduce únicamente su catálogo independiente de `radio/`. No incluye las colecciones MUSIC ni TECHNO.
 - **Mis sets** permite filtrar por colección y reproducir un set puntual. Elegir un set sale del modo radio.
 - El reproductor permanece visible al navegar: pausa, anterior/siguiente, posición y volumen. En celulares el volumen se maneja con los controles del dispositivo.
-- La forma de onda se calcula a pedido desde el botón del reproductor en escritorio. La carga inicial sólo solicita metadatos, sin descargar el audio completo para analizarlo.
+- La forma de onda se muestra a pedido al final de la ficha individual del set. El administrador puede prepararla y guardarla para evitar que cada visitante analice el audio completo. La carga inicial sólo solicita metadatos, sin descargar el audio completo para analizarlo.
 - La tecla Espacio alterna reproducción y pausa. Las flechas izquierda/derecha cambian de set cuando el foco no está en otro control.
 - Se conservan las fuentes de audio de R2 y los enlaces oficiales de Nicolás Cardú.
 
@@ -203,4 +203,21 @@ La vista previa local utiliza un contador SQLite separado en el servidor de edic
 
 ## Me gusta y favoritos
 
-Cada set tiene un corazón para marcar «Me gusta» y una estrella para guardarlo como favorito. Son preferencias personales guardadas en el navegador, sin cuenta ni recuento público de likes. El filtro «Favoritos» permite volver a los sets guardados. Las preferencias persisten al recargar y se sincronizan entre pestañas del mismo navegador; no se transfieren entre dispositivos. Si se bloquea el almacenamiento, el sitio avisa y no indica que se haya guardado.
+Los corazones muestran un total público guardado en D1. Un identificador aleatorio por navegador evita contar dos veces la misma selección; no es un conteo de personas verificadas. Se puede retirar el like. Los favoritos siguen siendo personales y se guardan en el navegador. Si el servicio no está conectado, los likes se muestran como no disponibles; no se inventan totales.
+
+## Edición y enlaces de sets
+
+Las decisiones consolidadas y la configuración de producción están en [NCC-SITE-SPEC.md](NCC-SITE-SPEC.md).
+
+- **Administrar** abre Tracklists después de iniciar sesión. Allí se editan nombre, fecha, tracklist y estado publicado de los audios de R2. Un audio nuevo se incorpora al actualizar el catálogo; el audio pesado se sigue subiendo a R2.
+- **Editar Sets**, **Editar About** y **Editar Tour Dates** permiten cambiar los textos desde la web. El guardado utiliza versiones para impedir que una ventana sobrescriba cambios más recientes de otra.
+- **Exportar contenido** descarga los metadatos de los sets y los textos del sitio. No incluye los archivos de audio.
+- Cada set tiene una dirección permanente `/set/slug`. Cambiar el título no cambia el slug. El nombre del reproductor y las fichas usan esa misma dirección.
+- Compartir usa el menú nativo en dispositivos táctiles compatibles y un menú con WhatsApp, Telegram, Facebook y copiar enlace en los demás. Los enlaces compartidos siempre apuntan a `https://ncc.ar`.
+- La portada y las fichas incluyen Open Graph y Twitter con la calavera original sobre fondo negro (`assets/player-cover.jpg`). Estos datos se entregan en el HTML, sin depender de JavaScript. Los servicios de mensajería pueden conservar una vista previa anterior en su caché.
+
+### Desarrollo y comprobación
+
+`node scripts/bundle-worker.mjs` incorpora el servicio de sets en el Worker. Ejecutarlo después de modificar `scripts/set-service.mjs`. `node --test tests/*.test.*` comprueba permisos, guardado, conflictos, likes, radio, reproducción y metadatos para compartir.
+
+`node scripts/preview.mjs` abre una vista previa en `http://127.0.0.1:8765`. Agregar `--admin` permite probar la edición con una identidad efímera local. Los cambios se guardan exclusivamente en `.work/preview.db`, nunca en la web pública. No publicar este servidor como servicio de producción.

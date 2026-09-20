@@ -16,3 +16,10 @@ CREATE TABLE IF NOT EXISTS likes (
   visitor_id TEXT NOT NULL,
   PRIMARY KEY (set_id, visitor_id)
 );
+
+CREATE TABLE IF NOT EXISTS site_content (
+  id TEXT PRIMARY KEY CHECK (id = 'main'),
+  content TEXT NOT NULL,
+  version INTEGER NOT NULL DEFAULT 1,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);

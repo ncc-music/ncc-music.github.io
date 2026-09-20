@@ -8,7 +8,7 @@
         const node = document.createElement(tag); if (className) node.className = className; if (text !== undefined) node.textContent = text; return node;
     };
     const allTracks = () => playerState.playlists.flatMap(p => p.tracks);
-    const setURL = track => new URL('/set/' + track.slug, location.origin).href;
+    const setURL = track => new URL('/set/' + track.slug, 'https://ncc.ar').href;
     async function request(path, options = {}) {
         const response = await fetch(api + path, { credentials: 'same-origin', ...options, headers: { 'Content-Type': 'application/json', ...options.headers }, signal: AbortSignal.timeout(20000) });
         let data; try { data = await response.json(); } catch { throw new Error('El servicio todavía no está disponible.'); }
@@ -58,8 +58,11 @@
         });
         if ($('player-share')) $('player-share').disabled = !track?.slug;
         if (track?.slug) $('track-name').href = '/set/' + track.slug;
+        else $('track-name').removeAttribute('href');
         document.querySelectorAll('[data-play-set]').forEach(button => {
             const active = track?.id === button.dataset.playSet && !audio.paused;
+            const item = [...allTracks(), ...adminTracks].find(item => item.id === button.dataset.playSet);
+            button.setAttribute('aria-label', (active ? 'Pausar ' : 'Reproducir ') + (item?.name || 'set'));
             button.innerHTML = icon(active ? 'pause' : 'play') + `<span>${active ? 'Pausar' : 'Reproducir'}</span>`;
         });
     }
@@ -84,24 +87,38 @@
     const originalSync = syncPlaybackUI;
     syncPlaybackUI = () => { originalSync(); syncSocial(); };
     const originalCatalogue = loadCatalogue;
+    let catalogueRequest = 0;
     loadCatalogue = async () => {
-        await originalCatalogue();
+        const requestId = ++catalogueRequest;
+        $('loading-initial').hidden = false;
+        $('loading-initial').textContent = 'Cargando sets…';
         try {
             const data = await request('/sets');
-            for (const playlist of playerState.playlists) {
-                const source = playlistSources.find(source => source.id === playlist.id);
-                const tracks = normalizeR2Playlist({ tracks: data.tracks.filter(track => track.key.startsWith(source.prefix)) }, source);
-                const playingKey = currentTrack()?.key;
-                playlist.tracks = tracks;
-                if (playerState.activePlaylistId === playlist.id) {
-                    const index = tracks.findIndex(track => track.key === playingKey);
-                    if (index >= 0) playerState.currentTrackIndex = index;
-                    else if (tracks.length) selectTrack(playlist.id, 0);
-                    else { audio.pause(); audio.removeAttribute('src'); audio.load(); }
-                }
+            if (!Array.isArray(data.tracks)) throw new Error('Invalid catalogue');
+            if (requestId !== catalogueRequest) return;
+            const selected = currentTrack();
+            playerState.playlists = enabledPlaylistSources.map(source => ({ ...source, error: '', tracks: normalizeR2Playlist({ tracks: data.tracks.filter(track => track.key.startsWith(source.prefix)) }, source) }));
+            playerState.loaded = true;
+            const playlist = getPlaylistById(playerState.activePlaylistId);
+            const index = playlist?.tracks.findIndex(track => track.key === selected?.key) ?? -1;
+            if (selected && index >= 0) {
+                playerState.currentTrackIndex = index;
+                $('track-name').textContent = playlist.tracks[index].name;
+                $('track-artist').textContent = playlist.tracks[index].artist;
+            } else {
+                const first = playlist?.tracks.length ? playlist : playerState.playlists.find(item => item.tracks.length);
+                if (first) selectTrack(first.id, 0);
+                else { audio.pause(); audio.removeAttribute('src'); audio.load(); playerState.isPlaying = false; $('track-name').textContent = 'Elegí un set'; $('track-name').removeAttribute('href'); }
             }
-        } catch { /* Existing audio catalogue remains usable while service is unavailable. */ }
-        renderCatalogue(); renderTracklists(); route(); syncSocial();
+            syncPlaybackUI(); loadPlaylistDurations();
+        } catch {
+            // Keep an already playing catalogue intact during a transient outage.
+            if (requestId !== catalogueRequest) return;
+            if (!playerState.loaded) await originalCatalogue();
+            else showMessage('No pudimos actualizar los sets. Volvé a intentar.');
+        } finally {
+            if (requestId === catalogueRequest) { $('loading-initial').hidden = true; renderCatalogue(); renderTracklists(); route(); syncSocial(); }
+        }
     };
     function navigate(path) { history.pushState({}, '', path); route(); window.scrollTo({ top: 0 }); }
     function openSet(track) { if (track?.slug) navigate('/set/' + track.slug); }
@@ -122,7 +139,7 @@
             const list = el('ol', 'set-tracklist'); track.tracklist.forEach(line => list.append(el('li', '', line.replace(/^\s*\d+[.)\-]?\s+/, '')))); card.append(list);
         } else card.append(el('p', 'empty-tracklist', 'Todavía no hay un tracklist publicado para este set.'));
         const actions = el('div', 'set-card-actions');
-        const play = action('Reproducir ' + track.name, 'play', () => playSet(track)); play.dataset.playSet = track.id; play.classList.add('set-play'); play.append(el('span', '', 'Reproducir')); play.disabled = !track.published;
+        const play = action('Reproducir ' + track.name, 'play', () => playSet(track)); play.dataset.playSet = track.id; play.classList.add('set-play'); play.append(el('span', '', 'Reproducir')); play.disabled = !track.published || !allTracks().some(item => item.key === track.key);
         actions.append(play, likeButton(track), action('Compartir ' + track.name, 'share', () => shareSet(track)));
         if (admin) { const edit = el('button', 'edit-set', 'Editar'); edit.type = 'button'; edit.addEventListener('click', () => editSet(track)); actions.append(edit); }
         if (!track.published) card.append(el('p', 'draft-label', 'No publicado'));
@@ -154,8 +171,12 @@
         if (admin) {
             const tools = el('div', 'admin-toolbar'); tools.append(el('span', '', 'Administración'));
             const refresh = el('button', 'edit-set', 'Actualizar audios'); refresh.type = 'button'; refresh.addEventListener('click', loadAdmin);
-            const backup = el('button', 'edit-set', 'Exportar tracklists'); backup.type = 'button'; backup.addEventListener('click', exportSets);
-            tools.append(refresh, backup); root.append(tools);
+            const backup = el('button', 'edit-set', 'Exportar contenido'); backup.type = 'button'; backup.addEventListener('click', exportSets);
+            tools.append(refresh, backup);
+            for (const [key, name] of [['sets', 'Sets'], ['about', 'About'], ['tour', 'Tour Dates']]) {
+                const edit = el('button', 'edit-set', 'Editar ' + name); edit.type = 'button'; edit.addEventListener('click', () => window.NCCContent?.edit(key)); tools.append(edit);
+            }
+            root.append(tools);
         }
         const tracks = admin ? adminTracks : allTracks().filter(track => track.playlistId !== 'radio');
         if (!tracks.length) root.append(el('p', 'empty-state', playerState.loaded ? 'Todavía no hay sets disponibles.' : 'Cargando sets…'));
@@ -168,7 +189,7 @@
         const root = $('set-detail-section'); if (!root) return;
         const match = location.pathname.match(/^\/set\/([^/]+)\/?$/);
         root.hidden = !match; detailTrack = null;
-        if (!match) return;
+        if (!match) { document.title = 'NCC Music | Lossless DJ Mixes by Nicolás Cardú'; return; }
         ['radio-feature','collections-section','sets-section','tracklists-section','about-section','tour-section','manifesto-section','mix-signature','page-quality','collection-filters','favorites-filter'].forEach(id => $(id).hidden = true);
         $('page-title').textContent = 'SET'; root.replaceChildren();
         detailTrack = allTracks().find(track => track.slug === match[1]);
@@ -185,7 +206,7 @@
     async function shareSet(track) {
         if (!track?.slug) { showMessage('El enlace del set todavía no está disponible.'); return; }
         const data = { title: track.name, text: track.name, url: setURL(track) };
-        if (navigator.share) {
+        if (navigator.share && window.matchMedia('(pointer: coarse)').matches) {
             try { await navigator.share(data); return; } catch (error) { if (error.name === 'AbortError') return; }
         }
         shareTrack = track;
@@ -204,7 +225,7 @@
                 const source = playlistSources.find(source => track.key.startsWith(source.prefix));
                 return normalizeR2Playlist({ tracks: [track] }, source)[0];
             }).filter(Boolean);
-            renderTracklists();
+            renderTracklists(); route();
         } catch (error) { showMessage(error.message); }
     }
     function editSet(track) {
@@ -225,7 +246,7 @@
     async function exportSets() {
         try {
             const data = await request('/admin/export'); const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
-            const link = el('a'); link.href = url; link.download = 'ncc-tracklists-' + new Date().toISOString().slice(0, 10) + '.json'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+            const link = el('a'); link.href = url; link.download = 'ncc-contenido-' + new Date().toISOString().slice(0, 10) + '.json'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
         } catch (error) { showMessage(error.message); }
     }
     document.addEventListener('DOMContentLoaded', () => {
