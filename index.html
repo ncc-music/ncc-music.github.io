@@ -76,7 +76,7 @@
                 ]
             }
         </script>
-        <link rel="stylesheet" href="styles.css?v=20260920">
+        <link rel="stylesheet" href="styles.css?v=20260921">
         <link rel="icon" type="image/png" href="assets/player-cover.png">
     </head>
     <body>
@@ -95,7 +95,7 @@
             <symbol id="i-wave" viewBox="0 0 24 24"><path d="M3 10v4m4-8v12m5-16v20m5-16v12m4-8v4"/></symbol>
             <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></symbol>
             <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9Z"/></symbol>
-            <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 16V3m-5 5 5-5 5 5M5 14v7h14v-7"/></symbol>
+            <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.5 6.8-4m-6.8 7 6.8 4"/></symbol>
             <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
         </defs></svg>
         <a class="skip-link" href="#main-content">Saltar al contenido</a>
@@ -193,8 +193,8 @@
             <footer class="page-footer">
                 <span>© 2026 NCC Music</span>
                 <div class="visit-counter" id="visit-counter" aria-label="Contador de visitas"><span class="visit-label">FREAK ID</span><span id="visit-count">—</span></div>
-                <button id="admin-entry" class="admin-entry" type="button">Administrar</button>
                 <a class="footer-about" href="#acerca">[ ABOUT ]</a>
+                <button id="admin-entry" class="admin-entry" type="button" aria-label="Administrar" title="Administrar">π</button>
             </footer>
         </main>
         <section class="player-dock" aria-label="Reproductor de música"><div class="now-playing"><img id="now-cover" src="assets/player-cover.png" alt="Logo NCC" class="now-cover"><div class="now-info"><span id="player-mode" class="player-mode">LISTO PARA ESCUCHAR</span><h2><a id="track-name" href="#tracklists">Elegí un set</a></h2><p id="track-artist">Nicolás Cardú</p></div></div>
@@ -206,8 +206,9 @@
         <audio id="audio-player" preload="metadata"></audio>
         <script src="js/waveform-stream.js?v=20260920"></script>
         <script src="js/gdrive-player.js?v=20260920"></script>
-        <script src="js/sets.js?v=20260920"></script>
-        <script src="js/content.js?v=20260920"></script>
+        <script src="js/detail-waveform.js?v=20260921"></script>
+        <script src="js/sets.js?v=20260921"></script>
+        <script src="js/content.js?v=20260921"></script>
         <script src="js/visits.js?v=20260914"></script>
     </body>
 </html>

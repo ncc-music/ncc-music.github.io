@@ -75,15 +75,6 @@
     };
     const originalPreferences = syncPlayerPreferences;
     syncPlayerPreferences = () => { originalPreferences(); syncSocial(); };
-    const originalSelection = selectTrack;
-    selectTrack = (...args) => {
-        const selected = originalSelection(...args);
-        if (detailTrack && selected?.key !== detailTrack.key) {
-            $('waveform-panel').hidden = true;
-            const load = document.querySelector('.waveform-load'); if (load) load.hidden = false;
-        }
-        return selected;
-    };
     const originalSync = syncPlaybackUI;
     syncPlaybackUI = () => { originalSync(); syncSocial(); };
     const originalCatalogue = loadCatalogue;
@@ -146,25 +137,11 @@
         card.append(actions);
         if (detailed) {
             const host = el('div', 'detail-waveform'); host.id = 'detail-waveform-host';
-            const generate = el('button', 'waveform-load', track.peaks?.length ? 'Mostrar forma de onda' : 'Cargar forma de onda');
-            generate.type = 'button'; generate.addEventListener('click', () => showDetailWaveform(track, generate));
-            host.append(generate); card.append(host);
+            card.append(host);
         }
         return card;
     }
-    function parkWaveform() {
-        const panel = $('waveform-panel'); panel.hidden = true; document.querySelector('.player-dock').append(panel);
-        waveformState.controller?.abort(); waveformState.requestId++;
-    }
-    async function showDetailWaveform(track, button) {
-        if (currentTrack()?.key !== track.key) {
-            const playlist = playerState.playlists.find(p => p.tracks.some(item => item.key === track.key));
-            if (!playlist) return;
-            selectTrack(playlist.id, playlist.tracks.findIndex(item => item.key === track.key));
-        }
-        const panel = $('waveform-panel'); $('detail-waveform-host').append(panel); panel.hidden = false;
-        button.hidden = true; resetWaveform(audio); await loadWaveform(track, audio); updateProgress();
-    }
+    function parkWaveform() { window.NCCDetailWaveform?.dispose(); }
     function renderTracklists() {
         const root = $('tracklists-section'); if (!root) return;
         root.replaceChildren();
@@ -173,7 +150,7 @@
             const refresh = el('button', 'edit-set', 'Actualizar audios'); refresh.type = 'button'; refresh.addEventListener('click', loadAdmin);
             const backup = el('button', 'edit-set', 'Exportar contenido'); backup.type = 'button'; backup.addEventListener('click', exportSets);
             tools.append(refresh, backup);
-            for (const [key, name] of [['sets', 'Sets'], ['about', 'About'], ['tour', 'Tour Dates']]) {
+            for (const [key, name] of [['sets', 'Sets'], ['about', 'About'], ['tour', 'Tour Dates'], ['manifesto', 'Manifesto']]) {
                 const edit = el('button', 'edit-set', 'Editar ' + name); edit.type = 'button'; edit.addEventListener('click', () => window.NCCContent?.edit(key)); tools.append(edit);
             }
             root.append(tools);
@@ -195,7 +172,7 @@
         detailTrack = allTracks().find(track => track.slug === match[1]);
         const back = el('a', 'back-to-sets', '← Tracklists'); back.href = '/#tracklists'; back.addEventListener('click', event => { event.preventDefault(); navigate('/#tracklists'); }); root.append(back);
         if (!detailTrack) { root.append(el('p', 'empty-state', playerState.loaded ? 'Este set no existe o no está publicado.' : 'Cargando set…')); return; }
-        root.append(buildCard(detailTrack, true)); document.title = detailTrack.name + ' | NCC Music'; syncSocial();
+        root.append(buildCard(detailTrack, true)); window.NCCDetailWaveform.mount(detailTrack, $('detail-waveform-host')); document.title = detailTrack.name + ' | NCC Music'; syncSocial();
     };
     function makeDialog(id, title) {
         const dialog = el('dialog', 'set-dialog'); dialog.id = id;
@@ -206,16 +183,31 @@
     async function shareSet(track) {
         if (!track?.slug) { showMessage('El enlace del set todavía no está disponible.'); return; }
         const data = { title: track.name, text: track.name, url: setURL(track) };
-        if (navigator.share && window.matchMedia('(pointer: coarse)').matches) {
-            try { await navigator.share(data); return; } catch (error) { if (error.name === 'AbortError') return; }
-        }
         shareTrack = track;
         const dialog = $('share-dialog'); dialog.querySelector('.share-links').replaceChildren();
         for (const [name, url] of [
+            ['Facebook', 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(data.url)],
+            ['Instagram', 'https://www.instagram.com/'],
             ['WhatsApp', 'https://wa.me/?text=' + encodeURIComponent(data.title + ' ' + data.url)],
-            ['Telegram', 'https://t.me/share/url?url=' + encodeURIComponent(data.url) + '&text=' + encodeURIComponent(data.title)],
-            ['Facebook', 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(data.url)]
-        ]) { const link = el('a', 'share-option', name); link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer'; dialog.querySelector('.share-links').append(link); }
+            ['Telegram', 'https://t.me/share/url?url=' + encodeURIComponent(data.url) + '&text=' + encodeURIComponent(data.title)]
+        ]) {
+            const link = el('a', 'share-option', name); link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+            if (name === 'Instagram') link.addEventListener('click', () => {
+                $('share-status').textContent = 'Copiá este enlace y pegalo en un mensaje o en el sticker Enlace de Instagram.';
+                navigator.clipboard?.writeText(data.url).then(() => {
+                    $('share-status').textContent = 'Enlace copiado. Pegalo en un mensaje o en el sticker Enlace de tu historia de Instagram.';
+                }).catch(() => {
+                    $('share-url').focus(); $('share-url').select(); $('share-status').textContent = 'Copiá este enlace y pegalo en Instagram.';
+                });
+            });
+            dialog.querySelector('.share-links').append(link);
+        }
+        if (navigator.share) {
+            const more = el('button', 'share-option', 'Más opciones…'); more.type = 'button';
+            more.addEventListener('click', async () => {
+                try { await navigator.share(data); } catch (error) { if (error.name !== 'AbortError') $('share-status').textContent = 'Elegí una red o copiá el enlace.'; }
+            }); dialog.querySelector('.share-links').append(more);
+        }
         $('share-url').value = data.url; $('share-status').textContent = ''; dialog.showModal();
     }
     async function loadAdmin() {

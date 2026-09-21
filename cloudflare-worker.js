@@ -342,7 +342,8 @@ function validContent(value) {
     return c && string(c.sets?.title, 120) && string(c.sets?.genres, 200, false) && string(c.sets?.description, 500, false)
         && string(c.about?.title, 120) && string(c.about?.body, 10000, false)
         && string(c.about?.bookingEmail, 254, false) && (!c.about.bookingEmail || /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(c.about.bookingEmail))
-        && string(c.tour?.title, 120) && string(c.tour?.body, 10000, false);
+        && string(c.tour?.title, 120) && string(c.tour?.body, 10000, false)
+        && (c.manifesto === undefined || ['en', 'es'].every(lang => string(c.manifesto?.['title_' + lang], 160) && string(c.manifesto?.['author_' + lang], 200, false) && string(c.manifesto?.['body_' + lang], 20000, false)));
 }
 async function handleSetService(request, env) {
     const url = new URL(request.url);

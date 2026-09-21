@@ -4,9 +4,10 @@
     const fields = {
         sets: [['title', 'Nombre de la colección', 120], ['genres', 'Descripción musical', 200], ['description', 'Texto de presentación', 500]],
         about: [['title', 'Nombre', 120], ['body', 'Biografía', 10000, true], ['bookingEmail', 'Correo de bookings', 254]],
-        tour: [['title', 'Título', 120], ['body', 'Fechas y lugares · una fecha por línea', 10000, true]]
+        tour: [['title', 'Título', 120], ['body', 'Fechas y lugares · una fecha por línea', 10000, true]],
+        manifesto: [['title_en', 'Título · English', 160], ['author_en', 'Autor · English', 200], ['body_en', 'Texto · English', 20000, true], ['title_es', 'Título · Español', 160], ['author_es', 'Autor · Español', 200], ['body_es', 'Texto · Español', 20000, true]]
     };
-    const names = { sets: 'Sets', about: 'About', tour: 'Tour Dates' };
+    const names = { sets: 'Sets', about: 'About', tour: 'Tour Dates', manifesto: 'Manifesto' };
     async function request(path, options = {}) {
         const response = await fetch('/api/' + path, { credentials: 'same-origin', ...options, headers: { 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(15000) });
         let result;
@@ -21,8 +22,24 @@
     function paragraphs(parent, text) {
         text.split(/\n\s*\n/).filter(Boolean).forEach(part => parent.append(node('p', part, 'content-paragraph')));
     }
+    function currentManifesto() {
+        const value = {};
+        for (const lang of ['en', 'es']) {
+            const article = $('manifesto-' + lang);
+            value['title_' + lang] = article.querySelector('h2').textContent;
+            value['author_' + lang] = article.querySelector('.manifesto-author').textContent;
+            value['body_' + lang] = [...article.querySelectorAll('p:not(.manifesto-author)')].map(p => p.textContent.trim()).join('\n\n');
+        }
+        return value;
+    }
     function render() {
         const content = snapshot?.content; if (!content) return;
+        if (content.manifesto) for (const lang of ['en', 'es']) {
+            const article = $('manifesto-' + lang);
+            const title = node('h2', content.manifesto['title_' + lang]); title.id = 'manifesto-title-' + lang;
+            article.replaceChildren(title, node('p', content.manifesto['author_' + lang], 'manifesto-author'));
+            paragraphs(article, content.manifesto['body_' + lang]);
+        }
         const collection = document.querySelector('[data-collection="techno-freaks"] .collection-copy');
         collection.querySelector('h2').textContent = content.sets.title;
         collection.querySelector('.collection-genres').textContent = content.sets.genres;
@@ -39,6 +56,7 @@
         if (!fields[key] || saving) return;
         try {
             snapshot = await request('admin/content'); section = key;
+            if (key === 'manifesto' && !snapshot.content.manifesto) snapshot.content.manifesto = currentManifesto();
             editor.querySelector('h2').textContent = 'Editar ' + names[key];
             const form = editor.querySelector('form'); form.replaceChildren();
             for (const [name, label, limit, multiline] of fields[key]) {

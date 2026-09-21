@@ -59,6 +59,10 @@ http.createServer(async (request,response) => {
         if(url.pathname==='/visits') {response.writeHead(200,{'Content-Type':'application/json'});response.end('{"count":0}');return;}
         const file=resolve(root,'.'+decodeURIComponent(url.pathname==='/'?'/index.html':url.pathname));
         if(!file.startsWith(root+'/') || /\/(?:\.|scripts|tests|node_modules)/.test(file.slice(root.length))) {response.writeHead(404);response.end();return;}
-        response.writeHead(200,{'Content-Type':types[extname(file)]||'application/octet-stream','Cache-Control':'no-store'}); response.end(await readFile(file));
-    } catch {response.writeHead(500);response.end('Preview unavailable');}
+        const contents = await readFile(file);
+        response.writeHead(200,{'Content-Type':types[extname(file)]||'application/octet-stream','Cache-Control':'no-store'}); response.end(contents);
+    } catch (error) {
+        if (response.headersSent) { response.destroy(); return; }
+        response.writeHead(error.code === 'ENOENT' ? 404 : 500); response.end('Preview unavailable');
+    }
 }).listen(8765,'127.0.0.1',()=>console.log('Preview: http://127.0.0.1:8765'));
