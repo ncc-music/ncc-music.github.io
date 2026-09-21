@@ -611,7 +611,7 @@ main { padding-bottom: calc(var(--dock-height) + 64px); }
 .share-option { display: grid; place-items: center; gap: 5px; min-width: 0; padding: 5px 2px; color: var(--muted); border: 0; border-radius: 8px; }
 .share-option:hover { color: var(--text); }
 .share-platform-icon { display: grid; place-items: center; width: 58px; height: 58px; border-radius: 50%; filter: drop-shadow(0 7px 10px #0009); transition: transform .2s cubic-bezier(.2,.8,.2,1), filter .2s ease; }
-.share-platform-icon img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.share-platform-icon img, .share-platform-icon svg { display: block; width: 100%; height: 100%; object-fit: contain; }
 .share-option:hover .share-platform-icon { transform: translateY(-3px) rotate(-3deg) scale(1.06); filter: drop-shadow(0 10px 13px #000b) brightness(1.08); }
 .share-option:nth-child(even):hover .share-platform-icon { transform: translateY(-3px) rotate(3deg) scale(1.06); }
 .share-platform-name { overflow: hidden; width: 100%; color: #dedee0; font-family: "Road Rage", Impact, sans-serif; font-size: 18px; font-weight: 400; letter-spacing: .035em; line-height: 1; text-align: center; text-overflow: ellipsis; text-transform: uppercase; }
