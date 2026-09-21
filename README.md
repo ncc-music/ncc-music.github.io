@@ -117,6 +117,8 @@ La web se aloja en GitHub Pages y los archivos de audio se alojan en Cloudflare 
 
 El Worker devuelve la playlist automática en `/playlist` y sirve `/audio/<archivo>` para que el reproductor pueda generar el waveform real con CORS.
 
+Desde el editor administrador de cada set también se puede subir una imagen fija PNG (hasta 5 MB) y una animación MP4 (hasta 25 MB) para el reproductor ampliado. Ambos archivos se configuran por separado; si no se personalizan, el set usa la imagen y el video predeterminados del sitio.
+
 ## 🔎 Indexación en Google
 
 El sitio usa `https://ncc.ar/` como URL canónica e incluye metadatos SEO, datos estructurados JSON-LD, `robots.txt` y `sitemap.xml`.

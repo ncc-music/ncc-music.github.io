@@ -14,7 +14,7 @@ Cada ficha muestra nombre, fecha si está cargada, tracklist completo, controles
 
 ## Administración
 
-El panel permite editar los metadatos de los audios presentes en R2, publicar u ocultar un set, preparar waveform FLAC, editar los textos de Sets, About, Tour Dates y Manifesto en ambos idiomas, y exportar el contenido. Los nuevos audios se incorporan desde R2 al actualizar. La subida de audio continúa en R2; no se añade una subida de archivos grandes al panel.
+El panel permite editar los metadatos de los audios presentes en R2, publicar u ocultar un set, preparar waveform FLAC, editar los textos de Sets, About, Tour Dates y Manifesto en ambos idiomas, y exportar el contenido. También permite elegir por set una imagen fija PNG y una animación MP4 para el reproductor ampliado, con controles independientes para restaurar los archivos predeterminados. Los nuevos audios se incorporan desde R2 al actualizar. La subida de audio continúa en R2.
 
 El acceso de edición requiere Cloudflare Access y validación del JWT en el Worker. Sin configuración, las operaciones de administración se rechazan. El administrador puede editar nombre y tags desde la lista, además de subir o bajar cada set; el orden se guarda por colección. Sin un orden manual, los sets se ordenan cronológicamente con el más reciente al final. Los textos se muestran como texto, no como HTML ejecutable. Los guardados detectan conflictos de versión.
 
@@ -41,7 +41,7 @@ La configuración está publicada en ncc.ar y verificada:
 - El acceso anónimo al panel redirige al inicio de sesión. El acceso directo al Worker sin identidad válida devuelve 401.
 - Los likes se probaron agregando y retirando uno; el total quedó restaurado. La reproducción continuó al navegar de About a Tracklists. Compartir muestra el enlace permanente y copiar devuelve confirmación. La ficha servida por el Worker contiene la calavera en Open Graph y Twitter.
 - El set NCC Records 001 - RAW Preview tiene fecha 18.09.2026, 13 pistas y 1400 valores de waveform guardados. Conserva el slug ncc-records-raw-preview-001-d6a88456 después de cambiar el título.
-- Las 32 pruebas locales pasan después de incorporar las mejoras de reproducción y archivo.
+- Las 34 pruebas locales pasan después de incorporar las mejoras de reproducción, archivo y medios visuales por set.
 
 Radio todavía no tiene audios en su carpeta radio/ y permanece deshabilitada hasta que se carguen. Es contenido pendiente, no una conexión con las otras colecciones.
 

@@ -246,7 +246,7 @@ function parseList(value) {
 }
 async function ensureSetOrganisation(env) {
     if (!env.SITE_DB || setOrganisationReady.has(env.SITE_DB)) return;
-    for (const [column, definition] of [['tags', "TEXT NOT NULL DEFAULT '[]'"], ['sort_order', 'INTEGER']]) {
+    for (const [column, definition] of [['tags', "TEXT NOT NULL DEFAULT '[]'"], ['sort_order', 'INTEGER'], ['animation_poster_key', "TEXT NOT NULL DEFAULT ''"], ['animation_video_key', "TEXT NOT NULL DEFAULT ''"]]) {
         try { await env.SITE_DB.prepare(`SELECT ${column} FROM sets LIMIT 0`).all(); }
         catch {
             try { await env.SITE_DB.prepare(`ALTER TABLE sets ADD COLUMN ${column} ${definition}`).run(); }
@@ -287,6 +287,9 @@ async function catalogue(env, origin, includeDrafts = false) {
             sortOrder: Number.isSafeInteger(saved?.sort_order) ? saved.sort_order : null, uploaded: object.uploaded?.toISOString?.() || '',
             published: saved ? Boolean(saved.published) : true, version: saved?.version || 0,
             peaks: saved?.peaks ? JSON.parse(saved.peaks) : null,
+            animationPosterKey: saved?.animation_poster_key || '', animationVideoKey: saved?.animation_video_key || '',
+            animationPosterUrl: saved?.animation_poster_key ? `${base}/${encodePath(saved.animation_poster_key)}?v=${saved.version || 1}` : '',
+            animationVideoUrl: saved?.animation_video_key ? `${base}/${encodePath(saved.animation_video_key)}?v=${saved.version || 1}` : '',
             likes: env.SITE_DB ? likes.get(id) || 0 : null,
             url: `${base}/${encodePath(object.key)}`, waveformUrl: `${origin}/api/audio/${encodePath(object.key)}`,
             size: object.size, contentType: object.httpMetadata?.contentType || contentTypeFromKey(object.key), available: true
@@ -298,6 +301,9 @@ async function catalogue(env, origin, includeDrafts = false) {
         date: row.date || '', tracklist: parseList(row.tracklist), tags: parseList(row.tags),
         sortOrder: Number.isSafeInteger(row.sort_order) ? row.sort_order : null, uploaded: '', published: Boolean(row.published),
         version: row.version || 0, peaks: row.peaks ? JSON.parse(row.peaks) : null,
+        animationPosterKey: row.animation_poster_key || '', animationVideoKey: row.animation_video_key || '',
+        animationPosterUrl: row.animation_poster_key ? `${base}/${encodePath(row.animation_poster_key)}?v=${row.version || 1}` : '',
+        animationVideoUrl: row.animation_video_key ? `${base}/${encodePath(row.animation_video_key)}?v=${row.version || 1}` : '',
         likes: env.SITE_DB ? likes.get(row.id) || 0 : null, url: '', waveformUrl: '', size: 0,
         contentType: contentTypeFromKey(row.audio_key), available: false
     }));
@@ -365,7 +371,13 @@ function validSetInput(value) {
         && (value.tags === undefined || Array.isArray(value.tags) && value.tags.length <= 12 && value.tags.every(tag => typeof tag === 'string' && tag.trim().length > 0 && tag.trim().length <= 32))
         && (value.sortOrder === undefined || value.sortOrder === null || Number.isSafeInteger(value.sortOrder) && value.sortOrder >= 0 && value.sortOrder <= 100000)
         && typeof value.published === 'boolean' && Number.isSafeInteger(value.version) && value.version >= 0
+        && (value.animationPosterKey === undefined || typeof value.animationPosterKey === 'string' && (value.animationPosterKey === '' || /^__site\/set-media\/[a-f0-9]{20}\/poster\.png$/.test(value.animationPosterKey)))
+        && (value.animationVideoKey === undefined || typeof value.animationVideoKey === 'string' && (value.animationVideoKey === '' || /^__site\/set-media\/[a-f0-9]{20}\/animation\.mp4$/.test(value.animationVideoKey)))
         && (value.peaks === undefined || value.peaks === null || Array.isArray(value.peaks) && value.peaks.length >= 50 && value.peaks.length <= 2000 && value.peaks.every(p => Number.isFinite(p) && p >= 0 && p <= 1));
+}
+function validSetMedia(bytes, kind) {
+    if (kind === 'poster') return bytes.length >= 8 && [137,80,78,71,13,10,26,10].every((value, index) => bytes[index] === value);
+    return bytes.length >= 12 && String.fromCharCode(...bytes.slice(4, 8)) === 'ftyp';
 }
 const validVisitor = value => /^[a-f0-9-]{36}$/.test(value || '');
 const cleanCommunityText = (value, max) => typeof value === 'string' && value.trim().length > 0 && value.trim().length <= max && !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value) ? value.trim() : '';
@@ -440,11 +452,31 @@ async function handleSetService(request, env) {
                 if (input.ids.some(id => !byId.has(id))) return reply({ error: 'Uno de los sets ya no está disponible.' }, 404);
                 const statements = input.ids.map((id, order) => {
                     const track = byId.get(id);
-                    return env.SITE_DB.prepare("INSERT INTO sets (id,audio_key,slug,title,date,tracklist,tags,sort_order,published,peaks) VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET sort_order=excluded.sort_order, version=sets.version+1, updated_at=datetime('now')")
-                        .bind(track.id, track.key, track.slug, track.name, track.date, JSON.stringify(track.tracklist), JSON.stringify(track.tags || []), order, Number(track.published), track.peaks ? JSON.stringify(track.peaks) : null);
+                    return env.SITE_DB.prepare("INSERT INTO sets (id,audio_key,slug,title,date,tracklist,tags,sort_order,animation_poster_key,animation_video_key,published,peaks) VALUES (?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET sort_order=excluded.sort_order, version=sets.version+1, updated_at=datetime('now')")
+                        .bind(track.id, track.key, track.slug, track.name, track.date, JSON.stringify(track.tracklist), JSON.stringify(track.tags || []), order, track.animationPosterKey || '', track.animationVideoKey || '', Number(track.published), track.peaks ? JSON.stringify(track.peaks) : null);
                 });
                 await env.SITE_DB.batch(statements);
                 return reply({ saved: true });
+            }
+            const mediaMatch = path.match(/^\/admin\/sets\/([a-f0-9]{20})\/media\/(poster|video)$/);
+            if (mediaMatch && request.method === 'PUT') {
+                if (!writeOriginAllowed(request, env)) return reply({ error: 'Origin not allowed' }, 403);
+                const [, id, kind] = mediaMatch;
+                const type = (request.headers.get('Content-Type') || '').split(';')[0].trim();
+                const expectedType = kind === 'poster' ? 'image/png' : 'video/mp4';
+                const limit = kind === 'poster' ? 5 * 1024 * 1024 : 25 * 1024 * 1024;
+                const declaredSize = Number(request.headers.get('Content-Length')) || 0;
+                if (type !== expectedType || declaredSize > limit) return reply({ error: kind === 'poster' ? 'Elegí una imagen PNG de hasta 5 MB.' : 'Elegí un video MP4 de hasta 25 MB.' }, 400);
+                const track = (await catalogue(env, url.origin, true)).find(item => item.id === id);
+                if (!track) return reply({ error: 'Set no encontrado.' }, 404);
+                const bytes = new Uint8Array(await request.arrayBuffer());
+                if (!bytes.length || bytes.length > limit || !validSetMedia(bytes, kind)) return reply({ error: kind === 'poster' ? 'El archivo no es un PNG válido.' : 'El archivo no es un MP4 válido.' }, 400);
+                const bucket = env.MY_BUCKET || env.MUSIC_BUCKET;
+                if (!bucket) return reply({ error: 'Storage unavailable' }, 503);
+                const key = `__site/set-media/${id}/${kind === 'poster' ? 'poster.png' : 'animation.mp4'}`;
+                await bucket.put(key, bytes, { httpMetadata: { contentType: expectedType, cacheControl: 'public, max-age=31536000' } });
+                const base = (env.R2_PUBLIC_URL || R2_PUBLIC_URL).replace(/\/$/, '');
+                return reply({ key, url: `${base}/${encodePath(key)}` });
             }
             if (request.method !== 'PUT' || !/^\/admin\/sets\/[a-f0-9]{20}$/.test(path)) return reply({ error: 'Not found' }, 404);
             if (!writeOriginAllowed(request, env)) return reply({ error: 'Origin not allowed' }, 403);
@@ -457,13 +489,16 @@ async function handleSetService(request, env) {
             const peaks = input.peaks === undefined ? track.peaks : input.peaks;
             const tags = input.tags === undefined ? track.tags : [...new Set(input.tags.map(tag => tag.trim()))];
             const sortOrder = input.sortOrder === undefined ? track.sortOrder : input.sortOrder;
+            const animationPosterKey = input.animationPosterKey === undefined ? track.animationPosterKey : input.animationPosterKey;
+            const animationVideoKey = input.animationVideoKey === undefined ? track.animationVideoKey : input.animationVideoKey;
+            if ((animationPosterKey && animationPosterKey !== `__site/set-media/${id}/poster.png`) || (animationVideoKey && animationVideoKey !== `__site/set-media/${id}/animation.mp4`)) return reply({ error: 'Los archivos visuales no corresponden a este set.' }, 400);
             let result;
             if (input.version === 0) {
-                result = await env.SITE_DB.prepare('INSERT OR IGNORE INTO sets (id, audio_key, slug, title, date, tracklist, tags, sort_order, published, peaks) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-                    .bind(id, track.key, track.slug, input.title.trim(), input.date, JSON.stringify(input.tracklist), JSON.stringify(tags), sortOrder, Number(input.published), peaks ? JSON.stringify(peaks) : null).run();
+                result = await env.SITE_DB.prepare('INSERT OR IGNORE INTO sets (id, audio_key, slug, title, date, tracklist, tags, sort_order, animation_poster_key, animation_video_key, published, peaks) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+                    .bind(id, track.key, track.slug, input.title.trim(), input.date, JSON.stringify(input.tracklist), JSON.stringify(tags), sortOrder, animationPosterKey, animationVideoKey, Number(input.published), peaks ? JSON.stringify(peaks) : null).run();
             } else {
-                result = await env.SITE_DB.prepare("UPDATE sets SET title = ?, date = ?, tracklist = ?, tags = ?, sort_order = ?, published = ?, peaks = ?, version = version + 1, updated_at = datetime('now') WHERE id = ? AND version = ?")
-                    .bind(input.title.trim(), input.date, JSON.stringify(input.tracklist), JSON.stringify(tags), sortOrder, Number(input.published), peaks ? JSON.stringify(peaks) : null, id, input.version).run();
+                result = await env.SITE_DB.prepare("UPDATE sets SET title = ?, date = ?, tracklist = ?, tags = ?, sort_order = ?, animation_poster_key = ?, animation_video_key = ?, published = ?, peaks = ?, version = version + 1, updated_at = datetime('now') WHERE id = ? AND version = ?")
+                    .bind(input.title.trim(), input.date, JSON.stringify(input.tracklist), JSON.stringify(tags), sortOrder, animationPosterKey, animationVideoKey, Number(input.published), peaks ? JSON.stringify(peaks) : null, id, input.version).run();
             }
             if (result.meta.changes !== 1) return reply({ error: 'El set cambió en otra ventana. Volvé a abrirlo antes de guardar.' }, 409);
             return reply({ saved: true, version: input.version + 1, slug: track.slug });

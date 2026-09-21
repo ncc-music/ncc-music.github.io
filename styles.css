@@ -585,7 +585,7 @@ main { padding-bottom: calc(var(--dock-height) + 64px); }
 .edit-set { margin-left: auto; }
 .admin-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding-block: 16px; border-bottom: 1px solid var(--line); }
 .draft-label { color: var(--accent); font-size: 14px; margin-top: 12px; }
-.set-dialog { color: var(--text); background: var(--surface); border: 1px solid #ffffff30; border-radius: 20px; width: min(640px, calc(100% - 24px)); max-height: 86dvh; padding: 28px; }
+.set-dialog { overflow-y: auto; color: var(--text); background: var(--surface); border: 1px solid #ffffff30; border-radius: 20px; width: min(640px, calc(100% - 24px)); max-height: 86dvh; padding: 28px; }
 .set-dialog::backdrop { background: #000a; backdrop-filter: blur(4px); }
 .dialog-heading { display: flex; gap: 20px; align-items: center; justify-content: space-between; margin-bottom: 24px; }
 .dialog-heading h2 { font-size: 24px; }
@@ -627,6 +627,14 @@ main { padding-bottom: calc(var(--dock-height) + 64px); }
 .audio-reference { overflow-wrap: anywhere; color: var(--muted); font-size: 14px; margin-block: 12px; }
 .published-label { display: flex; align-items: center; gap: 10px; }
 .published-label input { width: 20px; height: 20px; accent-color: var(--accent); }
+.set-media-editor { display: grid; gap: 14px; margin: 4px 0 20px; padding: 16px; border: 1px solid #ffffff26; border-radius: 10px; }
+.set-media-editor legend { padding: 0 7px; color: var(--text); font-size: 15px; font-weight: 800; }
+.set-media-editor > p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.set-media-field { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 7px 12px; align-items: center; }
+.set-media-field > span { color: var(--accent); font-size: 12px; text-align: right; }
+.set-dialog .set-media-field input[type=file] { grid-column: 1 / -1; margin: 0; padding: 9px; font-size: 13px; }
+.set-media-default { display: flex; grid-column: 1 / -1; align-items: center; gap: 8px; color: var(--muted); }
+.set-media-default input { width: 18px; height: 18px; accent-color: var(--accent); }
 @media (max-width: 1050px) { .player-options .quality-label { display: none; } .player-dock { gap: 12px; } #volume-slider { width: 60px; } }
 @media (max-width: 760px) {
     :root { --dock-height: 170px; }
@@ -700,6 +708,10 @@ body.player-expanded { overflow: hidden; }
 .now-player-close { position: sticky; top: 0; z-index: 2; display: grid; place-items: center; width: 48px; height: 48px; margin: 0 0 6px auto; color: var(--text); background: #1b1c1fcc; border: 1px solid #ffffff24; border-radius: 50%; backdrop-filter: blur(10px); }
 .now-player-layout { width: min(1080px,100%); margin: 0 auto; }
 .waveform-community-card { margin-top: 8px; padding: 14px; background: linear-gradient(180deg,#151719 0,#0d0f10 100%); border: 1px solid #ffffff1f; border-radius: 10px; box-shadow: inset 0 1px #ffffff08, 0 18px 50px #0005; }
+.expanded-player-visual { display: grid; grid-template-columns: minmax(0,1fr) clamp(210px,24vw,290px); gap: 18px; align-items: stretch; }
+.expanded-skull-media { display: grid; place-items: center; min-width: 0; overflow: hidden; background: #050606; border: 1px solid #ffffff14; border-radius: 7px; }
+.expanded-skull-media img, .expanded-skull-media video { display: block; grid-area: 1 / 1; width: 100%; height: 100%; max-height: 310px; aspect-ratio: 1; object-fit: contain; }
+.expanded-skull-media video[hidden], .expanded-skull-media img[hidden] { display: none; }
 .detail-waveform-card { margin-top: 28px; }
 .detail-waveform-card .detail-waveform { margin-top: 0; }
 .expanded-waveform-heading { display: flex; align-items: center; gap: 16px; min-width: 0; margin: 0 0 10px; }
@@ -810,6 +822,9 @@ body.player-expanded { overflow: hidden; }
     .now-player { height: 100dvh; padding-inline: 18px; box-shadow: none; }
     .now-player::before { content: ""; position: absolute; top: max(8px, env(safe-area-inset-top)); left: 50%; width: 42px; height: 4px; transform: translateX(-50%); background: #ffffff5c; border-radius: 999px; }
     .waveform-community-card { padding: 11px; }
+    .expanded-player-visual { grid-template-columns: minmax(0,1fr) 96px; gap: 8px; }
+    .expanded-skull-media { align-self: center; }
+    .expanded-skull-media img, .expanded-skull-media video { max-height: 120px; }
     .waveform-community-card .detail-waveform canvas { height: 150px; }
     .expanded-waveform-heading img { width: 50px; height: 50px; }
     .expanded-waveform-heading h2 { font-size: 19px; }

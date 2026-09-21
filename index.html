@@ -76,7 +76,7 @@
                 ]
             }
         </script>
-        <link rel="stylesheet" href="styles.css?v=20260921ah">
+        <link rel="stylesheet" href="styles.css?v=20260921aj">
         <link rel="icon" type="image/png" href="assets/player-cover.png">
     </head>
     <body>
@@ -204,7 +204,13 @@
             <button type="button" class="now-player-close" id="now-player-close" aria-label="Minimizar reproductor" title="Minimizar"><svg class="icon" aria-hidden="true"><use href="#i-collapse"/></svg></button>
             <div class="now-player-layout">
                 <div class="waveform-community-card">
-                    <div class="expanded-waveform detail-waveform" id="expanded-waveform"></div>
+                    <div class="expanded-player-visual">
+                        <div class="expanded-waveform detail-waveform" id="expanded-waveform"></div>
+                        <div class="expanded-skull-media" aria-label="Calavera animada de NCC">
+                            <img id="expanded-skull-poster" src="assets/skull-pieces.png" alt="Calavera de NCC construida por piezas">
+                            <video id="expanded-skull-video" src="assets/skull-pieces.mp4" poster="assets/skull-pieces.png" muted loop playsinline preload="metadata" aria-hidden="true" hidden></video>
+                        </div>
+                    </div>
                     <div id="now-player-community-slot">
                         <div class="community-shell" id="community-shell">
                             <div class="waveform-action-row">
@@ -240,10 +246,10 @@
         </section>
         <audio id="audio-player" preload="metadata"></audio>
         <script src="js/waveform-stream.js?v=20260920"></script>
-        <script src="js/gdrive-player.js?v=20260921q"></script>
+        <script src="js/gdrive-player.js?v=20260921r"></script>
         <script src="js/detail-waveform.js?v=20260921l"></script>
         <script src="js/tracklist-search.js?v=20260921b"></script>
-        <script src="js/sets.js?v=20260921y"></script>
+        <script src="js/sets.js?v=20260921aa"></script>
         <script src="js/content.js?v=20260921e"></script>
         <script src="js/visits.js?v=20260914"></script>
     </body>
