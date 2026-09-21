@@ -73,7 +73,7 @@ body[data-radio=on] .radio-icon { color: var(--accent); }
 .filter-button:hover { color: var(--text); }
 .filter-button.active { color: var(--text); background: #ffffff09; }
 .set-count { color: var(--muted); font-size: 12px; white-space: nowrap; }
-.track-table-head, .track-row { display: grid; grid-template-columns: 26px minmax(0,1fr) 140px 58px; gap: 14px; align-items: center; }
+.track-table-head, .track-row { display: grid; grid-template-columns: 26px minmax(0,1fr) 58px; gap: 14px; align-items: center; }
 .track-table-head { padding: 10px 14px 14px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 12px; }
 .track-table-head .icon { width: 15px; height: 15px; margin-left: auto; }
 .track-list { list-style: none; padding: 0; margin: 0; }
@@ -184,7 +184,7 @@ input[type=range]:disabled { opacity: .4; cursor: default; }
     h1 { font-size: 34px; }
     .radio-feature { padding: 21px; gap: 15px; }
     .radio-copy p { max-width: 230px; }
-    .track-table-head, .track-row { grid-template-columns: 20px minmax(0,1fr) 120px 48px; gap: 12px; }
+    .track-table-head, .track-row { grid-template-columns: 20px minmax(0,1fr) 48px; gap: 12px; }
     .track-title { font-size: 14px; }
     .track-collection { font-size: 13px; }
     .track-main { gap: 12px; }
@@ -720,6 +720,12 @@ body.player-expanded { overflow: hidden; }
 .now-player-community { margin-top: 0; padding-top: 0; border-top: 0; }
 .waveform-community { margin-top: 0; padding: 0; border: 0; }
 .waveform-action-row { display: flex; align-items: center; gap: 5px; margin-top: 8px; }
+.waveform-user-row { display: flex; align-items: center; gap: 7px; min-height: 32px; margin: 8px 77px 5px 41px; padding: 3px 10px; background: #08090a; border: 1px solid #ffffff38; border-radius: 999px; box-shadow: inset 0 1px #ffffff08; }
+.waveform-user-row:focus-within { border-color: #c7f37599; box-shadow: 0 0 0 2px #c7f37517; }
+.waveform-user-row label { flex: 0 0 auto; color: var(--muted); font-size: 11px; }
+.waveform-user-row input { flex: 1 1 auto; min-width: 0; padding: 4px 2px; color: var(--text); background: transparent; border: 0; font: inherit; font-size: 12px; }
+.waveform-user-row input:focus { outline: none; }
+.waveform-user-row > span { flex: 0 0 auto; color: var(--muted); font-size: 10px; font-variant-numeric: tabular-nums; }
 .waveform-action-row > .track-action { width: 36px; min-width: 36px; min-height: 36px; padding: 6px; border: 1px solid #ffffff24; border-radius: 50%; }
 .waveform-action-row > .track-action .like-count { display: none; }
 .waveform-action-row > .track-action.is-copied { color: var(--accent); border-color: #c7f37588; background: #c7f37514; }
@@ -750,17 +756,7 @@ body.player-expanded { overflow: hidden; }
 .comment-composer .primary-button { min-height: 34px; padding: 7px 13px; border-radius: 4px; }
 .comment-composer .comment-send { width: 36px; min-width: 36px; padding: 6px; border-radius: 50%; }
 .comment-send .icon { width: 18px; height: 18px; }
-.comment-details { display: flex; align-items: center; gap: 8px; margin: 7px 0 0 41px; }
-.comment-details label { flex: 0 0 auto; color: var(--muted); font-size: 11px; }
-.comment-details label span { opacity: .65; }
-.comment-details input { width: min(220px,55vw); padding: 5px 7px; color: var(--text); background: transparent; border: 0; border-bottom: 1px solid #ffffff22; border-radius: 0; font: inherit; font-size: 12px; }
-.comment-details input:focus { border-color: var(--accent); outline: none; }
-.comment-details > span { margin-left: auto; color: var(--muted); font-size: 10px; font-variant-numeric: tabular-nums; }
-#comment-position-help { margin: 6px 0 0 41px; color: var(--muted); font-size: 11px; }
 .comment-status { min-height: 18px; color: var(--muted); font-size: 12px; }
-.waveform-comment-form .comment-status { margin: 3px 0 0 41px; }
-.waveform-community .comment-details { margin-left: 0; }
-.waveform-community #comment-position-help { margin-left: 0; }
 .waveform-community .comment-status { margin: 3px 0 0; }
 .comment-status:empty { display: none; }
 .detail-community-slot { margin-top: 0; }
@@ -824,9 +820,6 @@ body.player-expanded { overflow: hidden; }
     .now-player-tracklist li { font-size: 14px; }
     .waveform-inline-form .comment-composer { grid-template-columns: minmax(0,1fr) auto; }
     .waveform-inline-form .comment-send { grid-column: 2; }
-    .comment-details { margin-left: 0; }
-    .comment-details input { width: min(180px,48vw); }
-    #comment-position-help, .waveform-comment-form .comment-status { margin-left: 0; }
     .comment-card header { display: block; }
     .comment-meta { display: flex; margin-top: 4px; }
     .comment-card time { display: block; }
