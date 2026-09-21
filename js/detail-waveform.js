@@ -59,20 +59,18 @@
         const point = event => { const rect = canvas.getBoundingClientRect(); seek((event.clientX - rect.left) / rect.width); };
         const stopScrub = event => {
             if (!pointer || event.pointerId !== pointer.id) return;
-            clearTimeout(pointer.timer); pointer = null; canvas.classList.remove('is-scrubbing');
+            pointer = null; canvas.classList.remove('is-scrubbing');
         };
         canvas.addEventListener('pointerdown', event => {
             if (!event.isPrimary) return;
             canvas.setPointerCapture(event.pointerId);
-            const heldEvent = { clientX: event.clientX };
-            pointer = { id: event.pointerId, scrubbing: false, latest: heldEvent, timer: setTimeout(() => {
-                if (!pointer || pointer.id !== event.pointerId) return;
-                pointer.scrubbing = true; canvas.classList.add('is-scrubbing'); point(pointer.latest);
-            }, 180) };
+            pointer = { id: event.pointerId, startX: event.clientX, scrubbing: false };
         });
         canvas.addEventListener('pointermove', event => {
             if (!pointer || event.pointerId !== pointer.id) return;
-            pointer.latest = { clientX: event.clientX };
+            if (!pointer.scrubbing && Math.abs(event.clientX - pointer.startX) >= 4) {
+                pointer.scrubbing = true; canvas.classList.add('is-scrubbing');
+            }
             if (pointer.scrubbing) point(event);
         });
         for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(type, stopScrub);
@@ -100,7 +98,6 @@
         window.addEventListener('resize', draw);
         dispose = () => {
             controller.abort(); pendingSeek = null;
-            if (pointer) clearTimeout(pointer.timer);
             for (const type of ['timeupdate', 'emptied', 'play', 'pause']) audio.removeEventListener(type, draw);
             audio.removeEventListener('loadedmetadata', applySeek); audio.removeEventListener('durationchange', applySeek);
             window.removeEventListener('resize', draw);
