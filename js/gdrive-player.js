@@ -124,30 +124,27 @@ function renderCatalogue() {
         const li = document.createElement('li'); li.className = 'track-entry';
         const button = document.createElement('div'); button.className = 'track-row'; button.setAttribute('role', 'group');
         button.dataset.playlistId = playlist.id; button.dataset.trackIndex = index;
-        button.setAttribute('aria-label', `Abrir reproductor ampliado: ${track.name}, ${playlist.title}`);
-        const number = document.createElement('button'); number.type = 'button'; number.className = 'track-number'; number.setAttribute('aria-label', `Reproducir ${track.name}`);
+        button.setAttribute('aria-label', `Reproducir y abrir reproductor ampliado: ${track.name}, ${playlist.title}`);
+        const number = document.createElement('button'); number.type = 'button'; number.className = 'track-number'; number.setAttribute('aria-label', `Reproducir y abrir ${track.name}`);
         number.textContent = String(order + 1).padStart(2, '0'); number.dataset.order = order + 1;
         const main = document.createElement('span'); main.className = 'track-main';
         const cover = document.createElement('img'); cover.className = 'track-thumb'; cover.src = track.cover; cover.alt = ''; cover.loading = 'lazy';
         const copy = document.createElement('span'); copy.className = 'track-text';
-        const title = document.createElement('button'); title.type = 'button'; title.className = 'track-title'; title.textContent = track.name; title.setAttribute('aria-label', `Abrir reproductor ampliado: ${track.name}`);
+        const title = document.createElement('button'); title.type = 'button'; title.className = 'track-title'; title.textContent = track.name; title.setAttribute('aria-label', `Reproducir y abrir reproductor ampliado: ${track.name}`);
         copy.append(title); main.append(cover, copy);
         const collection = document.createElement('span'); collection.className = 'track-collection'; collection.textContent = playlist.title;
         const duration = document.createElement('span'); duration.className = 'track-duration';
         duration.dataset.playlistId = playlist.id; duration.dataset.trackDuration = index;
         duration.textContent = formatTrackDuration(track.duration);
         button.append(number, main, collection, duration);
-        const playSelectedTrack = () => {
-            if (currentTrack()?.url === track.url) togglePlay();
-            else playTrack(playlist.id, index, false);
-        };
-        const expandSelectedTrack = trigger => {
-            if (currentTrack()?.url !== track.url) selectTrack(playlist.id, index, false);
+        const playAndExpandSelectedTrack = trigger => {
+            if (currentTrack()?.url !== track.url) playTrack(playlist.id, index, false);
+            else if (audio.paused) startPlayback();
             if (window.NCCSets) window.NCCSets.expand(trigger);
         };
-        number.addEventListener('click', event => { event.stopPropagation(); playSelectedTrack(); });
-        title.addEventListener('click', event => { event.stopPropagation(); expandSelectedTrack(event.currentTarget); });
-        button.addEventListener('click', event => expandSelectedTrack(event.currentTarget));
+        number.addEventListener('click', event => { event.stopPropagation(); playAndExpandSelectedTrack(event.currentTarget); });
+        title.addEventListener('click', event => { event.stopPropagation(); playAndExpandSelectedTrack(event.currentTarget); });
+        button.addEventListener('click', event => playAndExpandSelectedTrack(event.currentTarget));
         li.append(button, createTrackActions(track)); list.append(li);
     });
     root.append(list); syncActiveRows();
