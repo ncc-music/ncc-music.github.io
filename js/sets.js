@@ -272,12 +272,12 @@
     function openNowPlayer(trigger) {
         if (!currentTrack()) { showMessage('Elegí un set para abrir el reproductor.'); return; }
         playerReturnFocus = trigger || document.activeElement; nowPlayerOpen = true;
-        $('now-player').hidden = false; document.body.classList.add('player-expanded');
+        $('now-player-backdrop').hidden = false; $('now-player').hidden = false; document.body.classList.add('player-expanded');
         $('expand-player').setAttribute('aria-expanded', 'true'); renderNowPlayer(); $('now-player-close').focus();
     }
     function closeNowPlayer() {
         if (!nowPlayerOpen) return;
-        nowPlayerOpen = false; nowPlayerTrackKey = ''; $('now-player').hidden = true;
+        nowPlayerOpen = false; nowPlayerTrackKey = ''; $('now-player').hidden = true; $('now-player-backdrop').hidden = true;
         document.body.classList.remove('player-expanded'); $('expand-player').setAttribute('aria-expanded', 'false');
         window.NCCDetailWaveform.dispose();
         if (detailTrack && $('detail-waveform-host')?.isConnected) window.NCCDetailWaveform.mount(detailTrack, $('detail-waveform-host'));
@@ -386,6 +386,7 @@
         $('now-cover').addEventListener('keydown', event => { if (['Enter', ' '].includes(event.key)) { event.preventDefault(); openNowPlayer(event.currentTarget); } });
         $('now-info').addEventListener('click', event => { if (!event.target.closest('#track-name')) openNowPlayer(event.currentTarget); });
         $('expand-player').addEventListener('click', event => openNowPlayer(event.currentTarget));
+        $('now-player-backdrop').addEventListener('click', closeNowPlayer);
         $('now-player-close').addEventListener('click', closeNowPlayer);
         $('expanded-play').addEventListener('click', togglePlay);
         $('expanded-prev').addEventListener('click', () => nextTrack(-1));

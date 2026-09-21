@@ -13,12 +13,12 @@
         play.setAttribute('aria-label', 'Reproducir ' + track.name); play.title = 'Reproducir';
         status.setAttribute('role', 'status'); status.textContent = 'Cargando forma de onda…';
         frame.append(canvas, play); host.append(frame, status);
-        let peaks = [], pointer = false, pendingSeek = null;
+        let peaks = [], pointer = false, pendingSeek = null, playDismissed = false;
         const active = () => currentTrack()?.key === track.key;
         const position = () => active() && isSeekable(audio) ? audio.currentTime / audio.duration : 0;
         function syncPlay() {
             const playing = active() && !audio.paused && playerState.isPlaying;
-            play.hidden = playing;
+            play.hidden = playDismissed || playing;
             play.setAttribute('aria-label', (active() ? 'Continuar ' : 'Reproducir ') + track.name);
         }
         function draw() {
@@ -63,6 +63,7 @@
         });
         play.addEventListener('click', event => {
             event.stopPropagation();
+            playDismissed = true; play.hidden = true;
             if (!active()) {
                 const playlist = playerState.playlists.find(p => p.tracks.some(t => t.key === track.key));
                 if (!playlist) return;
