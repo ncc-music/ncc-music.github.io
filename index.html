@@ -76,7 +76,7 @@
                 ]
             }
         </script>
-        <link rel="stylesheet" href="styles.css?v=20260921x">
+        <link rel="stylesheet" href="styles.css?v=20260921y">
         <link rel="icon" type="image/png" href="assets/player-cover.png">
     </head>
     <body>
@@ -212,12 +212,11 @@
                         <div class="comment-composer">
                             <span class="comment-composer-avatar" aria-hidden="true">AF</span>
                             <label class="sr-only" for="comment-body">Comentario</label><textarea id="comment-body" name="comment" maxlength="600" rows="1" required placeholder="Escribe un comentario…"></textarea>
-                            <button type="button" id="comment-position-current" class="comment-position-button comment-time-button" aria-label="Usar el momento actual" aria-pressed="true"><span id="comment-position-current-time">0:00</span></button>
-                            <button type="button" id="comment-position-pick" class="comment-position-button" aria-pressed="false">Marcar en onda</button>
+                            <span class="comment-time-readout" aria-label="Momento actual del comentario"><span id="comment-position-current-time">0:00</span></span>
                             <button type="submit" class="primary-button comment-send" id="comment-submit" aria-label="Publicar comentario" title="Publicar comentario"><svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></button>
                         </div>
-                        <div class="comment-details"><label for="comment-name">Nombre <span>opcional</span></label><input id="comment-name" name="name" maxlength="32" autocomplete="nickname" placeholder="AnonymousFreak"><span id="comment-count">0/600</span></div>
-                        <p id="comment-position-help">Se publicará en el momento actual. También podés marcar otro punto en la onda.</p>
+                        <div class="comment-details"><label for="comment-name">User:</label><input id="comment-name" name="name" maxlength="32" autocomplete="nickname" placeholder="AnonymousFreak"><span id="comment-count">0/600</span></div>
+                        <p id="comment-position-help">El comentario se guarda en el momento actual del set.</p>
                         <p class="comment-status" id="comment-status" role="status"></p>
                     </form>
                     <div class="community-heading"><div><h3 id="community-title">FREAKS COMMENTS · 0</h3><p>Comentarios vinculados al tiempo</p></div><button type="button" class="fire-reaction" id="community-fire" aria-label="Reaccionar con fuego" aria-pressed="false" disabled><span aria-hidden="true">🔥</span><span id="community-fire-count">—</span></button></div>
@@ -241,7 +240,7 @@
         <script src="js/gdrive-player.js?v=20260921l"></script>
         <script src="js/detail-waveform.js?v=20260921l"></script>
         <script src="js/tracklist-search.js?v=20260921b"></script>
-        <script src="js/sets.js?v=20260921r"></script>
+        <script src="js/sets.js?v=20260921s"></script>
         <script src="js/content.js?v=20260921b"></script>
         <script src="js/visits.js?v=20260914"></script>
     </body>
