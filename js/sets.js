@@ -59,8 +59,8 @@
             const count = button.querySelector('.like-count'); if (count) count.textContent = item?.likes ?? '—';
         });
         if ($('player-share')) $('player-share').disabled = !track?.slug;
-        if (track?.slug) $('track-name').href = '/set/' + track.slug;
-        else $('track-name').removeAttribute('href');
+        $('track-name').disabled = !track;
+        $('track-name').setAttribute('aria-label', track ? `Abrir reproductor ampliado: ${track.name}` : 'Elegí un set para abrir el reproductor');
         document.querySelectorAll('[data-play-set]').forEach(button => {
             const active = track?.id === button.dataset.playSet && !audio.paused;
             const item = [...allTracks(), ...archiveTracks, ...adminTracks].find(item => item.id === button.dataset.playSet);
@@ -104,7 +104,7 @@
             } else {
                 const first = playlist?.tracks.length ? playlist : playerState.playlists.find(item => item.tracks.length);
                 if (first) selectTrack(first.id, 0);
-                else { audio.pause(); audio.removeAttribute('src'); audio.load(); playerState.isPlaying = false; $('track-name').textContent = 'Elegí un set'; $('track-name').removeAttribute('href'); }
+                else { audio.pause(); audio.removeAttribute('src'); audio.load(); playerState.isPlaying = false; $('track-name').textContent = 'Elegí un set'; }
             }
             syncPlaybackUI(); loadPlaylistDurations();
         } catch {
@@ -381,10 +381,10 @@
     }
     document.addEventListener('DOMContentLoaded', () => {
         const share = action('Compartir set actual', 'share', () => shareSet(currentTrack())); share.id = 'player-share'; document.querySelector('.player-preferences').append(share);
-        $('track-name').addEventListener('click', event => { event.preventDefault(); openNowPlayer(event.currentTarget); });
+        $('track-name').addEventListener('click', event => openNowPlayer(event.currentTarget));
         $('now-cover').addEventListener('click', event => openNowPlayer(event.currentTarget));
         $('now-cover').addEventListener('keydown', event => { if (['Enter', ' '].includes(event.key)) { event.preventDefault(); openNowPlayer(event.currentTarget); } });
-        $('now-info').addEventListener('click', event => { if (!event.target.closest('a')) openNowPlayer(event.currentTarget); });
+        $('now-info').addEventListener('click', event => { if (!event.target.closest('#track-name')) openNowPlayer(event.currentTarget); });
         $('expand-player').addEventListener('click', event => openNowPlayer(event.currentTarget));
         $('now-player-close').addEventListener('click', closeNowPlayer);
         $('expanded-play').addEventListener('click', togglePlay);
@@ -395,7 +395,7 @@
         for (const eventName of ['timeupdate', 'loadedmetadata', 'durationchange']) audio.addEventListener(eventName, syncNowPlayer);
         document.addEventListener('keydown', event => { if (event.key === 'Escape' && nowPlayerOpen) { event.preventDefault(); closeNowPlayer(); } });
         document.querySelectorAll('a[href^="#"]').forEach(link => link.addEventListener('click', event => {
-            if (link.id === 'track-name' || link.classList.contains('skip-link')) return;
+            if (link.classList.contains('skip-link')) return;
             event.preventDefault(); navigate('/' + link.getAttribute('href'));
         }));
         window.addEventListener('popstate', route);
