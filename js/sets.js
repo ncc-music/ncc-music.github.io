@@ -4,7 +4,6 @@
     let admin = false, adminTracks = [], archiveTracks = [], detailTrack = null, editorTrack = null, shareTrack = null, reordering = false;
     let tracklistQuery = '', nowPlayerOpen = false, nowPlayerTrackKey = '', nowPlayerTrack = null, playerReturnFocus = null;
     let socialLikes = new Set(), pendingLikes = new Set(), fireReactions = new Set(), pendingFire = new Set(), commentLikes = new Set(), communityRequest = 0;
-    let commentPositionMode = 'current', commentPickedSeconds = null, commentPicking = false;
     const communityCache = new Map();
     try { socialLikes = new Set(JSON.parse(localStorage.getItem('ncc-public-likes-v1') || '[]')); } catch {}
     try { fireReactions = new Set(JSON.parse(localStorage.getItem('ncc-fire-reactions-v1') || '[]')); } catch {}
@@ -150,36 +149,13 @@
         finally { pendingFire.delete(track.id); renderCommunity(track, communityCache.get(track.id)); }
     }
     function commentPositionSeconds(track = activeCommunityTrack() || currentTrack()) {
-        if (commentPositionMode === 'picked' && Number.isFinite(commentPickedSeconds)) return commentPickedSeconds;
         return currentTrack()?.key === track?.key && isSeekable(audio) ? audio.currentTime : 0;
     }
     function syncCommentPosition() {
-        const currentButton = $('comment-position-current'), pickButton = $('comment-position-pick');
-        if (!currentButton || !pickButton) return;
-        const seconds = commentPositionSeconds();
-        $('comment-position-current-time').textContent = formatTime(commentPositionMode === 'current' ? seconds : currentTrack()?.key === (activeCommunityTrack() || currentTrack())?.key && isSeekable(audio) ? audio.currentTime : 0);
-        currentButton.setAttribute('aria-pressed', String(commentPositionMode === 'current'));
-        pickButton.setAttribute('aria-pressed', String(commentPositionMode === 'picked' || commentPicking));
-        pickButton.textContent = commentPositionMode === 'picked' && Number.isFinite(commentPickedSeconds) ? `Elegido · ${formatTime(commentPickedSeconds)}` : commentPicking ? 'Tocá la onda…' : 'Marcar en onda';
+        const readout = $('comment-position-current-time'); if (!readout) return;
+        readout.textContent = formatTime(commentPositionSeconds());
         $('comment-body').placeholder = 'Escribe un comentario…';
-        window.NCCDetailWaveform?.setDraftPosition(commentPositionMode === 'picked' ? commentPickedSeconds : null);
-    }
-    function useCurrentCommentPosition() {
-        commentPositionMode = 'current'; commentPickedSeconds = null; commentPicking = false;
-        window.NCCDetailWaveform?.cancelCommentPick();
-        $('comment-position-help').textContent = 'Se publicará en el momento actual de reproducción.';
-        syncCommentPosition();
-    }
-    function chooseCommentPosition() {
-        commentPicking = true;
-        $('comment-position-help').textContent = 'Tocá el punto exacto en el waveform.';
-        syncCommentPosition();
-        if (!window.NCCDetailWaveform?.pickCommentPosition(seconds => {
-            commentPicking = false; commentPositionMode = 'picked'; commentPickedSeconds = Math.max(0, seconds);
-            $('comment-position-help').textContent = `Posición elegida: ${formatTime(commentPickedSeconds)}.`; syncCommentPosition(); $('comment-body').focus();
-        })) {
-            commentPicking = false; $('comment-position-help').textContent = 'El waveform todavía no está disponible.'; syncCommentPosition();
-        }
+        window.NCCDetailWaveform?.setDraftPosition(null);
     }
     async function submitComment(event) {
         event.preventDefault();
@@ -197,7 +173,7 @@
             $('comment-body').value = ''; $('comment-count').textContent = '0/600';
             try { if (name) localStorage.setItem('ncc-comment-name-v1', name); else localStorage.removeItem('ncc-comment-name-v1'); } catch {}
             $('comment-status').textContent = `Publicado como ${result.comment.author} en ${formatTime(result.comment.positionSeconds || 0)}.`;
-            commentPositionMode = 'current'; commentPickedSeconds = null; commentPicking = false; syncCommentPosition(); renderCommunity(track, data);
+            syncCommentPosition(); renderCommunity(track, data);
         } catch (error) { $('comment-status').textContent = error.message; }
         finally { button.disabled = false; }
     }
@@ -421,7 +397,7 @@
         for (const line of track.tracklist || []) list.append(el('li', '', line.replace(/^\s*\d+[.)\-]?\s+/, '')));
         $('expanded-like').dataset.likeId = track.id || '';
         $('expanded-waveform').replaceChildren(); window.NCCDetailWaveform.mount(track, $('expanded-waveform'));
-        commentPositionMode = 'current'; commentPickedSeconds = null; commentPicking = false; syncCommentPosition();
+        syncCommentPosition();
         $('comment-body').value = ''; $('comment-count').textContent = '0/600'; $('comment-status').textContent = '';
         loadCommunity(track);
         syncNowPlayer();
@@ -484,7 +460,7 @@
         root.append(buildCard(detailTrack, true));
         if (!nowPlayerOpen) {
             if (detailTrack.available) window.NCCDetailWaveform.mount(detailTrack, $('detail-waveform-host'));
-            commentPositionMode = 'current'; commentPickedSeconds = null; commentPicking = false; syncCommentPosition();
+            syncCommentPosition();
             $('comment-body').value = ''; $('comment-count').textContent = '0/600'; $('comment-status').textContent = ''; loadCommunity(detailTrack);
         }
         const focus = root.querySelector('.tracklist-focus'); if (focus) requestAnimationFrame(() => focus.scrollIntoView({ block: 'center' }));
@@ -691,8 +667,6 @@
         $('community-toggle').addEventListener('click', () => setCommunityExpanded($('community-toggle').getAttribute('aria-expanded') !== 'true'));
         $('comment-form').addEventListener('submit', submitComment);
         $('comment-body').addEventListener('input', event => { $('comment-count').textContent = `${event.target.value.length}/600`; });
-        $('comment-position-current').addEventListener('click', useCurrentCommentPosition);
-        $('comment-position-pick').addEventListener('click', chooseCommentPosition);
         try { $('comment-name').value = localStorage.getItem('ncc-comment-name-v1') || ''; } catch {}
         for (const eventName of ['timeupdate', 'loadedmetadata', 'durationchange']) audio.addEventListener(eventName, syncNowPlayer);
         document.addEventListener('keydown', event => { if (event.key === 'Escape' && nowPlayerOpen) { event.preventDefault(); closeNowPlayer(); } });
