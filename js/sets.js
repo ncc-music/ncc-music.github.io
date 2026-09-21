@@ -61,15 +61,23 @@
         return Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('es-AR', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
     }
     const activeCommunityTrack = () => nowPlayerOpen ? nowPlayerTrack || currentTrack() : detailTrack;
+    function setCommunityExpanded(expanded) {
+        const toggle = $('community-toggle'), panel = $('community-panel');
+        if (!toggle || !panel) return;
+        toggle.setAttribute('aria-expanded', String(expanded));
+        toggle.setAttribute('aria-label', `${expanded ? 'Ocultar' : 'Mostrar'} comentarios`);
+        panel.hidden = !expanded;
+    }
     function moveCommunity(slot) {
-        const panel = $('community-panel');
-        if (panel && slot && panel.parentElement !== slot) slot.append(panel);
+        const shell = $('community-shell');
+        if (shell && slot && shell.parentElement !== slot) slot.append(shell);
     }
     function renderCommunity(track, data) {
         const visible = activeCommunityTrack();
         if (!track?.id || visible?.id !== track.id) return;
         window.NCCDetailWaveform?.setComments(data?.comments || []);
         $('community-title').textContent = `FREAKS COMMENTS · ${data?.comments?.length ?? 0}`;
+        $('community-toggle-count').textContent = data?.comments?.length ?? 0;
         const fire = $('community-fire');
         fire.disabled = pendingFire.has(track.id) || !data;
         fire.setAttribute('aria-pressed', String(fireReactions.has(track.id)));
@@ -320,7 +328,7 @@
             waveformCard.append(host);
             const communitySlot = el('div', 'detail-community-slot'); communitySlot.id = 'detail-community-slot'; waveformCard.append(communitySlot);
             card.append(waveformCard);
-            if (!nowPlayerOpen) moveCommunity(communitySlot);
+            if (!nowPlayerOpen) { moveCommunity(communitySlot); setCommunityExpanded(false); }
         }
         const label = el('h3', 'tracklist-label', 'TRACKLIST'); card.append(label);
         if (track.tracklist?.length) {
@@ -406,6 +414,7 @@
         const track = nowPlayerTrack || currentTrack(); if (!track || !nowPlayerOpen) return;
         nowPlayerTrackKey = track.key;
         moveCommunity($('now-player-community-slot'));
+        setCommunityExpanded(false);
         $('now-player').setAttribute('aria-label', 'Reproductor ampliado: ' + track.name);
         const list = $('expanded-tracklist'); list.replaceChildren();
         $('expanded-tracklist-empty').hidden = Boolean(track.tracklist?.length);
@@ -679,6 +688,7 @@
         $('expanded-like').addEventListener('click', () => toggleLike(nowPlayerTrack || currentTrack()));
         $('expanded-share').addEventListener('click', () => shareSet(nowPlayerTrack || currentTrack()));
         $('community-fire').addEventListener('click', () => toggleFire(nowPlayerTrack || currentTrack()));
+        $('community-toggle').addEventListener('click', () => setCommunityExpanded($('community-toggle').getAttribute('aria-expanded') !== 'true'));
         $('comment-form').addEventListener('submit', submitComment);
         $('comment-body').addEventListener('input', event => { $('comment-count').textContent = `${event.target.value.length}/600`; });
         $('comment-position-current').addEventListener('click', useCurrentCommentPosition);
