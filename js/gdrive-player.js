@@ -124,13 +124,13 @@ function renderCatalogue() {
         const li = document.createElement('li'); li.className = 'track-entry';
         const button = document.createElement('div'); button.className = 'track-row'; button.setAttribute('role', 'group');
         button.dataset.playlistId = playlist.id; button.dataset.trackIndex = index;
-        button.setAttribute('aria-label', `Reproducir y abrir reproductor ampliado: ${track.name}, ${playlist.title}`);
-        const number = document.createElement('button'); number.type = 'button'; number.className = 'track-number'; number.setAttribute('aria-label', `Reproducir y abrir ${track.name}`);
+        button.setAttribute('aria-label', `Abrir reproductor ampliado: ${track.name}, ${playlist.title}`);
+        const number = document.createElement('button'); number.type = 'button'; number.className = 'track-number'; number.setAttribute('aria-label', `Abrir ${track.name}`);
         number.textContent = String(order + 1).padStart(2, '0'); number.dataset.order = order + 1;
         const main = document.createElement('span'); main.className = 'track-main';
         const cover = document.createElement('img'); cover.className = 'track-thumb'; cover.src = track.cover; cover.alt = ''; cover.loading = 'lazy';
         const copy = document.createElement('span'); copy.className = 'track-text';
-        const title = document.createElement('button'); title.type = 'button'; title.className = 'track-title'; title.textContent = track.name; title.setAttribute('aria-label', `Reproducir y abrir reproductor ampliado: ${track.name}`);
+        const title = document.createElement('button'); title.type = 'button'; title.className = 'track-title'; title.textContent = track.name; title.setAttribute('aria-label', `Abrir reproductor ampliado: ${track.name}`);
         copy.append(title); main.append(cover, copy);
         const duration = document.createElement('span'); duration.className = 'track-duration';
         duration.dataset.playlistId = playlist.id; duration.dataset.trackDuration = index;
@@ -144,10 +144,7 @@ function renderCatalogue() {
                 window.NCCSets.open(track);
                 return;
             }
-            if (!playbackInProgress) {
-                if (currentTrack()?.url !== track.url) playTrack(playlist.id, index, false);
-                else startPlayback();
-            }
+            if (!playbackInProgress && currentTrack()?.url !== track.url) selectTrack(playlist.id, index, false);
             if (window.NCCSets) window.NCCSets.expand(trigger, track);
         };
         number.addEventListener('click', event => { event.stopPropagation(); playAndExpandSelectedTrack(event.currentTarget); });
@@ -176,7 +173,7 @@ function syncActiveRows() {
         const playlist = getPlaylistById(row.dataset.playlistId);
         const track = playlist?.tracks[Number(row.dataset.trackIndex)];
         const previewingAnotherSet = Boolean(currentTrack() && !audio.paused && playerState.isPlaying && !active);
-        const action = previewingAnotherSet ? 'Abrir ficha' : 'Reproducir y abrir reproductor ampliado';
+        const action = previewingAnotherSet ? 'Abrir ficha' : 'Abrir reproductor ampliado';
         row.classList.toggle('active', active);
         row.setAttribute('aria-current', active ? 'true' : 'false');
         if (track) {
@@ -338,7 +335,7 @@ function route() {
     renderCatalogue();
 }
 function initPlayer() {
-    audio = $('audio-player'); audio.volume = .8;
+    audio = $('audio-player'); audio.volume = 1;
     setupWaveform(audio, $('waveform-canvas'), $('waveform-status'));
     $('play-button').addEventListener('click', togglePlay);
     $('player-like').addEventListener('click', () => window.NCCSets ? window.NCCSets.toggleLike(currentTrack()) : toggleCurrentTrackPreference('likes'));

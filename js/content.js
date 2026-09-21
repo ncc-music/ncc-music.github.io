@@ -3,7 +3,7 @@
     let snapshot, editor, section, saving = false;
     const fields = {
         sets: [['title', 'Nombre de la colección', 120], ['genres', 'Descripción musical', 200], ['description', 'Texto de presentación', 500]],
-        about: [['title', 'Nombre', 120], ['body', 'Biografía', 10000, true], ['bookingEmail', 'Correo de bookings', 254]],
+        about: [['title', 'Nombre', 120], ['body', 'Biografía', 10000, true], ['bookingEmail', 'Correo de BOOK ME', 254]],
         tour: [['title', 'Título', 120], ['body', 'Fechas y lugares · una fecha por línea', 10000, true]],
         manifesto: [['title_en', 'Título · English', 160], ['author_en', 'Autor · English', 200], ['body_en', 'Texto · English', 20000, true], ['title_es', 'Título · Español', 160], ['author_es', 'Autor · Español', 200], ['body_es', 'Texto · Español', 20000, true]]
     };
@@ -49,7 +49,9 @@
         const about = document.querySelector('.about-copy'); about.replaceChildren(node('p', 'Behind the music', 'eyebrow'));
         const heading = node('h2', content.about.title); heading.id = 'about-title'; about.append(heading);
         paragraphs(about, content.about.body);
-        if (content.about.bookingEmail) { const booking = node('a', 'Bookings: ' + content.about.bookingEmail, 'booking-link'); booking.href = 'mailto:' + content.about.bookingEmail; about.append(booking); }
+        const bookingEmail = !content.about.bookingEmail || content.about.bookingEmail === 'bookings@ncc.ar' ? 'info@ncc.ar' : content.about.bookingEmail;
+        const booking = node('a', '', 'booking-link'); booking.href = 'mailto:' + bookingEmail;
+        booking.append(node('span', 'BOOK ME'), node('strong', bookingEmail)); about.append(booking);
         const tour = $('tour-section'); tour.replaceChildren(node('p', 'EN VIVO', 'eyebrow'));
         const title = node('h2', content.tour.title); title.id = 'tour-title'; tour.append(title); paragraphs(tour, content.tour.body);
     }
