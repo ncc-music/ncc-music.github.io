@@ -273,7 +273,10 @@
     }
     function closeNowPlayer() {
         if (!nowPlayerOpen) return;
-        nowPlayerOpen = false; nowPlayerTrackKey = ''; $('now-player').hidden = true; $('now-player-backdrop').hidden = true;
+        const panel = $('now-player');
+        panel.classList.remove('is-dragging'); panel.style.removeProperty('transform'); panel.style.removeProperty('transition');
+        $('now-player-backdrop').style.removeProperty('opacity');
+        nowPlayerOpen = false; nowPlayerTrackKey = ''; panel.hidden = true; $('now-player-backdrop').hidden = true;
         document.body.classList.remove('player-expanded'); $('expand-player').setAttribute('aria-expanded', 'false');
         window.NCCDetailWaveform.dispose();
         if (detailTrack && $('detail-waveform-host')?.isConnected) window.NCCDetailWaveform.mount(detailTrack, $('detail-waveform-host'));
@@ -387,6 +390,57 @@
             if (event.target.closest('.now-info, .now-cover, button, a, input, label, canvas, .waveform-panel')) return;
             openNowPlayer(miniPlayer);
         });
+        const expandedPlayer = $('now-player'), expandedBackdrop = $('now-player-backdrop');
+        let swipe = null;
+        const resetSwipe = () => {
+            if (!swipe) return;
+            expandedPlayer.classList.remove('is-dragging');
+            expandedPlayer.style.transition = 'transform .2s ease-out';
+            expandedPlayer.style.removeProperty('transform');
+            expandedBackdrop.style.removeProperty('opacity');
+            setTimeout(() => expandedPlayer.style.removeProperty('transition'), 220);
+            swipe = null;
+        };
+        const beginSwipe = (id, x, y, target) => {
+            if (!nowPlayerOpen || !matchMedia('(max-width: 760px)').matches || expandedPlayer.scrollTop > 0) return;
+            if (target.closest('button, input, canvas, a, label')) return;
+            swipe = { id, x, y, offset: 0, dragging: false };
+        };
+        const moveSwipe = (id, x, y, event) => {
+            if (!swipe || id !== swipe.id) return;
+            const dx = x - swipe.x, dy = y - swipe.y;
+            if (!swipe.dragging) {
+                if (dy < 8) return;
+                if (Math.abs(dx) > dy) { swipe = null; return; }
+                swipe.dragging = true; expandedPlayer.classList.add('is-dragging');
+            }
+            event.preventDefault();
+            swipe.offset = Math.min(dy, expandedPlayer.clientHeight * .75);
+            expandedPlayer.style.transform = `translateY(${swipe.offset}px)`;
+            expandedBackdrop.style.opacity = String(Math.max(0, 1 - swipe.offset / (expandedPlayer.clientHeight * .75)));
+        };
+        const finishSwipe = id => {
+            if (!swipe || id !== swipe.id) return;
+            const shouldClose = swipe.dragging && swipe.offset >= Math.max(90, expandedPlayer.clientHeight * .12);
+            if (shouldClose) { swipe = null; closeNowPlayer(); }
+            else resetSwipe();
+        };
+        expandedPlayer.addEventListener('pointerdown', event => {
+            if (event.pointerType !== 'touch' && event.isPrimary) beginSwipe(event.pointerId, event.clientX, event.clientY, event.target);
+        });
+        expandedPlayer.addEventListener('pointermove', event => {
+            if (event.pointerType !== 'touch') moveSwipe(event.pointerId, event.clientX, event.clientY, event);
+        }, { passive: false });
+        expandedPlayer.addEventListener('pointerup', event => finishSwipe(event.pointerId));
+        expandedPlayer.addEventListener('pointercancel', event => finishSwipe(event.pointerId));
+        expandedPlayer.addEventListener('touchstart', event => {
+            if (event.touches.length === 1) beginSwipe('touch', event.touches[0].clientX, event.touches[0].clientY, event.target);
+        }, { passive: true });
+        expandedPlayer.addEventListener('touchmove', event => {
+            if (event.touches.length === 1) moveSwipe('touch', event.touches[0].clientX, event.touches[0].clientY, event);
+        }, { passive: false });
+        expandedPlayer.addEventListener('touchend', () => finishSwipe('touch'));
+        expandedPlayer.addEventListener('touchcancel', () => finishSwipe('touch'));
         $('now-player-backdrop').addEventListener('click', closeNowPlayer);
         $('now-player-close').addEventListener('click', closeNowPlayer);
         $('expanded-like').addEventListener('click', () => toggleLike(currentTrack()));
