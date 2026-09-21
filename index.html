@@ -76,7 +76,7 @@
                 ]
             }
         </script>
-        <link rel="stylesheet" href="styles.css?v=20260921ad">
+        <link rel="stylesheet" href="styles.css?v=20260921af">
         <link rel="icon" type="image/png" href="assets/player-cover.png">
     </head>
     <body>
@@ -157,7 +157,7 @@
                 <div id="loading-initial" class="load-status" role="status">Cargando sets…</div>
                 <div id="playlist" class="playlist-groups"></div>
             </section>
-                <section class="about-section" id="about-section" hidden aria-labelledby="about-title"><div class="about-art"><img src="assets/player-cover.png" alt="Identidad visual de NCC"></div><div class="about-copy"><p class="eyebrow">Behind the music</p><h2 id="about-title">Nicølás Cardú</h2><p>Does it matter?<br>Enjoy the music! x)</p><p>Sets en audio lossless, FLAC y WAV.</p><a class="booking-link" href="mailto:bookings@ncc.ar">Bookings: bookings@ncc.ar</a></div></section>
+                <section class="about-section" id="about-section" hidden aria-labelledby="about-title"><div class="about-art"><img src="assets/player-cover.png" alt="Identidad visual de NCC"></div><div class="about-copy"><p class="eyebrow">Behind the music</p><h2 id="about-title">Nicølás Cardú</h2><p>Does it matter?<br>Enjoy the music! x)</p><p>Sets en audio lossless, FLAC y WAV.</p><a class="booking-link" href="mailto:info@ncc.ar"><span>BOOK ME</span><strong>info@ncc.ar</strong></a></div></section>
             <section id="set-detail-section" class="set-detail-section" hidden aria-label="Ficha del set"></section>
             <section class="tracklists-section" id="tracklists-section" hidden aria-label="Tracklists">
                 <p class="empty-state">Todavía no hay tracklists publicadas.</p>
@@ -234,17 +234,17 @@
         </section>
         <section class="player-dock" aria-label="Reproductor de música"><div class="now-playing"><img id="now-cover" src="assets/player-cover.png" alt="Abrir reproductor ampliado" class="now-cover" role="button" tabindex="0"><div class="now-info" id="now-info"><span id="player-mode" class="player-mode">LISTO PARA ESCUCHAR</span><p id="track-artist">CARDÚ</p><h2><button type="button" id="track-name" class="track-name-button" aria-label="Elegí un set para abrir el reproductor" disabled>Elegí un set</button></h2></div><button type="button" id="expand-player" class="expand-player" aria-label="Abrir reproductor ampliado" aria-controls="now-player" aria-expanded="false"><svg class="icon" aria-hidden="true"><use href="#i-expand"/></svg></button></div>
             <div class="transport"><div class="transport-buttons"><button class="icon-button" id="prev-button" aria-label="Set anterior" title="Set anterior"><svg class="icon"><use href="#i-prev"/></svg></button><button class="play-button" id="play-button" aria-label="Reproducir" title="Reproducir" disabled><svg class="icon"><use href="#i-play"/></svg></button><button class="icon-button" id="next-button" aria-label="Siguiente set" title="Siguiente set"><svg class="icon"><use href="#i-next"/></svg></button></div><div class="progress-control"><span id="current-time">0:00</span><input type="range" id="seek-slider" min="0" max="1000" value="0" aria-label="Posición de reproducción" disabled><span id="duration">--:--</span></div></div>
-            <div class="player-options"><button id="waveform-toggle" class="icon-button" aria-label="Mostrar forma de onda" aria-expanded="false" aria-controls="waveform-panel" title="Forma de onda"><svg class="icon"><use href="#i-wave"/></svg></button><button id="mute-button" class="icon-button" aria-label="Silenciar" title="Silenciar"><svg class="icon"><use href="#i-volume"/></svg></button><label class="sr-only" for="volume-slider">Volumen</label><input type="range" id="volume-slider" min="0" max="100" value="80"><span id="volume-value" class="sr-only">80%</span><div class="player-preferences" role="group" aria-label="Preferencias del set actual"><button type="button" id="player-like" class="track-action" aria-label="Me gusta" aria-pressed="false" disabled><svg class="icon" aria-hidden="true"><use href="#i-heart"/></svg><span>Me gusta</span></button><button type="button" id="player-favorite" class="track-action" aria-label="Favorito" aria-pressed="false" disabled><span>Favorito</span><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg></button></div></div>
+            <div class="player-options"><button id="waveform-toggle" class="icon-button" aria-label="Mostrar forma de onda" aria-expanded="false" aria-controls="waveform-panel" title="Forma de onda"><svg class="icon"><use href="#i-wave"/></svg></button><button id="mute-button" class="icon-button" aria-label="Silenciar" title="Silenciar"><svg class="icon"><use href="#i-volume"/></svg></button><label class="sr-only" for="volume-slider">Volumen</label><input type="range" id="volume-slider" min="0" max="100" value="100"><span id="volume-value" class="sr-only">100%</span><div class="player-preferences" role="group" aria-label="Preferencias del set actual"><button type="button" id="player-like" class="track-action" aria-label="Me gusta" aria-pressed="false" disabled><svg class="icon" aria-hidden="true"><use href="#i-heart"/></svg><span>Me gusta</span></button><button type="button" id="player-favorite" class="track-action" aria-label="Favorito" aria-pressed="false" disabled><span>Favorito</span><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg></button></div></div>
             <div class="waveform-panel" id="waveform-panel" hidden><span class="eyebrow">FORMA DE ONDA</span><canvas id="waveform-canvas" width="960" height="96" role="slider" aria-label="Progreso del audio" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0"></canvas><p id="waveform-status" role="status">Elegí un set para ver su forma de onda.</p></div>
             <p id="player-message" class="player-message" role="status" hidden></p>
         </section>
         <audio id="audio-player" preload="metadata"></audio>
         <script src="js/waveform-stream.js?v=20260920"></script>
-        <script src="js/gdrive-player.js?v=20260921o"></script>
+        <script src="js/gdrive-player.js?v=20260921p"></script>
         <script src="js/detail-waveform.js?v=20260921l"></script>
         <script src="js/tracklist-search.js?v=20260921b"></script>
         <script src="js/sets.js?v=20260921x"></script>
-        <script src="js/content.js?v=20260921b"></script>
+        <script src="js/content.js?v=20260921c"></script>
         <script src="js/visits.js?v=20260914"></script>
     </body>
 </html>
