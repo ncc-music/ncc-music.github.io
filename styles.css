@@ -648,7 +648,7 @@ body.player-expanded { overflow: hidden; }
 .expanded-waveform canvas { height: 180px; }
 .now-player-actions { display: flex; justify-content: center; gap: 14px; margin: 18px 0 0; }
 .now-player-actions .track-action span { display: inline; }
-.now-player-tracklist { padding-top: 2px; }
+.now-player-tracklist { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); }
 .now-player-tracklist h3 { margin-bottom: 16px; color: var(--muted); font-size: 14px; letter-spacing: .1em; }
 .now-player-tracklist ol { padding-left: 2.2em; margin: 0; list-style-type: decimal-leading-zero; }
 .now-player-tracklist li { padding: 6px 0 6px 8px; }
