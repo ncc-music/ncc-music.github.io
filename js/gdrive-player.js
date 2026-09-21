@@ -117,7 +117,7 @@ function renderCatalogue() {
     }
     const heading = document.createElement('div'); heading.className = 'track-table-head';
     heading.setAttribute('aria-hidden', 'true');
-    heading.innerHTML = `<span>#</span><span>Título</span>${icon('clock')}`;
+    heading.innerHTML = `<span>#</span><span>Título</span><span></span>${icon('clock')}`;
     root.append(heading);
     const list = document.createElement('ol'); list.className = 'track-list';
     tracks.forEach(({ track, index, playlist }, order) => {
@@ -132,10 +132,12 @@ function renderCatalogue() {
         const copy = document.createElement('span'); copy.className = 'track-text';
         const title = document.createElement('button'); title.type = 'button'; title.className = 'track-title'; title.textContent = track.name; title.setAttribute('aria-label', `Abrir reproductor ampliado: ${track.name}`);
         copy.append(title); main.append(cover, copy);
+        const rowPlay = document.createElement('button'); rowPlay.type = 'button'; rowPlay.className = 'track-play';
+        rowPlay.innerHTML = icon('play'); rowPlay.setAttribute('aria-label', `Reproducir ${track.name}`); rowPlay.title = 'Reproducir';
         const duration = document.createElement('span'); duration.className = 'track-duration';
         duration.dataset.playlistId = playlist.id; duration.dataset.trackDuration = index;
         duration.textContent = formatTrackDuration(track.duration);
-        button.append(number, main, duration);
+        button.append(number, main, rowPlay, duration);
         const playAndExpandSelectedTrack = trigger => {
             const playbackInProgress = Boolean(currentTrack() && !audio.paused && playerState.isPlaying);
             const previewingAnotherSet = playbackInProgress && currentTrack()?.key !== track.key;
@@ -149,6 +151,13 @@ function renderCatalogue() {
         };
         number.addEventListener('click', event => { event.stopPropagation(); playAndExpandSelectedTrack(event.currentTarget); });
         title.addEventListener('click', event => { event.stopPropagation(); playAndExpandSelectedTrack(event.currentTarget); });
+        rowPlay.addEventListener('click', event => {
+            event.stopPropagation();
+            const active = currentTrack()?.key === track.key;
+            if (active && playerState.isPlaying) audio.pause();
+            else if (active) startPlayback();
+            else playTrack(playlist.id, index, false);
+        });
         button.addEventListener('click', event => playAndExpandSelectedTrack(event.currentTarget));
         li.append(button, createTrackActions(track));
         if (window.NCCSets?.isAdmin?.() && playlist.id !== 'radio') {
@@ -182,8 +191,11 @@ function syncActiveRows() {
             row.querySelector('.track-title')?.setAttribute('aria-label', `${action}: ${track.name}`);
         }
         const number = row.querySelector('.track-number');
-        if (active) number.innerHTML = icon(playerState.isPlaying ? 'wave' : 'play');
-        else number.textContent = String(number.dataset.order).padStart(2, '0');
+        number.textContent = String(number.dataset.order).padStart(2, '0');
+        const rowPlay = row.querySelector('.track-play'), playing = active && playerState.isPlaying;
+        rowPlay.innerHTML = icon(playing ? 'wave' : 'play');
+        rowPlay.setAttribute('aria-label', `${playing ? 'Pausar' : 'Reproducir'} ${track?.name || 'set'}`);
+        rowPlay.title = playing ? 'Pausar' : 'Reproducir';
     });
 }
 function showMessage(message) {
