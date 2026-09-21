@@ -35,6 +35,32 @@ test('concurrent distinct likes are not lost', async () => {
     const responses = await Promise.all(Array.from({ length: 12 }, (_, n) => worker.fetch(req(`/sets/${track.id}/likes`, 'PUT', { visitor: `${n.toString(16).padStart(8, '0')}-abcd-1234-abcd-123456789abc`, liked: true }), environment)));
     assert.ok(responses.every(r => r.ok)); assert.equal((await tracks(environment))[0].likes, 12);
 });
+test('set community supports anonymous comments and idempotent fire reactions', async () => {
+    const environment = env(), [track] = await tracks(environment);
+    const community = () => worker.fetch(req(`/sets/${track.id}/community`), environment);
+    assert.deepEqual(await (await community()).json(), { fireCount: 0, comments: [] });
+    const anonymous = await worker.fetch(req(`/sets/${track.id}/comments`, 'POST', { visitor, author: '', body: 'Raw energy.' }), environment);
+    assert.equal(anonymous.status, 201);
+    const first = (await anonymous.json()).comment;
+    assert.equal(first.author, 'AnonymousFreak'); assert.equal(first.body, 'Raw energy.');
+    const named = await worker.fetch(req(`/sets/${track.id}/comments`, 'POST', { visitor, author: 'Night Rider', body: 'Again 🔥' }), environment);
+    assert.equal(named.status, 201);
+    const snapshot = await (await community()).json();
+    assert.equal(snapshot.comments.length, 2); assert.equal(snapshot.comments[0].author, 'Night Rider');
+    const fire = body => worker.fetch(req(`/sets/${track.id}/fire`, 'PUT', body), environment);
+    assert.equal((await (await fire({ visitor, reacted: true })).json()).count, 1);
+    assert.equal((await (await fire({ visitor, reacted: true })).json()).count, 1);
+    assert.equal((await (await fire({ visitor, reacted: false })).json()).count, 0);
+});
+test('community rejects unsafe requests and rate limits anonymous comments', async () => {
+    const environment = env(), [track] = await tracks(environment);
+    const path = `/sets/${track.id}/comments`;
+    assert.equal((await worker.fetch(req(path, 'POST', { visitor, body: 'Nope' }, { Origin: 'https://foreign.example' }), environment)).status, 403);
+    assert.equal((await worker.fetch(req(path, 'POST', { visitor: '<script>', body: 'Nope' }), environment)).status, 400);
+    assert.equal((await worker.fetch(req(path, 'POST', { visitor, author: 'A'.repeat(33), body: 'Nope' }), environment)).status, 400);
+    for (let index = 0; index < 5; index++) assert.equal((await worker.fetch(req(path, 'POST', { visitor, body: `Comment ${index}` }), environment)).status, 201);
+    assert.equal((await worker.fetch(req(path, 'POST', { visitor, body: 'One too many' }), environment)).status, 429);
+});
 test('unpublished sets are excluded from all public catalogues and cannot receive likes', async () => {
     const environment = env(), [track] = await tracks(environment);
     await environment.SITE_DB.prepare('INSERT INTO sets (id,audio_key,slug,title,published) VALUES (?,?,?,?,0)').bind(track.id, track.key, track.slug, track.name).run();
