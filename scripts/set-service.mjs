@@ -4,6 +4,7 @@ const ORIGIN = 'https://ncc.ar';
 const jwksCache = new Map();
 const encoder = new TextEncoder();
 let communityPositionReady = false;
+const setOrganisationReady = new WeakSet();
 async function stableId(key) {
     const bytes = await crypto.subtle.digest('SHA-256', encoder.encode(key));
     return Array.from(new Uint8Array(bytes), b => b.toString(16).padStart(2, '0')).join('').slice(0, 20);
@@ -11,9 +12,34 @@ async function stableId(key) {
 function slugify(title) {
     return title.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 90) || 'set';
 }
+function parseList(value) {
+    try { const parsed = JSON.parse(value || '[]'); return Array.isArray(parsed) ? parsed : []; }
+    catch { return []; }
+}
+async function ensureSetOrganisation(env) {
+    if (!env.SITE_DB || setOrganisationReady.has(env.SITE_DB)) return;
+    for (const [column, definition] of [['tags', "TEXT NOT NULL DEFAULT '[]'"], ['sort_order', 'INTEGER']]) {
+        try { await env.SITE_DB.prepare(`SELECT ${column} FROM sets LIMIT 0`).all(); }
+        catch {
+            try { await env.SITE_DB.prepare(`ALTER TABLE sets ADD COLUMN ${column} ${definition}`).run(); }
+            catch (error) { if (!/duplicate column/i.test(String(error?.message || error))) throw error; }
+        }
+    }
+    setOrganisationReady.add(env.SITE_DB);
+}
+function compareCatalogueTracks(a, b) {
+    const group = COLLECTIONS.findIndex(prefix => a.key.startsWith(prefix)) - COLLECTIONS.findIndex(prefix => b.key.startsWith(prefix));
+    if (group) return group;
+    const aOrdered = Number.isSafeInteger(a.sortOrder), bOrdered = Number.isSafeInteger(b.sortOrder);
+    if (aOrdered && bOrdered && a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
+    if (aOrdered !== bOrdered) return aOrdered ? -1 : 1;
+    const chronological = (a.date || a.uploaded || a.key).localeCompare(b.date || b.uploaded || b.key, undefined, { numeric: true, sensitivity: 'base' });
+    return chronological || a.name.localeCompare(b.name, 'es', { numeric: true, sensitivity: 'base' });
+}
 async function catalogue(env, origin, includeDrafts = false) {
     const bucket = env.MY_BUCKET || env.MUSIC_BUCKET;
     if (!bucket) throw new Error('Storage unavailable');
+    await ensureSetOrganisation(env);
     const rows = env.SITE_DB ? (await env.SITE_DB.prepare('SELECT * FROM sets').all()).results : [];
     const counts = env.SITE_DB ? (await env.SITE_DB.prepare('SELECT set_id, COUNT(*) AS count FROM likes GROUP BY set_id').all()).results : [];
     const metadata = new Map(rows.map(row => [row.audio_key, row]));
@@ -29,7 +55,8 @@ async function catalogue(env, origin, includeDrafts = false) {
         return {
             id, key: object.key, name, artist: object.customMetadata?.artist || 'Nicolás Cardú',
             slug: saved?.slug || `${slugify(titleFromKey(object.key))}-${id.slice(0, 8)}`,
-            date: saved?.date || '', tracklist: saved ? JSON.parse(saved.tracklist) : [],
+            date: saved?.date || '', tracklist: saved ? parseList(saved.tracklist) : [], tags: saved ? parseList(saved.tags) : [],
+            sortOrder: Number.isSafeInteger(saved?.sort_order) ? saved.sort_order : null, uploaded: object.uploaded?.toISOString?.() || '',
             published: saved ? Boolean(saved.published) : true, version: saved?.version || 0,
             peaks: saved?.peaks ? JSON.parse(saved.peaks) : null,
             likes: env.SITE_DB ? likes.get(id) || 0 : null,
@@ -40,12 +67,13 @@ async function catalogue(env, origin, includeDrafts = false) {
     // Keep published tracklists searchable after an audio object is retired from R2.
     const archivedTracks = rows.filter(row => !activeKeys.has(row.audio_key)).map(row => ({
         id: row.id, key: row.audio_key, name: row.title, artist: 'Nicolás Cardú', slug: row.slug,
-        date: row.date || '', tracklist: JSON.parse(row.tracklist || '[]'), published: Boolean(row.published),
+        date: row.date || '', tracklist: parseList(row.tracklist), tags: parseList(row.tags),
+        sortOrder: Number.isSafeInteger(row.sort_order) ? row.sort_order : null, uploaded: '', published: Boolean(row.published),
         version: row.version || 0, peaks: row.peaks ? JSON.parse(row.peaks) : null,
         likes: env.SITE_DB ? likes.get(row.id) || 0 : null, url: '', waveformUrl: '', size: 0,
         contentType: contentTypeFromKey(row.audio_key), available: false
     }));
-    const tracks = [...activeTracks, ...archivedTracks];
+    const tracks = [...activeTracks, ...archivedTracks].sort(compareCatalogueTracks);
     return tracks.filter(track => includeDrafts || track.published);
 }
 function writeOriginAllowed(request, env) {
@@ -106,6 +134,8 @@ function validSetInput(value) {
     return typeof value.title === 'string' && value.title.trim().length > 0 && value.title.length <= 240
         && typeof value.date === 'string' && (value.date === '' || /^\d{4}-\d{2}-\d{2}$/.test(value.date) && new Date(value.date).toISOString().slice(0, 10) === value.date)
         && Array.isArray(value.tracklist) && value.tracklist.length <= 500 && value.tracklist.every(line => typeof line === 'string' && line.length <= 1000)
+        && (value.tags === undefined || Array.isArray(value.tags) && value.tags.length <= 12 && value.tags.every(tag => typeof tag === 'string' && tag.trim().length > 0 && tag.trim().length <= 32))
+        && (value.sortOrder === undefined || value.sortOrder === null || Number.isSafeInteger(value.sortOrder) && value.sortOrder >= 0 && value.sortOrder <= 100000)
         && typeof value.published === 'boolean' && Number.isSafeInteger(value.version) && value.version >= 0
         && (value.peaks === undefined || value.peaks === null || Array.isArray(value.peaks) && value.peaks.length >= 50 && value.peaks.length <= 2000 && value.peaks.every(p => Number.isFinite(p) && p >= 0 && p <= 1));
 }
@@ -169,6 +199,25 @@ async function handleSetService(request, env) {
                 if (result.meta.changes !== 1) return reply({ error: 'El contenido cambió en otra ventana. Cerrá el editor y volvé a abrirlo.' }, 409);
                 return reply({ saved: true, version: input.version + 1 });
             }
+            if (path === '/admin/order') {
+                if (request.method !== 'PUT') return reply({ error: 'Método no permitido.' }, 405);
+                if (!writeOriginAllowed(request, env)) return reply({ error: 'Origin not allowed' }, 403);
+                let input;
+                try {
+                    input = await readSmallJSON(request);
+                    if (!Array.isArray(input.ids) || !input.ids.length || input.ids.length > 500 || new Set(input.ids).size !== input.ids.length || !input.ids.every(id => /^[a-f0-9]{20}$/.test(id))) throw new Error();
+                } catch { return reply({ error: 'El orden enviado no es válido.' }, 400); }
+                const available = await catalogue(env, url.origin, true);
+                const byId = new Map(available.map(track => [track.id, track]));
+                if (input.ids.some(id => !byId.has(id))) return reply({ error: 'Uno de los sets ya no está disponible.' }, 404);
+                const statements = input.ids.map((id, order) => {
+                    const track = byId.get(id);
+                    return env.SITE_DB.prepare("INSERT INTO sets (id,audio_key,slug,title,date,tracklist,tags,sort_order,published,peaks) VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET sort_order=excluded.sort_order, version=sets.version+1, updated_at=datetime('now')")
+                        .bind(track.id, track.key, track.slug, track.name, track.date, JSON.stringify(track.tracklist), JSON.stringify(track.tags || []), order, Number(track.published), track.peaks ? JSON.stringify(track.peaks) : null);
+                });
+                await env.SITE_DB.batch(statements);
+                return reply({ saved: true });
+            }
             if (request.method !== 'PUT' || !/^\/admin\/sets\/[a-f0-9]{20}$/.test(path)) return reply({ error: 'Not found' }, 404);
             if (!writeOriginAllowed(request, env)) return reply({ error: 'Origin not allowed' }, 403);
             let input;
@@ -178,13 +227,15 @@ async function handleSetService(request, env) {
             const track = (await catalogue(env, url.origin, true)).find(item => item.id === id);
             if (!track) return reply({ error: 'Set no encontrado.' }, 404);
             const peaks = input.peaks === undefined ? track.peaks : input.peaks;
+            const tags = input.tags === undefined ? track.tags : [...new Set(input.tags.map(tag => tag.trim()))];
+            const sortOrder = input.sortOrder === undefined ? track.sortOrder : input.sortOrder;
             let result;
             if (input.version === 0) {
-                result = await env.SITE_DB.prepare('INSERT OR IGNORE INTO sets (id, audio_key, slug, title, date, tracklist, published, peaks) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-                    .bind(id, track.key, track.slug, input.title.trim(), input.date, JSON.stringify(input.tracklist), Number(input.published), peaks ? JSON.stringify(peaks) : null).run();
+                result = await env.SITE_DB.prepare('INSERT OR IGNORE INTO sets (id, audio_key, slug, title, date, tracklist, tags, sort_order, published, peaks) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+                    .bind(id, track.key, track.slug, input.title.trim(), input.date, JSON.stringify(input.tracklist), JSON.stringify(tags), sortOrder, Number(input.published), peaks ? JSON.stringify(peaks) : null).run();
             } else {
-                result = await env.SITE_DB.prepare("UPDATE sets SET title = ?, date = ?, tracklist = ?, published = ?, peaks = ?, version = version + 1, updated_at = datetime('now') WHERE id = ? AND version = ?")
-                    .bind(input.title.trim(), input.date, JSON.stringify(input.tracklist), Number(input.published), peaks ? JSON.stringify(peaks) : null, id, input.version).run();
+                result = await env.SITE_DB.prepare("UPDATE sets SET title = ?, date = ?, tracklist = ?, tags = ?, sort_order = ?, published = ?, peaks = ?, version = version + 1, updated_at = datetime('now') WHERE id = ? AND version = ?")
+                    .bind(input.title.trim(), input.date, JSON.stringify(input.tracklist), JSON.stringify(tags), sortOrder, Number(input.published), peaks ? JSON.stringify(peaks) : null, id, input.version).run();
             }
             if (result.meta.changes !== 1) return reply({ error: 'El set cambió en otra ventana. Volvé a abrirlo antes de guardar.' }, 409);
             return reply({ saved: true, version: input.version + 1, slug: track.slug });

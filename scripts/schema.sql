@@ -6,6 +6,8 @@ CREATE TABLE IF NOT EXISTS sets (
   title TEXT NOT NULL,
   date TEXT NOT NULL DEFAULT '',
   tracklist TEXT NOT NULL DEFAULT '[]',
+  tags TEXT NOT NULL DEFAULT '[]',
+  sort_order INTEGER,
   published INTEGER NOT NULL DEFAULT 1 CHECK (published IN (0, 1)),
   peaks TEXT,
   version INTEGER NOT NULL DEFAULT 1,
