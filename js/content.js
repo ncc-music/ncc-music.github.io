@@ -52,8 +52,10 @@
         const bookingEmail = !content.about.bookingEmail || content.about.bookingEmail === 'bookings@ncc.ar' ? 'info@ncc.ar' : content.about.bookingEmail;
         const booking = node('a', '', 'booking-link'); booking.href = 'mailto:' + bookingEmail;
         booking.append(node('span', 'BOOK ME'), node('strong', bookingEmail)); about.append(booking);
-        const tour = $('tour-section'); tour.replaceChildren(node('p', 'EN VIVO', 'eyebrow'));
+        const tour = $('tour-section'); tour.replaceChildren();
         const title = node('h2', content.tour.title); title.id = 'tour-title'; tour.append(title); paragraphs(tour, content.tour.body);
+        const tourBooking = node('a', '', 'booking-link'); tourBooking.href = 'mailto:' + bookingEmail;
+        tourBooking.append(node('span', 'BOOK ME'), node('strong', bookingEmail)); tour.append(tourBooking);
     }
     async function edit(key) {
         if (!fields[key] || saving) return;
