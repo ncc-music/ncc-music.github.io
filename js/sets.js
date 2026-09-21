@@ -75,6 +75,7 @@
         const visible = activeCommunityTrack();
         if (!track?.id || visible?.id !== track.id) return;
         window.NCCDetailWaveform?.setComments(data?.comments || []);
+        $('expanded-like').dataset.likeId = track.id || '';
         $('community-title').textContent = `FREAKS COMMENTS · ${data?.comments?.length ?? 0}`;
         $('community-toggle-count').textContent = data?.comments?.length ?? 0;
         const fire = $('community-fire');
@@ -154,12 +155,13 @@
     function syncCommentPosition() {
         const readout = $('comment-position-current-time'); if (!readout) return;
         readout.textContent = formatTime(commentPositionSeconds());
-        $('comment-body').placeholder = 'Escribe un comentario…';
+        $('comment-body').placeholder = 'Escribe tu comentario';
         window.NCCDetailWaveform?.setDraftPosition(null);
     }
     async function submitComment(event) {
         event.preventDefault();
         const track = activeCommunityTrack() || currentTrack(); if (!track?.id) return;
+        setCommunityExpanded(true);
         const name = $('comment-name').value.trim(), body = $('comment-body').value.trim();
         if (!body) { $('comment-status').textContent = 'Escribí un comentario.'; $('comment-body').focus(); return; }
         let visitor;
@@ -202,6 +204,18 @@
             button.innerHTML = icon(active ? 'pause' : 'play') + `<span>${item?.available === false ? 'Audio no disponible' : active ? 'Pausar' : 'Reproducir'}</span>`;
         });
         syncNowPlayer();
+    }
+    async function copySetLink(track, button) {
+        if (!track?.slug || !button) return;
+        const originalLabel = 'Copiar enlace';
+        try {
+            await navigator.clipboard.writeText(setURL(track));
+            button.classList.add('is-copied'); button.setAttribute('aria-label', 'Enlace copiado'); button.title = 'Enlace copiado';
+            setTimeout(() => { button.classList.remove('is-copied'); button.setAttribute('aria-label', originalLabel); button.title = originalLabel; }, 1600);
+        } catch {
+            shareSet(track);
+            $('share-status').textContent = 'Seleccioná y copiá el enlace.';
+        }
     }
     const originalActions = createTrackActions;
     createTrackActions = track => {
@@ -661,8 +675,9 @@
         });
         $('now-player-backdrop').addEventListener('click', closeNowPlayer);
         $('now-player-close').addEventListener('click', closeNowPlayer);
-        $('expanded-like').addEventListener('click', () => toggleLike(nowPlayerTrack || currentTrack()));
-        $('expanded-share').addEventListener('click', () => shareSet(nowPlayerTrack || currentTrack()));
+        $('expanded-like').addEventListener('click', () => toggleLike(activeCommunityTrack() || currentTrack()));
+        $('expanded-share').addEventListener('click', () => shareSet(activeCommunityTrack() || currentTrack()));
+        $('expanded-copy-link').addEventListener('click', event => copySetLink(activeCommunityTrack() || currentTrack(), event.currentTarget));
         $('community-fire').addEventListener('click', () => toggleFire(nowPlayerTrack || currentTrack()));
         $('community-toggle').addEventListener('click', () => setCommunityExpanded($('community-toggle').getAttribute('aria-expanded') !== 'true'));
         $('comment-form').addEventListener('submit', submitComment);
