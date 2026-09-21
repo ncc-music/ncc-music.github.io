@@ -43,10 +43,11 @@ test('set community supports anonymous comments and idempotent fire reactions', 
     assert.equal(anonymous.status, 201);
     const first = (await anonymous.json()).comment;
     assert.equal(first.author, 'AnonymousFreak'); assert.equal(first.body, 'Raw energy.');
-    const named = await worker.fetch(req(`/sets/${track.id}/comments`, 'POST', { visitor, author: 'Night Rider', body: 'Again 🔥' }), environment);
+    const named = await worker.fetch(req(`/sets/${track.id}/comments`, 'POST', { visitor, author: 'Night Rider', body: 'Again 🔥', positionSeconds: 83.46 }), environment);
     assert.equal(named.status, 201);
     const snapshot = await (await community()).json();
     assert.equal(snapshot.comments.length, 2); assert.equal(snapshot.comments[0].author, 'Night Rider');
+    assert.equal(snapshot.comments[0].positionSeconds, 83.5);
     const fire = body => worker.fetch(req(`/sets/${track.id}/fire`, 'PUT', body), environment);
     assert.equal((await (await fire({ visitor, reacted: true })).json()).count, 1);
     assert.equal((await (await fire({ visitor, reacted: true })).json()).count, 1);
@@ -58,6 +59,7 @@ test('community rejects unsafe requests and rate limits anonymous comments', asy
     assert.equal((await worker.fetch(req(path, 'POST', { visitor, body: 'Nope' }, { Origin: 'https://foreign.example' }), environment)).status, 403);
     assert.equal((await worker.fetch(req(path, 'POST', { visitor: '<script>', body: 'Nope' }), environment)).status, 400);
     assert.equal((await worker.fetch(req(path, 'POST', { visitor, author: 'A'.repeat(33), body: 'Nope' }), environment)).status, 400);
+    assert.equal((await worker.fetch(req(path, 'POST', { visitor, body: 'Nope', positionSeconds: 90000 }), environment)).status, 400);
     for (let index = 0; index < 5; index++) assert.equal((await worker.fetch(req(path, 'POST', { visitor, body: `Comment ${index}` }), environment)).status, 201);
     assert.equal((await worker.fetch(req(path, 'POST', { visitor, body: 'One too many' }), environment)).status, 429);
 });
