@@ -4,23 +4,23 @@
     function mount(track, host) {
         dispose();
         const controller = new AbortController();
-        const frame = document.createElement('div'), canvas = document.createElement('canvas'), play = document.createElement('button'), status = document.createElement('p');
+        const frame = document.createElement('div'), canvas = document.createElement('canvas'), guide = document.createElement('span'), play = document.createElement('button'), status = document.createElement('p');
         host.replaceChildren(); frame.className = 'waveform-frame';
         canvas.tabIndex = 0; canvas.setAttribute('role', 'slider');
-        canvas.setAttribute('aria-label', 'Posición en ' + track.name + '. Mantené presionado y arrastrá para desplazarte.');
+        canvas.setAttribute('aria-label', 'Reproducir o pausar ' + track.name + '. Mantené presionado y arrastrá para desplazarte.');
         canvas.setAttribute('aria-valuemin', '0'); canvas.setAttribute('aria-valuemax', '100');
+        guide.className = 'waveform-guide'; guide.hidden = true; guide.setAttribute('aria-hidden', 'true');
         play.type = 'button'; play.className = host.id === 'expanded-waveform' ? 'waveform-play expanded-play' : 'waveform-play'; play.innerHTML = icon('play');
         if (host.id === 'expanded-waveform') play.id = 'expanded-play';
         play.setAttribute('aria-label', 'Reproducir ' + track.name); play.title = 'Reproducir';
         status.setAttribute('role', 'status'); status.textContent = 'Cargando forma de onda…';
-        frame.append(canvas, play); host.append(frame, status);
-        let peaks = [], pointer = null, pendingSeek = null, playDismissed = false;
+        frame.append(canvas, guide, play); host.append(frame, status);
+        let peaks = [], pointer = null, pendingSeek = null;
         const active = () => currentTrack()?.key === track.key;
         const position = () => active() && isSeekable(audio) ? audio.currentTime / audio.duration : 0;
         function syncPlay() {
             const playing = active() && !audio.paused && playerState.isPlaying;
-            const invisible = playDismissed || (active() && (!audio.paused || audio.currentTime > 0));
-            play.classList.toggle('is-invisible', invisible);
+            play.classList.toggle('is-invisible', playing);
             play.innerHTML = icon(playing ? 'pause' : 'play');
             play.setAttribute('aria-label', (playing ? 'Pausar ' : 'Reproducir ') + track.name);
             play.title = playing ? 'Pausa' : 'Reproducir';
@@ -56,32 +56,7 @@
             }
             applySeek();
         }
-        const point = event => { const rect = canvas.getBoundingClientRect(); seek((event.clientX - rect.left) / rect.width); };
-        const stopScrub = event => {
-            if (!pointer || event.pointerId !== pointer.id) return;
-            pointer = null; canvas.classList.remove('is-scrubbing');
-        };
-        canvas.addEventListener('pointerdown', event => {
-            if (!event.isPrimary) return;
-            canvas.setPointerCapture(event.pointerId);
-            pointer = { id: event.pointerId, startX: event.clientX, scrubbing: false };
-        });
-        canvas.addEventListener('pointermove', event => {
-            if (!pointer || event.pointerId !== pointer.id) return;
-            if (!pointer.scrubbing && Math.abs(event.clientX - pointer.startX) >= 4) {
-                pointer.scrubbing = true; canvas.classList.add('is-scrubbing');
-            }
-            if (pointer.scrubbing) point(event);
-        });
-        for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(type, stopScrub);
-        canvas.addEventListener('keydown', event => {
-            const delta = active() && isSeekable(audio) ? 5 / audio.duration : .01;
-            const positions = { ArrowRight: position() + delta, ArrowLeft: position() - delta, Home: 0, End: 1 };
-            if (event.key in positions) { event.preventDefault(); seek(positions[event.key]); }
-        });
-        play.addEventListener('click', event => {
-            event.stopPropagation();
-            playDismissed = true;
+        function togglePlayback() {
             if (!active()) {
                 const playlist = playerState.playlists.find(p => p.tracks.some(t => t.key === track.key));
                 if (!playlist) return;
@@ -92,6 +67,50 @@
                 if (isSeekable(audio) && audio.currentTime >= audio.duration) audio.currentTime = 0;
                 startPlayback();
             }
+        }
+        const point = event => { const rect = canvas.getBoundingClientRect(); seek((event.clientX - rect.left) / rect.width); };
+        const showGuide = clientX => {
+            const rect = canvas.getBoundingClientRect();
+            guide.style.left = `${clamp((clientX - rect.left) / rect.width, 0, 1) * 100}%`;
+            guide.hidden = false;
+        };
+        const stopScrub = event => {
+            if (!pointer || event.pointerId !== pointer.id) return;
+            pointer = null; canvas.classList.remove('is-scrubbing');
+            if (event.pointerType !== 'mouse') guide.hidden = true;
+        };
+        canvas.addEventListener('pointerdown', event => {
+            if (!event.isPrimary) return;
+            canvas.setPointerCapture(event.pointerId);
+            pointer = { id: event.pointerId, startX: event.clientX, scrubbing: false };
+            showGuide(event.clientX);
+        });
+        canvas.addEventListener('pointermove', event => {
+            if (!pointer || event.pointerId !== pointer.id) {
+                if (event.pointerType === 'mouse') showGuide(event.clientX);
+                return;
+            }
+            showGuide(event.clientX);
+            if (!pointer.scrubbing && Math.abs(event.clientX - pointer.startX) >= 4) {
+                pointer.scrubbing = true; canvas.classList.add('is-scrubbing');
+            }
+            if (pointer.scrubbing) point(event);
+        });
+        canvas.addEventListener('pointerup', event => {
+            if (!pointer || event.pointerId !== pointer.id) return;
+            const wasScrubbing = pointer.scrubbing; stopScrub(event);
+            if (!wasScrubbing) togglePlayback();
+        });
+        for (const type of ['pointercancel', 'lostpointercapture']) canvas.addEventListener(type, stopScrub);
+        canvas.addEventListener('pointerleave', event => { if (!pointer && event.pointerType === 'mouse') guide.hidden = true; });
+        canvas.addEventListener('keydown', event => {
+            if (event.key === ' ' || event.key === 'Enter') { event.preventDefault(); togglePlayback(); return; }
+            const delta = active() && isSeekable(audio) ? 5 / audio.duration : .01;
+            const positions = { ArrowRight: position() + delta, ArrowLeft: position() - delta, Home: 0, End: 1 };
+            if (event.key in positions) { event.preventDefault(); seek(positions[event.key]); }
+        });
+        play.addEventListener('click', event => {
+            event.stopPropagation(); togglePlayback();
         });
         for (const type of ['timeupdate', 'emptied', 'play', 'pause']) audio.addEventListener(type, draw);
         audio.addEventListener('loadedmetadata', applySeek); audio.addEventListener('durationchange', applySeek);
