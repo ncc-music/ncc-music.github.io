@@ -3,8 +3,10 @@
     const api = '/api';
     let admin = false, adminTracks = [], archiveTracks = [], detailTrack = null, editorTrack = null, shareTrack = null;
     let tracklistQuery = '', nowPlayerOpen = false, nowPlayerTrackKey = '', nowPlayerTrack = null, playerReturnFocus = null;
-    let socialLikes = new Set(), pendingLikes = new Set();
+    let socialLikes = new Set(), pendingLikes = new Set(), fireReactions = new Set(), pendingFire = new Set(), communityRequest = 0;
+    const communityCache = new Map();
     try { socialLikes = new Set(JSON.parse(localStorage.getItem('ncc-public-likes-v1') || '[]')); } catch {}
+    try { fireReactions = new Set(JSON.parse(localStorage.getItem('ncc-fire-reactions-v1') || '[]')); } catch {}
     const el = (tag, className, text) => {
         const node = document.createElement(tag); if (className) node.className = className; if (text !== undefined) node.textContent = text; return node;
     };
@@ -42,6 +44,83 @@
             try { localStorage.setItem('ncc-public-likes-v1', JSON.stringify([...socialLikes])); } catch {}
         } catch (error) { showMessage(error.message); }
         finally { pendingLikes.delete(track.id); syncSocial(); }
+    }
+    function communityVisitor() {
+        try {
+            let visitor = localStorage.getItem('ncc-community-visitor-v1');
+            if (!visitor) { visitor = crypto.randomUUID(); localStorage.setItem('ncc-community-visitor-v1', visitor); }
+            return visitor;
+        } catch { throw new Error('El navegador no permite publicar de forma anónima.'); }
+    }
+    function commentDate(value) {
+        const raw = String(value || '');
+        const date = new Date(raw.includes('T') ? raw : raw.replace(' ', 'T') + 'Z');
+        return Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('es-AR', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+    }
+    function renderCommunity(track, data) {
+        const visible = nowPlayerTrack || currentTrack();
+        if (!nowPlayerOpen || !track?.id || visible?.id !== track.id) return;
+        const fire = $('community-fire');
+        fire.disabled = pendingFire.has(track.id) || !data;
+        fire.setAttribute('aria-pressed', String(fireReactions.has(track.id)));
+        fire.setAttribute('aria-label', `${fireReactions.has(track.id) ? 'Quitar reacción de fuego' : 'Reaccionar con fuego'} a ${track.name}`);
+        $('community-fire-count').textContent = data?.fireCount ?? '—';
+        const list = $('comment-list'); list.replaceChildren();
+        if (!data) { list.append(el('p', 'empty-state', 'Cargando comentarios…')); return; }
+        if (!data.comments?.length) { list.append(el('p', 'empty-state', 'Todavía no hay comentarios. Sé el primer freak.')); return; }
+        for (const comment of data.comments) {
+            const card = el('article', 'comment-card'), header = el('header'), author = el('strong', '', comment.author || 'AnonymousFreak');
+            const time = el('time', '', commentDate(comment.createdAt)); time.dateTime = comment.createdAt || '';
+            header.append(author, time); card.append(header, el('p', '', comment.body || '')); list.append(card);
+        }
+    }
+    async function loadCommunity(track) {
+        if (!track?.id) return;
+        const requestId = ++communityRequest;
+        renderCommunity(track, communityCache.get(track.id) || null);
+        try {
+            const data = await request(`/sets/${track.id}/community`);
+            if (!Array.isArray(data.comments) || !Number.isFinite(Number(data.fireCount))) throw new Error('Respuesta inválida.');
+            if (requestId !== communityRequest) return;
+            const normalized = { fireCount: Number(data.fireCount), comments: data.comments.slice(0, 100) };
+            communityCache.set(track.id, normalized); renderCommunity(track, normalized);
+        } catch (error) {
+            if (requestId !== communityRequest) return;
+            $('community-fire').disabled = true; $('community-fire-count').textContent = '—';
+            const list = $('comment-list'); list.replaceChildren(el('p', 'empty-state', error.message || 'Comentarios no disponibles.'));
+        }
+    }
+    async function toggleFire(track) {
+        if (!track?.id || pendingFire.has(track.id) || !communityCache.has(track.id)) return;
+        let visitor;
+        try { visitor = communityVisitor(); } catch (error) { $('comment-status').textContent = error.message; return; }
+        const reacted = !fireReactions.has(track.id); pendingFire.add(track.id); renderCommunity(track, communityCache.get(track.id));
+        try {
+            const result = await request(`/sets/${track.id}/fire`, { method: 'PUT', body: JSON.stringify({ visitor, reacted }) });
+            if (result.reacted) fireReactions.add(track.id); else fireReactions.delete(track.id);
+            const data = communityCache.get(track.id); data.fireCount = Number(result.count); communityCache.set(track.id, data);
+            try { localStorage.setItem('ncc-fire-reactions-v1', JSON.stringify([...fireReactions])); } catch {}
+            $('comment-status').textContent = result.reacted ? 'Reacción 🔥 agregada.' : 'Reacción retirada.';
+        } catch (error) { $('comment-status').textContent = error.message; }
+        finally { pendingFire.delete(track.id); renderCommunity(track, communityCache.get(track.id)); }
+    }
+    async function submitComment(event) {
+        event.preventDefault();
+        const track = nowPlayerTrack || currentTrack(); if (!track?.id) return;
+        const name = $('comment-name').value.trim(), body = $('comment-body').value.trim();
+        if (!body) { $('comment-status').textContent = 'Escribí un comentario.'; $('comment-body').focus(); return; }
+        let visitor;
+        try { visitor = communityVisitor(); } catch (error) { $('comment-status').textContent = error.message; return; }
+        const button = $('comment-submit'); button.disabled = true; $('comment-status').textContent = 'Publicando…';
+        try {
+            const result = await request(`/sets/${track.id}/comments`, { method: 'POST', body: JSON.stringify({ visitor, author: name, body }) });
+            const data = communityCache.get(track.id) || { fireCount: 0, comments: [] };
+            data.comments = [result.comment, ...data.comments].slice(0, 100); communityCache.set(track.id, data);
+            $('comment-body').value = ''; $('comment-count').textContent = '0/600';
+            try { if (name) localStorage.setItem('ncc-comment-name-v1', name); else localStorage.removeItem('ncc-comment-name-v1'); } catch {}
+            $('comment-status').textContent = `Publicado como ${result.comment.author}.`; renderCommunity(track, data);
+        } catch (error) { $('comment-status').textContent = error.message; }
+        finally { button.disabled = false; }
     }
     function syncSocial() {
         const track = currentTrack();
@@ -254,6 +333,8 @@
         for (const line of track.tracklist || []) list.append(el('li', '', line.replace(/^\s*\d+[.)\-]?\s+/, '')));
         $('expanded-like').dataset.likeId = track.id || '';
         $('expanded-waveform').replaceChildren(); window.NCCDetailWaveform.mount(track, $('expanded-waveform'));
+        $('comment-body').value = ''; $('comment-count').textContent = '0/600'; $('comment-status').textContent = '';
+        loadCommunity(track);
         syncNowPlayer();
     }
     function syncNowPlayer() {
@@ -280,7 +361,7 @@
         const panel = $('now-player');
         panel.classList.remove('is-dragging'); panel.style.removeProperty('transform'); panel.style.removeProperty('transition');
         $('now-player-backdrop').style.removeProperty('opacity');
-        nowPlayerOpen = false; nowPlayerTrackKey = ''; nowPlayerTrack = null; panel.hidden = true; $('now-player-backdrop').hidden = true;
+        nowPlayerOpen = false; nowPlayerTrackKey = ''; nowPlayerTrack = null; communityRequest++; panel.hidden = true; $('now-player-backdrop').hidden = true;
         document.body.classList.remove('player-expanded'); $('expand-player').setAttribute('aria-expanded', 'false');
         window.NCCDetailWaveform.dispose();
         if (detailTrack && $('detail-waveform-host')?.isConnected) window.NCCDetailWaveform.mount(detailTrack, $('detail-waveform-host'));
@@ -464,13 +545,17 @@
                 if (moved > 8) return;
             }
             if (suppressExpandedClick) { suppressExpandedClick = false; return; }
-            if (event.target.closest('.now-player-tracklist, .expanded-waveform, .now-player-actions, button, input, canvas, a, label')) return;
+            if (event.target.closest('.now-player-tracklist, .now-player-community, .expanded-waveform, .now-player-actions, button, input, textarea, canvas, a, label')) return;
             closeNowPlayer();
         });
         $('now-player-backdrop').addEventListener('click', closeNowPlayer);
         $('now-player-close').addEventListener('click', closeNowPlayer);
         $('expanded-like').addEventListener('click', () => toggleLike(nowPlayerTrack || currentTrack()));
         $('expanded-share').addEventListener('click', () => shareSet(nowPlayerTrack || currentTrack()));
+        $('community-fire').addEventListener('click', () => toggleFire(nowPlayerTrack || currentTrack()));
+        $('comment-form').addEventListener('submit', submitComment);
+        $('comment-body').addEventListener('input', event => { $('comment-count').textContent = `${event.target.value.length}/600`; });
+        try { $('comment-name').value = localStorage.getItem('ncc-comment-name-v1') || ''; } catch {}
         for (const eventName of ['timeupdate', 'loadedmetadata', 'durationchange']) audio.addEventListener(eventName, syncNowPlayer);
         document.addEventListener('keydown', event => { if (event.key === 'Escape' && nowPlayerOpen) { event.preventDefault(); closeNowPlayer(); } });
         document.querySelectorAll('a[href^="#"]').forEach(link => link.addEventListener('click', event => {
