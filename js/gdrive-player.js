@@ -139,6 +139,12 @@ function renderCatalogue() {
         button.append(number, main, collection, duration);
         const playAndExpandSelectedTrack = trigger => {
             const playbackInProgress = Boolean(currentTrack() && !audio.paused && playerState.isPlaying);
+            const previewingAnotherSet = playbackInProgress && currentTrack()?.key !== track.key;
+            if (previewingAnotherSet && window.NCCSets) {
+                window.NCCSets.collapse();
+                window.NCCSets.open(track);
+                return;
+            }
             if (!playbackInProgress) {
                 if (currentTrack()?.url !== track.url) playTrack(playlist.id, index, false);
                 else startPlayback();
@@ -155,8 +161,17 @@ function renderCatalogue() {
 function syncActiveRows() {
     document.querySelectorAll('.track-row').forEach(row => {
         const active = row.dataset.playlistId === playerState.activePlaylistId && Number(row.dataset.trackIndex) === playerState.currentTrackIndex;
+        const playlist = getPlaylistById(row.dataset.playlistId);
+        const track = playlist?.tracks[Number(row.dataset.trackIndex)];
+        const previewingAnotherSet = Boolean(currentTrack() && !audio.paused && playerState.isPlaying && !active);
+        const action = previewingAnotherSet ? 'Abrir ficha' : 'Reproducir y abrir reproductor ampliado';
         row.classList.toggle('active', active);
         row.setAttribute('aria-current', active ? 'true' : 'false');
+        if (track) {
+            row.setAttribute('aria-label', `${action}: ${track.name}, ${playlist.title}`);
+            row.querySelector('.track-number')?.setAttribute('aria-label', `${action}: ${track.name}`);
+            row.querySelector('.track-title')?.setAttribute('aria-label', `${action}: ${track.name}`);
+        }
         const number = row.querySelector('.track-number');
         if (active) number.innerHTML = icon(playerState.isPlaying ? 'wave' : 'play');
         else number.textContent = String(number.dataset.order).padStart(2, '0');
