@@ -336,7 +336,7 @@
         const play = action('Reproducir ' + track.name, 'play', () => playSet(track)); play.dataset.playSet = track.id; play.classList.add('set-play'); play.append(el('span', '', track.available ? 'Reproducir' : 'Audio no disponible')); play.disabled = !track.published || !track.available || !allTracks().some(item => item.key === track.key);
         if (!detailed) actions.append(play);
         actions.append(likeButton(track), action('Compartir ' + track.name, 'share', () => shareSet(track)));
-        if (admin) { const edit = el('button', 'edit-set', 'Editar'); edit.type = 'button'; edit.addEventListener('click', () => editSet(track)); actions.append(edit); }
+        if (admin) { const edit = el('button', 'edit-set admin-ficha-button', 'Editar ficha'); edit.type = 'button'; edit.addEventListener('click', () => editSet(track)); actions.append(edit); }
         if (!track.published) card.append(el('p', 'draft-label', 'No publicado'));
         card.append(actions);
         return card;
@@ -436,6 +436,11 @@
         const animation = $('expanded-skull-video'), poster = $('expanded-skull-poster');
         const animate = active && playerState.isPlaying && !playerState.isBuffering && !audio.paused;
         animation.hidden = !animate; poster.hidden = animate;
+        const mediaToggle = $('expanded-skull-toggle');
+        mediaToggle.setAttribute('aria-pressed', String(animate));
+        mediaToggle.setAttribute('aria-label', `${animate ? 'Pausar' : 'Reproducir'} ${track.name}`);
+        mediaToggle.title = animate ? 'Pausar' : 'Reproducir';
+        mediaToggle.querySelector('use').setAttribute('href', animate ? '#i-pause' : '#i-play');
         if (animate && animation.paused) animation.play().catch(() => { animation.hidden = true; poster.hidden = false; });
         else if (!animate && !animation.paused) animation.pause();
         syncCommentPosition();
@@ -714,6 +719,7 @@
         $('expanded-like').addEventListener('click', () => toggleLike(activeCommunityTrack() || currentTrack()));
         $('expanded-share').addEventListener('click', () => shareSet(activeCommunityTrack() || currentTrack()));
         $('expanded-copy-link').addEventListener('click', event => copySetLink(activeCommunityTrack() || currentTrack(), event.currentTarget));
+        $('expanded-skull-toggle').addEventListener('click', () => playSet(nowPlayerTrack || currentTrack()));
         $('community-fire').addEventListener('click', () => toggleFire(nowPlayerTrack || currentTrack()));
         $('community-toggle').addEventListener('click', () => setCommunityExpanded($('community-toggle').getAttribute('aria-expanded') !== 'true'));
         $('comment-form').addEventListener('submit', submitComment);

@@ -170,7 +170,7 @@ function renderCatalogue() {
                 control.disabled = direction < 0 ? actualIndex === 0 : actualIndex === playlist.tracks.length - 1;
                 control.addEventListener('click', event => { event.stopPropagation(); window.NCCSets.move(track, direction); }); adminActions.append(control);
             }
-            const edit = document.createElement('button'); edit.type = 'button'; edit.className = 'playlist-admin-action playlist-admin-edit'; edit.textContent = 'Editar'; edit.setAttribute('aria-label', `Editar nombre y tags de ${track.name}`);
+            const edit = document.createElement('button'); edit.type = 'button'; edit.className = 'playlist-admin-action playlist-admin-edit'; edit.textContent = 'Editar ficha'; edit.setAttribute('aria-label', `Editar ficha completa de ${track.name}`);
             edit.addEventListener('click', event => { event.stopPropagation(); window.NCCSets.edit(track); }); adminActions.append(edit);
             li.append(adminActions);
         }
