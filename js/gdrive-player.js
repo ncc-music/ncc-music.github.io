@@ -205,7 +205,9 @@ function syncPlaybackUI() {
     $('radio-button').innerHTML = `${icon(radioPlaying ? 'pause' : 'play')}<span>${radioPlaying ? 'Pausar radio' : playerState.radio ? 'Continuar radio' : 'Escuchar radio'}</span>`;
     document.body.dataset.radio = playerState.radio ? 'on' : 'off';
     document.body.dataset.playing = playing && !playerState.isBuffering ? 'true' : 'false';
-    $('player-mode').textContent = playerState.radio ? 'NCC RADIO' : currentTrack() ? 'DJ MIXES' : 'LISTO PARA ESCUCHAR';
+    const playerMode = $('player-mode');
+    playerMode.textContent = playerState.radio ? 'NCC RADIO' : 'LISTO PARA ESCUCHAR';
+    playerMode.hidden = Boolean(currentTrack() && !playerState.radio);
     syncActiveRows();
     syncPlayerPreferences();
     if ('mediaSession' in navigator) navigator.mediaSession.playbackState = playing ? 'playing' : 'paused';
@@ -218,7 +220,7 @@ function selectTrack(playlistId, index, radio = false) {
     playerState.activePlaylistId = playlistId; playerState.currentTrackIndex = index;
     playerState.radio = playlistId === 'radio'; playerState.isPlaying = false; playerState.isBuffering = true;
     audio.src = track.url;
-    $('track-name').textContent = track.name; $('track-artist').textContent = playerState.radio ? track.artist : 'CΔRDÚ';
+    $('track-name').textContent = track.name; $('track-artist').textContent = playerState.radio ? track.artist : 'CARDÚ';
     $('duration').textContent = formatTrackDuration(track.duration); $('current-time').textContent = '0:00';
     $('seek-slider').value = 0; $('seek-slider').disabled = true; paintRange($('seek-slider'), 0);
     showMessage(''); resetWaveform(audio); syncPlaybackUI();

@@ -249,7 +249,7 @@
             if (selected && index >= 0) {
                 playerState.currentTrackIndex = index;
                 $('track-name').textContent = playlist.tracks[index].name;
-                $('track-artist').textContent = playlist.id === 'radio' ? playlist.tracks[index].artist : 'CΔRDÚ';
+                $('track-artist').textContent = playlist.id === 'radio' ? playlist.tracks[index].artist : 'CARDÚ';
             } else {
                 const first = playlist?.tracks.length ? playlist : playerState.playlists.find(item => item.tracks.length);
                 if (first) selectTrack(first.id, 0);
@@ -487,14 +487,7 @@
         dialog.setAttribute('aria-labelledby', heading.id);
         const close = el('button', 'dialog-close', 'Cerrar'); close.type = 'button'; close.addEventListener('click', () => dialog.close()); header.append(heading, close); dialog.append(header); document.body.append(dialog); return dialog;
     }
-    const sharePlatformIcon = platform => ({
-        twitter: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4l14 16M19 4 5 20"/></svg>',
-        facebook: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 21v-8h3l.5-3H14V8.4c0-1 .4-1.7 1.8-1.7H18V4.1c-.6-.1-1.5-.2-2.6-.2-2.7 0-4.5 1.6-4.5 4.6V10H8v3h2.9v8Z" fill="currentColor" stroke="none"/></svg>',
-        instagram: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="5"/><circle cx="12" cy="12" r="3.5"/><circle cx="17.5" cy="6.8" r=".8" fill="currentColor" stroke="none"/></svg>',
-        whatsapp: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 19 4.8 21l2.8-.7A8.5 8.5 0 1 0 6 19Z"/><path d="M9 8.3c.4 2.9 2 4.8 5 5.7l1.2-1.4 2 .9c-.5 2.2-2.1 2.8-4.4 2.1-3-.9-5.4-3.3-6.2-6.3-.5-2 .2-3.4 2.2-3.9Z"/></svg>',
-        telegram: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 17-7-4 16-5-5-3 3 .5-5Z"/><path d="m8.5 13 7-5"/></svg>',
-        reddit: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10.5c-2.5 0-4 1.6-4 3.7 0 3.2 4 5.8 9 5.8s9-2.6 9-5.8c0-2.1-1.5-3.7-4-3.7"/><path d="m12 10 1.4-5 3.6.8"/><circle cx="18.5" cy="6" r="1.5"/><circle cx="8.5" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="15.5" cy="14" r="1" fill="currentColor" stroke="none"/><path d="M9 17c1.7 1 4.3 1 6 0"/></svg>'
-    })[platform];
+    const sharePlatformAsset = platform => `assets/social/share-${platform === 'twitter' ? 'x' : platform}-brush.svg`;
     function renderSharePreview(track) {
         $('share-preview-cover').src = track.cover || 'assets/player-cover-clean.jpg';
         $('share-preview-title').textContent = track.name;
@@ -513,7 +506,7 @@
         renderSharePreview(track);
         const dialog = $('share-dialog'); dialog.querySelector('.share-links').replaceChildren();
         for (const platform of [
-            { id: 'twitter', name: 'Twitter', url: 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(data.title) + '&url=' + encodeURIComponent(data.url) },
+            { id: 'twitter', name: 'X', url: 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(data.title) + '&url=' + encodeURIComponent(data.url) },
             { id: 'facebook', name: 'Facebook', url: 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(data.url) },
             { id: 'instagram', name: 'Instagram', url: 'https://www.instagram.com/' },
             { id: 'whatsapp', name: 'WhatsApp', url: 'https://wa.me/?text=' + encodeURIComponent(data.title + ' ' + data.url) },
@@ -521,7 +514,8 @@
             { id: 'reddit', name: 'Reddit', url: 'https://www.reddit.com/submit?url=' + encodeURIComponent(data.url) + '&title=' + encodeURIComponent(data.title) }
         ]) {
             const link = el('a', `share-option share-${platform.id}`); link.href = platform.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.setAttribute('aria-label', `Compartir en ${platform.name}`);
-            const icon = el('span', 'share-platform-icon'); icon.innerHTML = sharePlatformIcon(platform.id);
+            const icon = el('span', 'share-platform-icon');
+            const image = document.createElement('img'); image.src = sharePlatformAsset(platform.id); image.alt = ''; image.setAttribute('aria-hidden', 'true'); image.width = 120; image.height = 120; icon.append(image);
             link.append(icon, el('span', 'share-platform-name', platform.name));
             if (platform.id === 'instagram') link.addEventListener('click', () => {
                 $('share-status').textContent = 'Copiá este enlace y pegalo en un mensaje o en el sticker Enlace de Instagram.';
