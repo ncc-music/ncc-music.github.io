@@ -5,7 +5,8 @@ import { database } from './helpers/database.mjs';
 const source = readFileSync('cloudflare-worker.js', 'utf8');
 const { default: worker } = await import('data:text/javascript;base64,' + Buffer.from(source).toString('base64'));
 const entries = [
-    { key: 'techno-freaks/Session 01.flac', size: 123, customMetadata: { title: 'Session 01' } },
+    { key: 'techno-freaks/Session 01.flac', size: 123, uploaded: new Date('2026-01-01T00:00:00Z'), customMetadata: { title: 'Session 01' } },
+    { key: 'techno-freaks/Session 02.flac', size: 123, uploaded: new Date('2026-02-01T00:00:00Z'), customMetadata: { title: 'Session 02' } },
     { key: 'radio/Radio 01.mp3', size: 123 },
     { key: 'chill-out/Music 01.flac', size: 123 }
 ];
@@ -15,8 +16,9 @@ async function tracks(environment) { return (await (await worker.fetch(req('/set
 const visitor = 'a1234567-abcd-1234-abcd-123456789abc';
 test('catalogue isolates collections and assigns repeatable, unique slugs', async () => {
     const environment = env(), first = await tracks(environment), second = await tracks(environment);
-    assert.equal(first.length, 3); assert.deepEqual(first.map(t => t.slug), second.map(t => t.slug));
-    assert.equal(new Set(first.map(t => t.slug)).size, 3);
+    assert.equal(first.length, 4); assert.deepEqual(first.map(t => t.slug), second.map(t => t.slug));
+    assert.equal(new Set(first.map(t => t.slug)).size, 4);
+    assert.deepEqual(first.filter(t => t.key.startsWith('techno-freaks/')).map(t => t.name), ['Session 01', 'Session 02']);
     const radio = await worker.fetch(new Request('https://worker.example/playlist?prefix=radio/'), environment);
     assert.deepEqual((await radio.json()).tracks.map(t => t.key), ['radio/Radio 01.mp3']);
 });
@@ -80,7 +82,7 @@ test('published tracklists remain in the archive after their audio is removed', 
         assert.equal(archived.url, '');
         assert.deepEqual(archived.tracklist, ['Artist — Archived Track']);
     } finally {
-        entries.push({ key: 'techno-freaks/Session 01.flac', size: 123, customMetadata: { title: 'Session 01' } });
+        entries.push({ key: 'techno-freaks/Session 01.flac', size: 123, uploaded: new Date('2026-01-01T00:00:00Z'), customMetadata: { title: 'Session 01' } });
     }
 });
 test('editing and export fail closed without verified administrator identity', async () => {
@@ -110,11 +112,15 @@ test('signed admin saves validate JWT, preserve slug and reject stale updates', 
         const claims = { iss: 'https://ncc-test.cloudflareaccess.com', aud: ['test-aud'], email: environment.ADMIN_EMAIL, exp: Math.floor(Date.now()/1000)+600 };
         const token = await tokenFor(claims), headers = { 'Cf-Access-Jwt-Assertion': token };
         const [track] = await tracks(environment);
-        const input = { title: 'Renamed', date: '2026-09-19', tracklist: ['Artist — Track'], published: true, version: 0 };
+        const input = { title: 'Renamed', date: '2026-09-19', tags: ['techno', 'live'], sortOrder: null, tracklist: ['Artist — Track'], published: true, version: 0 };
         assert.equal((await worker.fetch(req('/admin/sets/'+track.id, 'PUT', input, headers), environment)).status, 200);
-        const saved = (await tracks(environment))[0]; assert.equal(saved.name, 'Renamed'); assert.equal(saved.slug, track.slug); assert.equal(saved.version, 1);
+        const saved = (await tracks(environment)).find(item => item.id === track.id); assert.equal(saved.name, 'Renamed'); assert.equal(saved.slug, track.slug); assert.equal(saved.version, 1); assert.deepEqual(saved.tags, ['techno', 'live']);
         assert.equal((await worker.fetch(req('/admin/sets/'+track.id, 'PUT', input, headers), environment)).status, 409);
         assert.equal((await worker.fetch(req('/admin/sets/'+track.id, 'PUT', { ...input, version:1, date:'2026-02-31' }, headers), environment)).status, 400);
+        assert.equal((await worker.fetch(req('/admin/sets/'+track.id, 'PUT', { ...input, version:1, tags:['x'.repeat(33)] }, headers), environment)).status, 400);
+        const techno = (await tracks(environment)).filter(item => item.key.startsWith('techno-freaks/'));
+        assert.equal((await worker.fetch(req('/admin/order', 'PUT', { ids: techno.map(item => item.id).reverse() }, headers), environment)).status, 200);
+        assert.deepEqual((await tracks(environment)).filter(item => item.key.startsWith('techno-freaks/')).map(item => item.id), techno.map(item => item.id).reverse());
         const originalContent = await (await worker.fetch(req('/content'), environment)).json();
         assert.equal(originalContent.version, 0);
         const content = structuredClone(originalContent.content); content.about.body = 'Una biografía editada'; content.tour.body = '20.10.2026 · Buenos Aires';
