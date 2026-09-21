@@ -163,6 +163,10 @@
         const link = el('a', 'set-title-link', track.name); link.href = '/set/' + track.slug;
         link.addEventListener('click', event => { event.preventDefault(); openSet(track); }); heading.append(link); card.append(heading);
         if (track.date) { const date = el('time', 'set-date', track.date.split('-').reverse().join('.')); date.dateTime = track.date; card.append(date); }
+        if (detailed) {
+            const host = el('div', 'detail-waveform'); host.id = 'detail-waveform-host';
+            card.append(host);
+        }
         const label = el('h3', 'tracklist-label', 'TRACKLIST'); card.append(label);
         if (track.tracklist?.length) {
             const focus = detailed && history.state?.tracklistFocus?.slug === track.slug ? history.state.tracklistFocus : null;
@@ -176,14 +180,11 @@
         } else card.append(el('p', 'empty-tracklist', 'Todavía no hay un tracklist publicado para este set.'));
         const actions = el('div', 'set-card-actions');
         const play = action('Reproducir ' + track.name, 'play', () => playSet(track)); play.dataset.playSet = track.id; play.classList.add('set-play'); play.append(el('span', '', track.available ? 'Reproducir' : 'Audio no disponible')); play.disabled = !track.published || !track.available || !allTracks().some(item => item.key === track.key);
-        actions.append(play, likeButton(track), action('Compartir ' + track.name, 'share', () => shareSet(track)));
+        if (!detailed) actions.append(play);
+        actions.append(likeButton(track), action('Compartir ' + track.name, 'share', () => shareSet(track)));
         if (admin) { const edit = el('button', 'edit-set', 'Editar'); edit.type = 'button'; edit.addEventListener('click', () => editSet(track)); actions.append(edit); }
         if (!track.published) card.append(el('p', 'draft-label', 'No publicado'));
         card.append(actions);
-        if (detailed) {
-            const host = el('div', 'detail-waveform'); host.id = 'detail-waveform-host';
-            card.append(host);
-        }
         return card;
     }
     function parkWaveform() { if (!nowPlayerOpen) window.NCCDetailWaveform?.dispose(); }
