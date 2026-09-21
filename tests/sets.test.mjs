@@ -41,6 +41,20 @@ test('unpublished sets are excluded from all public catalogues and cannot receiv
     assert.equal((await tracks(environment)).some(t => t.id === track.id), false);
     assert.equal((await worker.fetch(req(`/sets/${track.id}/likes`, 'PUT', { visitor, liked: true }), environment)).status, 404);
 });
+test('published tracklists remain in the archive after their audio is removed', async () => {
+    const environment = env(), [track] = await tracks(environment);
+    await environment.SITE_DB.prepare('INSERT INTO sets (id,audio_key,slug,title,date,tracklist,published) VALUES (?,?,?,?,?,?,1)')
+        .bind(track.id, track.key, track.slug, track.name, '2026-09-20', JSON.stringify(['Artist — Archived Track'])).run();
+    entries.splice(entries.findIndex(entry => entry.key === track.key), 1);
+    try {
+        const archived = (await tracks(environment)).find(item => item.id === track.id);
+        assert.equal(archived.available, false);
+        assert.equal(archived.url, '');
+        assert.deepEqual(archived.tracklist, ['Artist — Archived Track']);
+    } finally {
+        entries.push({ key: 'techno-freaks/Session 01.flac', size: 123, customMetadata: { title: 'Session 01' } });
+    }
+});
 test('editing and export fail closed without verified administrator identity', async () => {
     const environment = env(), [track] = await tracks(environment);
     for (const path of ['/admin/sets', '/admin/export', '/admin/session']) assert.equal((await worker.fetch(req(path), environment)).status, 401);
