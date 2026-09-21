@@ -13,7 +13,7 @@
         const sets = [];
         let matchCount = 0;
         for (const track of available) {
-            const metadataMatch = tokens.every(token => normalize(`${track.name} ${track.date || ''}`).includes(token));
+            const metadataMatch = tokens.every(token => normalize(`${track.name} ${track.date || ''} ${(track.tags || []).join(' ')}`).includes(token));
             const lines = Array.isArray(track.tracklist) ? track.tracklist : [];
             const matches = lines.map((text, index) => ({ index, text })).filter(item => metadataMatch || tokens.every(token => normalize(item.text).includes(token)));
             if (metadataMatch || matches.length) { sets.push({ track, matches, metadataMatch }); matchCount += matches.length; }

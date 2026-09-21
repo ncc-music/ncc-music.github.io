@@ -4,6 +4,7 @@
     const DRAG_TOLERANCE_PX = 6;
     let dispose = () => {};
     let activeView = null;
+    const commentInitials = value => String(value || 'AnonymousFreak').trim().split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase() || 'AF';
     function mount(track, host) {
         dispose();
         const controller = new AbortController();
@@ -39,13 +40,20 @@
                 if (comment.positionSeconds === null || comment.positionSeconds === undefined) continue;
                 const seconds = Number(comment.positionSeconds);
                 if (!Number.isFinite(seconds) || seconds < 0) continue;
-                const marker = document.createElement('button'); marker.type = 'button'; marker.className = 'waveform-comment-marker';
-                marker.style.left = `${clamp(seconds / total, 0, 1) * 100}%`; marker.dataset.commentId = comment.id || '';
+                const marker = document.createElement('button'), avatar = document.createElement('span'), bubble = document.createElement('span'), bubbleMeta = document.createElement('span'), bubbleBody = document.createElement('span');
+                marker.type = 'button'; marker.className = 'waveform-comment-marker'; avatar.className = 'waveform-comment-avatar'; bubble.className = 'waveform-comment-bubble'; bubbleMeta.className = 'waveform-comment-bubble-meta'; bubbleBody.className = 'waveform-comment-bubble-body';
+                const markerPosition = clamp(seconds / total, 0, 1);
+                marker.style.left = `${markerPosition * 100}%`; marker.dataset.commentId = comment.id || '';
+                if (markerPosition < .14) marker.classList.add('is-edge-start');
+                else if (markerPosition > .86) marker.classList.add('is-edge-end');
                 marker.setAttribute('aria-label', `Comentario de ${comment.author || 'AnonymousFreak'} en ${formatTime(seconds)}`);
-                marker.title = `${formatTime(seconds)} · ${comment.author || 'AnonymousFreak'}: ${comment.body || ''}`; marker.textContent = '●';
+                avatar.textContent = commentInitials(comment.author); bubbleMeta.textContent = `${comment.author || 'AnonymousFreak'} · ${formatTime(seconds)}`; bubbleBody.textContent = comment.body || '';
+                bubble.append(bubbleMeta, bubbleBody); marker.append(avatar, bubble);
                 marker.addEventListener('click', event => {
                     event.stopPropagation();
-                    document.querySelector(`.comment-card[data-comment-id="${CSS.escape(comment.id || '')}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    const open = !marker.classList.contains('is-open');
+                    markerLayer.querySelectorAll('.waveform-comment-marker.is-open').forEach(item => item.classList.remove('is-open'));
+                    marker.classList.toggle('is-open', open);
                 });
                 markerLayer.append(marker);
             }
@@ -106,6 +114,11 @@
                 selectTrack(playlist.id, playlist.tracks.findIndex(t => t.key === track.key));
             }
             applySeek();
+        }
+        function seekTo(seconds) {
+            const total = duration();
+            if (!total || !Number.isFinite(Number(seconds))) return false;
+            seek(Number(seconds) / total); return true;
         }
         function togglePlayback() {
             if (!active()) {
@@ -198,7 +211,7 @@
             audio.removeEventListener('loadedmetadata', applySeek); audio.removeEventListener('durationchange', applySeek);
             window.removeEventListener('resize', draw);
         };
-        activeView = { host, track, setComments, setDraftPosition, pickCommentPosition, cancelCommentPick };
+        activeView = { host, track, setComments, setDraftPosition, pickCommentPosition, cancelCommentPick, seekTo };
         draw();
         (async () => {
             try {
@@ -231,6 +244,7 @@
         setComments: comments => activeView?.setComments(comments),
         setDraftPosition: seconds => activeView?.setDraftPosition(seconds),
         pickCommentPosition: callback => Boolean(activeView?.pickCommentPosition(callback)),
-        cancelCommentPick: () => activeView?.cancelCommentPick()
+        cancelCommentPick: () => activeView?.cancelCommentPick(),
+        seekTo: seconds => Boolean(activeView?.seekTo(seconds))
     };
 })();

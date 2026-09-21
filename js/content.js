@@ -44,7 +44,8 @@
         collection.querySelector('h2').textContent = content.sets.title;
         collection.querySelector('.collection-genres').textContent = content.sets.genres;
         collection.querySelector('p:last-child').textContent = content.sets.description;
-        $('collection-play-button').setAttribute('aria-label', 'Reproducir el primer set de ' + content.sets.title);
+        const collectionLink = document.querySelector('[data-collection="techno-freaks"]');
+        collectionLink.setAttribute('aria-label', `Abrir la lista ${content.sets.title}: ${content.sets.genres}, ${content.sets.description}`);
         const about = document.querySelector('.about-copy'); about.replaceChildren(node('p', 'Behind the music', 'eyebrow'));
         const heading = node('h2', content.about.title); heading.id = 'about-title'; about.append(heading);
         paragraphs(about, content.about.body);

@@ -1,16 +1,18 @@
 // Shared set details, administration and social actions; one persistent audio element.
 (() => {
     const api = '/api';
-    let admin = false, adminTracks = [], archiveTracks = [], detailTrack = null, editorTrack = null, shareTrack = null;
+    let admin = false, adminTracks = [], archiveTracks = [], detailTrack = null, editorTrack = null, shareTrack = null, reordering = false;
     let tracklistQuery = '', nowPlayerOpen = false, nowPlayerTrackKey = '', nowPlayerTrack = null, playerReturnFocus = null;
-    let socialLikes = new Set(), pendingLikes = new Set(), fireReactions = new Set(), pendingFire = new Set(), communityRequest = 0;
+    let socialLikes = new Set(), pendingLikes = new Set(), fireReactions = new Set(), pendingFire = new Set(), commentLikes = new Set(), communityRequest = 0;
     let commentPositionMode = 'current', commentPickedSeconds = null, commentPicking = false;
     const communityCache = new Map();
     try { socialLikes = new Set(JSON.parse(localStorage.getItem('ncc-public-likes-v1') || '[]')); } catch {}
     try { fireReactions = new Set(JSON.parse(localStorage.getItem('ncc-fire-reactions-v1') || '[]')); } catch {}
+    try { commentLikes = new Set(JSON.parse(localStorage.getItem('ncc-comment-likes-v1') || '[]')); } catch {}
     const el = (tag, className, text) => {
         const node = document.createElement(tag); if (className) node.className = className; if (text !== undefined) node.textContent = text; return node;
     };
+    const commentInitials = value => String(value || 'AnonymousFreak').trim().split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase() || 'AF';
     const allTracks = () => playerState.playlists.flatMap(p => p.tracks);
     const allKnownTracks = () => admin ? adminTracks : archiveTracks.length ? archiveTracks : allTracks().filter(track => track.playlistId !== 'radio');
     const setURL = track => new URL('/set/' + track.slug, 'https://ncc.ar').href;
@@ -58,9 +60,14 @@
         const date = new Date(raw.includes('T') ? raw : raw.replace(' ', 'T') + 'Z');
         return Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('es-AR', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
     }
+    const activeCommunityTrack = () => nowPlayerOpen ? nowPlayerTrack || currentTrack() : detailTrack;
+    function moveCommunity(slot) {
+        const panel = $('community-panel');
+        if (panel && slot && panel.parentElement !== slot) slot.append(panel);
+    }
     function renderCommunity(track, data) {
-        const visible = nowPlayerTrack || currentTrack();
-        if (!nowPlayerOpen || !track?.id || visible?.id !== track.id) return;
+        const visible = activeCommunityTrack();
+        if (!track?.id || visible?.id !== track.id) return;
         window.NCCDetailWaveform?.setComments(data?.comments || []);
         const fire = $('community-fire');
         fire.disabled = pendingFire.has(track.id) || !data;
@@ -71,12 +78,33 @@
         if (!data) { list.append(el('p', 'empty-state', 'Cargando comentarios…')); return; }
         if (!data.comments?.length) { list.append(el('p', 'empty-state', 'Todavía no hay comentarios. Sé el primer freak.')); return; }
         for (const comment of data.comments) {
-            const card = el('article', 'comment-card'), header = el('header'), author = el('strong', '', comment.author || 'AnonymousFreak');
+            const authorName = comment.author || 'AnonymousFreak';
+            const card = el('article', 'comment-card'), avatar = el('span', 'comment-card-avatar', commentInitials(authorName));
+            const content = el('div', 'comment-card-content'), header = el('header'), author = el('strong', '', authorName);
             card.dataset.commentId = comment.id || '';
             const time = el('time', '', commentDate(comment.createdAt)); time.dateTime = comment.createdAt || '';
             const meta = el('span', 'comment-meta');
-            if (Number.isFinite(comment.positionSeconds)) meta.append(el('span', 'comment-audio-time', formatTime(comment.positionSeconds)));
-            meta.append(time); header.append(author, meta); card.append(header, el('p', '', comment.body || '')); list.append(card);
+            if (Number.isFinite(comment.positionSeconds)) {
+                const audioTime = el('button', 'comment-audio-time', formatTime(comment.positionSeconds)); audioTime.type = 'button';
+                audioTime.setAttribute('aria-label', `Ir a ${formatTime(comment.positionSeconds)}`);
+                audioTime.addEventListener('click', () => window.NCCDetailWaveform?.seekTo(comment.positionSeconds)); meta.append(audioTime);
+            }
+            meta.append(time); header.append(author, meta);
+            const actions = el('div', 'comment-actions');
+            const reply = el('button', 'comment-action', 'Responder'); reply.type = 'button';
+            reply.addEventListener('click', () => {
+                const textarea = $('comment-body'); textarea.value = `@${authorName} `; textarea.dispatchEvent(new Event('input')); textarea.focus();
+                $('comment-status').textContent = `Respuesta para ${authorName}.`;
+            });
+            const likeKey = String(comment.id || `${track.id}:${authorName}:${comment.createdAt || ''}`);
+            const like = el('button', 'comment-action comment-like', 'Me gusta'); like.type = 'button';
+            like.setAttribute('aria-pressed', String(commentLikes.has(likeKey)));
+            like.addEventListener('click', () => {
+                if (commentLikes.has(likeKey)) commentLikes.delete(likeKey); else commentLikes.add(likeKey);
+                like.setAttribute('aria-pressed', String(commentLikes.has(likeKey)));
+                try { localStorage.setItem('ncc-comment-likes-v1', JSON.stringify([...commentLikes])); } catch {}
+            });
+            actions.append(reply, like); content.append(header, el('p', '', comment.body || ''), actions); card.append(avatar, content); list.append(card);
         }
     }
     async function loadCommunity(track) {
@@ -112,7 +140,7 @@
         } catch (error) { $('comment-status').textContent = error.message; }
         finally { pendingFire.delete(track.id); renderCommunity(track, communityCache.get(track.id)); }
     }
-    function commentPositionSeconds(track = nowPlayerTrack || currentTrack()) {
+    function commentPositionSeconds(track = activeCommunityTrack() || currentTrack()) {
         if (commentPositionMode === 'picked' && Number.isFinite(commentPickedSeconds)) return commentPickedSeconds;
         return currentTrack()?.key === track?.key && isSeekable(audio) ? audio.currentTime : 0;
     }
@@ -120,16 +148,17 @@
         const currentButton = $('comment-position-current'), pickButton = $('comment-position-pick');
         if (!currentButton || !pickButton) return;
         const seconds = commentPositionSeconds();
-        $('comment-position-current-time').textContent = formatTime(commentPositionMode === 'current' ? seconds : currentTrack()?.key === (nowPlayerTrack || currentTrack())?.key && isSeekable(audio) ? audio.currentTime : 0);
+        $('comment-position-current-time').textContent = formatTime(commentPositionMode === 'current' ? seconds : currentTrack()?.key === (activeCommunityTrack() || currentTrack())?.key && isSeekable(audio) ? audio.currentTime : 0);
         currentButton.setAttribute('aria-pressed', String(commentPositionMode === 'current'));
         pickButton.setAttribute('aria-pressed', String(commentPositionMode === 'picked' || commentPicking));
-        pickButton.textContent = commentPositionMode === 'picked' && Number.isFinite(commentPickedSeconds) ? `Elegido · ${formatTime(commentPickedSeconds)}` : commentPicking ? 'Tocá el waveform…' : 'Elegir en waveform';
+        pickButton.textContent = commentPositionMode === 'picked' && Number.isFinite(commentPickedSeconds) ? `Elegido · ${formatTime(commentPickedSeconds)}` : commentPicking ? 'Tocá la onda…' : 'Marcar en onda';
+        $('comment-body').placeholder = 'Escribe un comentario…';
         window.NCCDetailWaveform?.setDraftPosition(commentPositionMode === 'picked' ? commentPickedSeconds : null);
     }
     function useCurrentCommentPosition() {
         commentPositionMode = 'current'; commentPickedSeconds = null; commentPicking = false;
         window.NCCDetailWaveform?.cancelCommentPick();
-        $('comment-position-help').textContent = 'El comentario quedará en el momento actual de reproducción.';
+        $('comment-position-help').textContent = 'Se publicará en el momento actual de reproducción.';
         syncCommentPosition();
     }
     function chooseCommentPosition() {
@@ -138,14 +167,14 @@
         syncCommentPosition();
         if (!window.NCCDetailWaveform?.pickCommentPosition(seconds => {
             commentPicking = false; commentPositionMode = 'picked'; commentPickedSeconds = Math.max(0, seconds);
-            $('comment-position-help').textContent = `Posición elegida: ${formatTime(commentPickedSeconds)}.`; syncCommentPosition();
+            $('comment-position-help').textContent = `Posición elegida: ${formatTime(commentPickedSeconds)}.`; syncCommentPosition(); $('comment-body').focus();
         })) {
             commentPicking = false; $('comment-position-help').textContent = 'El waveform todavía no está disponible.'; syncCommentPosition();
         }
     }
     async function submitComment(event) {
         event.preventDefault();
-        const track = nowPlayerTrack || currentTrack(); if (!track?.id) return;
+        const track = activeCommunityTrack() || currentTrack(); if (!track?.id) return;
         const name = $('comment-name').value.trim(), body = $('comment-body').value.trim();
         if (!body) { $('comment-status').textContent = 'Escribí un comentario.'; $('comment-body').focus(); return; }
         let visitor;
@@ -220,7 +249,7 @@
             if (selected && index >= 0) {
                 playerState.currentTrackIndex = index;
                 $('track-name').textContent = playlist.tracks[index].name;
-                $('track-artist').textContent = playlist.tracks[index].artist;
+                $('track-artist').textContent = playlist.id === 'radio' ? playlist.tracks[index].artist : 'CΔRDÚ';
             } else {
                 const first = playlist?.tracks.length ? playlist : playerState.playlists.find(item => item.tracks.length);
                 if (first) selectTrack(first.id, 0);
@@ -283,9 +312,12 @@
         const link = el('a', 'set-title-link', track.name); link.href = '/set/' + track.slug;
         link.addEventListener('click', event => { event.preventDefault(); openSet(track); }); heading.append(link); card.append(heading);
         if (track.date) { const date = el('time', 'set-date', track.date.split('-').reverse().join('.')); date.dateTime = track.date; card.append(date); }
+        if (track.tags?.length) card.append(el('p', 'set-tags', track.tags.map(tag => `#${tag}`).join(' ')));
         if (detailed) {
             const host = el('div', 'detail-waveform'); host.id = 'detail-waveform-host';
             card.append(host);
+            const communitySlot = el('div', 'detail-community-slot'); communitySlot.id = 'detail-community-slot'; card.append(communitySlot);
+            if (!nowPlayerOpen) moveCommunity(communitySlot);
         }
         const label = el('h3', 'tracklist-label', 'TRACKLIST'); card.append(label);
         if (track.tracklist?.length) {
@@ -329,7 +361,9 @@
         const actions = el('div', 'set-card-actions');
         const play = action('Reproducir ' + track.name, 'play', () => playSet(track)); play.dataset.playSet = track.id; play.classList.add('set-play'); play.append(el('span', '', track.available ? 'Reproducir set' : 'Audio no disponible')); play.disabled = !track.available;
         const view = el('button', 'track-action', 'Ver ficha'); view.type = 'button'; view.addEventListener('click', () => openSet(track, searching && matches.length ? matches[0].index : null));
-        actions.append(play, view); body.append(actions); details.append(body); return details;
+        actions.append(play, view);
+        if (admin) { const edit = el('button', 'edit-set', 'Editar nombre y tags'); edit.type = 'button'; edit.addEventListener('click', () => editSet(track)); actions.append(edit); }
+        body.append(actions); details.append(body); return details;
     }
     function renderTracklists() {
         const root = $('tracklists-section'); if (!root) return;
@@ -368,6 +402,7 @@
     function renderNowPlayer() {
         const track = nowPlayerTrack || currentTrack(); if (!track || !nowPlayerOpen) return;
         nowPlayerTrackKey = track.key;
+        moveCommunity($('now-player-community-slot'));
         $('now-player').setAttribute('aria-label', 'Reproductor ampliado: ' + track.name);
         const list = $('expanded-tracklist'); list.replaceChildren();
         $('expanded-tracklist-empty').hidden = Boolean(track.tracklist?.length);
@@ -407,13 +442,17 @@
         nowPlayerOpen = false; nowPlayerTrackKey = ''; nowPlayerTrack = null; communityRequest++; panel.hidden = true; $('now-player-backdrop').hidden = true;
         document.body.classList.remove('player-expanded'); $('expand-player').setAttribute('aria-expanded', 'false');
         window.NCCDetailWaveform.dispose();
-        if (detailTrack && $('detail-waveform-host')?.isConnected) window.NCCDetailWaveform.mount(detailTrack, $('detail-waveform-host'));
+        if (detailTrack && $('detail-waveform-host')?.isConnected) {
+            window.NCCDetailWaveform.mount(detailTrack, $('detail-waveform-host'));
+            moveCommunity($('detail-community-slot')); loadCommunity(detailTrack);
+        }
         playerReturnFocus?.focus?.(); playerReturnFocus = null;
     }
     const originalRoute = route;
     route = () => {
         parkWaveform(); originalRoute();
         const root = $('set-detail-section'); if (!root) return;
+        moveCommunity($('now-player-community-slot'));
         const match = location.pathname.match(/^\/set\/([^/]+)\/?$/);
         root.hidden = !match; detailTrack = null;
         if (!match) {
@@ -431,7 +470,11 @@
         const back = el('a', 'back-to-sets', '← Tracklists'); back.href = '/#tracklists'; back.addEventListener('click', event => { event.preventDefault(); if (history.state?.fromTracklists) history.back(); else navigate('/#tracklists'); }); root.append(back);
         if (!detailTrack) { root.append(el('p', 'empty-state', playerState.loaded ? 'Este set no existe o no está publicado.' : 'Cargando set…')); return; }
         root.append(buildCard(detailTrack, true));
-        if (!nowPlayerOpen && detailTrack.available) window.NCCDetailWaveform.mount(detailTrack, $('detail-waveform-host'));
+        if (!nowPlayerOpen) {
+            if (detailTrack.available) window.NCCDetailWaveform.mount(detailTrack, $('detail-waveform-host'));
+            commentPositionMode = 'current'; commentPickedSeconds = null; commentPicking = false; syncCommentPosition();
+            $('comment-body').value = ''; $('comment-count').textContent = '0/600'; $('comment-status').textContent = ''; loadCommunity(detailTrack);
+        }
         const focus = root.querySelector('.tracklist-focus'); if (focus) requestAnimationFrame(() => focus.scrollIntoView({ block: 'center' }));
         document.title = detailTrack.name + ' | NCC Music'; syncSocial();
     };
@@ -441,19 +484,43 @@
         dialog.setAttribute('aria-labelledby', heading.id);
         const close = el('button', 'dialog-close', 'Cerrar'); close.type = 'button'; close.addEventListener('click', () => dialog.close()); header.append(heading, close); dialog.append(header); document.body.append(dialog); return dialog;
     }
+    const sharePlatformIcon = platform => ({
+        twitter: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4l14 16M19 4 5 20"/></svg>',
+        facebook: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 21v-8h3l.5-3H14V8.4c0-1 .4-1.7 1.8-1.7H18V4.1c-.6-.1-1.5-.2-2.6-.2-2.7 0-4.5 1.6-4.5 4.6V10H8v3h2.9v8Z" fill="currentColor" stroke="none"/></svg>',
+        instagram: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="5"/><circle cx="12" cy="12" r="3.5"/><circle cx="17.5" cy="6.8" r=".8" fill="currentColor" stroke="none"/></svg>',
+        whatsapp: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 19 4.8 21l2.8-.7A8.5 8.5 0 1 0 6 19Z"/><path d="M9 8.3c.4 2.9 2 4.8 5 5.7l1.2-1.4 2 .9c-.5 2.2-2.1 2.8-4.4 2.1-3-.9-5.4-3.3-6.2-6.3-.5-2 .2-3.4 2.2-3.9Z"/></svg>',
+        telegram: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 17-7-4 16-5-5-3 3 .5-5Z"/><path d="m8.5 13 7-5"/></svg>',
+        reddit: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10.5c-2.5 0-4 1.6-4 3.7 0 3.2 4 5.8 9 5.8s9-2.6 9-5.8c0-2.1-1.5-3.7-4-3.7"/><path d="m12 10 1.4-5 3.6.8"/><circle cx="18.5" cy="6" r="1.5"/><circle cx="8.5" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="15.5" cy="14" r="1" fill="currentColor" stroke="none"/><path d="M9 17c1.7 1 4.3 1 6 0"/></svg>'
+    })[platform];
+    function renderSharePreview(track) {
+        $('share-preview-cover').src = track.cover || 'assets/player-cover-clean.jpg';
+        $('share-preview-title').textContent = track.name;
+        $('share-preview-meta').textContent = ['CΔRDÚ', track.date ? track.date.split('-').reverse().join('.') : '', track.playlistTitle || 'DJ MIXES'].filter(Boolean).join(' · ');
+        const waveform = $('share-preview-waveform'); waveform.replaceChildren();
+        const peaks = Array.isArray(track.peaks) && track.peaks.length ? track.peaks : Array.from({ length: 44 }, (_, index) => .22 + Math.abs(Math.sin(index * .71)) * .58);
+        const step = Math.max(1, Math.floor(peaks.length / 44));
+        for (let index = 0; index < peaks.length && waveform.children.length < 44; index += step) {
+            const bar = el('span'); bar.style.setProperty('--share-peak', String(Math.max(.12, Math.min(1, Number(peaks[index]) || .12)))); waveform.append(bar);
+        }
+    }
     async function shareSet(track) {
         if (!track?.slug) { showMessage('El enlace del set todavía no está disponible.'); return; }
         const data = { title: track.name, text: track.name, url: setURL(track) };
         shareTrack = track;
+        renderSharePreview(track);
         const dialog = $('share-dialog'); dialog.querySelector('.share-links').replaceChildren();
-        for (const [name, url] of [
-            ['Facebook', 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(data.url)],
-            ['Instagram', 'https://www.instagram.com/'],
-            ['WhatsApp', 'https://wa.me/?text=' + encodeURIComponent(data.title + ' ' + data.url)],
-            ['Telegram', 'https://t.me/share/url?url=' + encodeURIComponent(data.url) + '&text=' + encodeURIComponent(data.title)]
+        for (const platform of [
+            { id: 'twitter', name: 'Twitter', url: 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(data.title) + '&url=' + encodeURIComponent(data.url) },
+            { id: 'facebook', name: 'Facebook', url: 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(data.url) },
+            { id: 'instagram', name: 'Instagram', url: 'https://www.instagram.com/' },
+            { id: 'whatsapp', name: 'WhatsApp', url: 'https://wa.me/?text=' + encodeURIComponent(data.title + ' ' + data.url) },
+            { id: 'telegram', name: 'Telegram', url: 'https://t.me/share/url?url=' + encodeURIComponent(data.url) + '&text=' + encodeURIComponent(data.title) },
+            { id: 'reddit', name: 'Reddit', url: 'https://www.reddit.com/submit?url=' + encodeURIComponent(data.url) + '&title=' + encodeURIComponent(data.title) }
         ]) {
-            const link = el('a', 'share-option', name); link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer';
-            if (name === 'Instagram') link.addEventListener('click', () => {
+            const link = el('a', `share-option share-${platform.id}`); link.href = platform.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.setAttribute('aria-label', `Compartir en ${platform.name}`);
+            const icon = el('span', 'share-platform-icon'); icon.innerHTML = sharePlatformIcon(platform.id);
+            link.append(icon, el('span', 'share-platform-name', platform.name));
+            if (platform.id === 'instagram') link.addEventListener('click', () => {
                 $('share-status').textContent = 'Copiá este enlace y pegalo en un mensaje o en el sticker Enlace de Instagram.';
                 navigator.clipboard?.writeText(data.url).then(() => {
                     $('share-status').textContent = 'Enlace copiado. Pegalo en un mensaje o en el sticker Enlace de tu historia de Instagram.';
@@ -462,12 +529,6 @@
                 });
             });
             dialog.querySelector('.share-links').append(link);
-        }
-        if (navigator.share) {
-            const more = el('button', 'share-option', 'Más opciones…'); more.type = 'button';
-            more.addEventListener('click', async () => {
-                try { await navigator.share(data); } catch (error) { if (error.name !== 'AbortError') $('share-status').textContent = 'Elegí una red o copiá el enlace.'; }
-            }); dialog.querySelector('.share-links').append(more);
         }
         $('share-url').value = data.url; $('share-status').textContent = ''; dialog.showModal();
     }
@@ -478,12 +539,13 @@
                 const source = playlistSources.find(source => track.key.startsWith(source.prefix));
                 return normalizeR2Playlist({ tracks: [track] }, source)[0];
             }).filter(Boolean);
-            renderTracklists(); route();
+            document.body.classList.add('admin-mode'); renderCatalogue(); renderTracklists(); route();
         } catch (error) { showMessage(error.message); }
     }
     function editSet(track) {
         editorTrack = { ...(adminTracks.find(item => item.id === track.id) || track) };
         $('edit-title').value = editorTrack.name; $('edit-date').value = editorTrack.date || '';
+        $('edit-tags').value = (editorTrack.tags || []).join(', ');
         $('edit-tracklist').value = editorTrack.tracklist.join('\n'); $('edit-published').checked = editorTrack.published;
         $('edit-audio').textContent = editorTrack.key; $('edit-status').textContent = ''; $('edit-dialog').showModal();
     }
@@ -495,10 +557,28 @@
                 editorTrack.peaks = await analyzeFLAC(editorTrack, undefined, progress => { $('edit-status').textContent = `Preparando waveform… ${progress}%`; });
             }
             $('edit-status').textContent = 'Guardando…';
-            await request('/admin/sets/' + editorTrack.id, { method: 'PUT', body: JSON.stringify({ title: $('edit-title').value, date: $('edit-date').value, tracklist: $('edit-tracklist').value.split('\n').map(line => line.trim()).filter(Boolean), published: $('edit-published').checked, version: editorTrack.version, peaks: editorTrack.peaks }) });
+            const tags = [...new Set($('edit-tags').value.split(',').map(tag => tag.trim().replace(/^#/, '')).filter(Boolean))];
+            await request('/admin/sets/' + editorTrack.id, { method: 'PUT', body: JSON.stringify({ title: $('edit-title').value, date: $('edit-date').value, tags, sortOrder: editorTrack.sortOrder, tracklist: $('edit-tracklist').value.split('\n').map(line => line.trim()).filter(Boolean), published: $('edit-published').checked, version: editorTrack.version, peaks: editorTrack.peaks }) });
             $('edit-dialog').close(); await loadCatalogue(); await loadAdmin(); showMessage('Set guardado.');
         } catch (error) { $('edit-status').textContent = error.message; }
         finally { button.disabled = false; }
+    }
+    async function moveSet(track, direction) {
+        if (!admin || reordering || ![-1, 1].includes(direction)) return;
+        const playlist = getPlaylistById(track.playlistId);
+        const from = playlist?.tracks.findIndex(item => item.id === track.id) ?? -1;
+        const to = from + direction;
+        if (!playlist || from < 0 || to < 0 || to >= playlist.tracks.length) return;
+        reordering = true;
+        [playlist.tracks[from], playlist.tracks[to]] = [playlist.tracks[to], playlist.tracks[from]];
+        renderCatalogue(); showMessage('Guardando el nuevo orden…');
+        try {
+            await request('/admin/order', { method: 'PUT', body: JSON.stringify({ ids: playlist.tracks.map(item => item.id) }) });
+            await loadCatalogue(); await loadAdmin(); showMessage('Orden guardado.');
+        } catch (error) {
+            [playlist.tracks[from], playlist.tracks[to]] = [playlist.tracks[to], playlist.tracks[from]];
+            renderCatalogue(); showMessage(error.message);
+        } finally { reordering = false; }
     }
     async function exportSets() {
         try {
@@ -608,15 +688,24 @@
             event.preventDefault(); navigate('/' + link.getAttribute('href'));
         }));
         window.addEventListener('popstate', route);
-        const sharing = makeDialog('share-dialog', 'Compartir set'); sharing.append(el('div', 'share-links'));
-        const label = el('label', '', 'Enlace del set'); label.htmlFor = 'share-url'; sharing.append(label);
-        const input = el('input'); input.id = 'share-url'; input.readOnly = true; sharing.append(input);
-        const copy = el('button', 'primary-button', 'Copiar enlace'); copy.type = 'button'; copy.addEventListener('click', async () => {
+        const sharing = makeDialog('share-dialog', 'Compartir'); sharing.classList.add('share-dialog');
+        const preview = el('section', 'share-preview'); preview.setAttribute('aria-label', 'Vista previa del set');
+        const cover = el('img', 'share-preview-cover'); cover.id = 'share-preview-cover'; cover.alt = '';
+        const previewBody = el('div', 'share-preview-body'); const previewTop = el('div', 'share-preview-top');
+        const previewPlay = el('span', 'share-preview-play'); previewPlay.innerHTML = icon('play');
+        const previewCopy = el('div'); const previewTitle = el('strong'); previewTitle.id = 'share-preview-title'; const previewMeta = el('span'); previewMeta.id = 'share-preview-meta';
+        previewCopy.append(previewTitle, previewMeta); previewTop.append(previewPlay, previewCopy);
+        const previewWaveform = el('div', 'share-preview-waveform'); previewWaveform.id = 'share-preview-waveform'; previewWaveform.setAttribute('aria-hidden', 'true');
+        previewBody.append(previewTop, previewWaveform); preview.append(cover, previewBody); sharing.append(preview);
+        const shareHeading = el('p', 'share-section-label', 'Compartir en'); sharing.append(shareHeading, el('div', 'share-links'));
+        const label = el('label', 'share-section-label', 'Enlace del set'); label.htmlFor = 'share-url'; sharing.append(label);
+        const linkRow = el('div', 'share-link-row'); const input = el('input'); input.id = 'share-url'; input.readOnly = true; linkRow.append(input);
+        const copy = el('button', 'primary-button share-copy', 'Copiar'); copy.type = 'button'; copy.addEventListener('click', async () => {
             try { await navigator.clipboard.writeText(setURL(shareTrack)); $('share-status').textContent = 'Enlace copiado.'; }
             catch { input.focus(); input.select(); $('share-status').textContent = 'Seleccioná y copiá el enlace.'; }
-        }); sharing.append(copy); const status = el('p'); status.id = 'share-status'; status.setAttribute('role', 'status'); sharing.append(status);
+        }); linkRow.append(copy); sharing.append(linkRow); const status = el('p'); status.id = 'share-status'; status.setAttribute('role', 'status'); sharing.append(status);
         const editor = makeDialog('edit-dialog', 'Editar set'); const form = el('form', 'set-form');
-        form.innerHTML = '<label for="edit-title">Nombre del set</label><input id="edit-title" required maxlength="240"><label for="edit-date">Fecha</label><input id="edit-date" type="date"><label for="edit-tracklist">Tracklist · una pista por línea</label><textarea id="edit-tracklist" rows="12"></textarea><p class="audio-reference" id="edit-audio"></p><label class="published-label"><input type="checkbox" id="edit-published"> Publicado</label><p id="edit-status" role="status"></p><button id="save-set" class="primary-button" type="submit">Guardar</button>';
+        form.innerHTML = '<label for="edit-title">Nombre del set</label><input id="edit-title" required maxlength="240"><label for="edit-date">Fecha</label><input id="edit-date" type="date"><label for="edit-tags">Tags · separados por comas</label><input id="edit-tags" maxlength="400" placeholder="techno, live, warehouse"><label for="edit-tracklist">Tracklist · una pista por línea</label><textarea id="edit-tracklist" rows="12"></textarea><p class="audio-reference" id="edit-audio"></p><label class="published-label"><input type="checkbox" id="edit-published"> Publicado</label><p id="edit-status" role="status"></p><button id="save-set" class="primary-button" type="submit">Guardar</button>';
         form.addEventListener('submit', saveSet); editor.append(form);
         $('admin-entry').addEventListener('click', async () => {
             if (admin) { navigate('/#tracklists'); return; }
@@ -626,5 +715,5 @@
         request('/admin/session').then(() => loadAdmin()).catch(() => {});
         window.addEventListener('storage', event => { if (event.key === 'ncc-public-likes-v1') { try { socialLikes = new Set(JSON.parse(event.newValue || '[]')); syncSocial(); } catch {} } });
     });
-    window.NCCSets = { open: openSet, toggleLike, share: shareSet, expand: openNowPlayer, collapse: closeNowPlayer };
+    window.NCCSets = { open: openSet, toggleLike, share: shareSet, expand: openNowPlayer, collapse: closeNowPlayer, isAdmin: () => admin, edit: editSet, move: moveSet };
 })();

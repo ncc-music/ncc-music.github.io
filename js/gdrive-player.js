@@ -45,7 +45,7 @@ function normalizeR2Playlist(data, source) {
         const url = available ? safeMediaUrl(track.url || fallback) : '';
         const extension = (track.key || url).split('?')[0].split('.').pop().toUpperCase();
         return {
-            id: track.id, slug: track.slug, date: track.date || '', tracklist: track.tracklist || [], likes: track.likes ?? null, peaks: track.peaks || null, size: track.size, version: track.version || 0, published: track.published !== false, available, key: track.key || '', name: track.name, artist: track.artist || 'Nicolás Cardú', url,
+            id: track.id, slug: track.slug, date: track.date || '', tracklist: track.tracklist || [], tags: Array.isArray(track.tags) ? track.tags : [], sortOrder: Number.isSafeInteger(track.sortOrder) ? track.sortOrder : null, uploaded: track.uploaded || '', likes: track.likes ?? null, peaks: track.peaks || null, size: track.size, version: track.version || 0, published: track.published !== false, available, key: track.key || '', name: track.name, artist: track.artist || 'Nicolás Cardú', url,
             waveformUrl: safeMediaUrl(usesHostedProxy ? fallback : (track.waveformUrl || track.waveform_url || fallback || url)),
             duration: normalizeDuration(track.duration || track.durationSeconds || track.duration_seconds),
             format: ['FLAC', 'WAV', 'MP3', 'OGG', 'M4A', 'AAC'].includes(extension) ? extension : 'AUDIO',
@@ -132,7 +132,11 @@ function renderCatalogue() {
         const copy = document.createElement('span'); copy.className = 'track-text';
         const title = document.createElement('button'); title.type = 'button'; title.className = 'track-title'; title.textContent = track.name; title.setAttribute('aria-label', `Reproducir y abrir reproductor ampliado: ${track.name}`);
         copy.append(title); main.append(cover, copy);
-        const collection = document.createElement('span'); collection.className = 'track-collection'; collection.textContent = playlist.title;
+        const collection = document.createElement('span'); collection.className = 'track-collection';
+        const collectionName = document.createElement('span'); collectionName.textContent = playlist.title; collection.append(collectionName);
+        if (track.tags.length) {
+            const tags = document.createElement('span'); tags.className = 'track-tags'; tags.textContent = track.tags.map(tag => `#${tag}`).join(' '); collection.append(tags);
+        }
         const duration = document.createElement('span'); duration.className = 'track-duration';
         duration.dataset.playlistId = playlist.id; duration.dataset.trackDuration = index;
         duration.textContent = formatTrackDuration(track.duration);
@@ -154,7 +158,20 @@ function renderCatalogue() {
         number.addEventListener('click', event => { event.stopPropagation(); playAndExpandSelectedTrack(event.currentTarget); });
         title.addEventListener('click', event => { event.stopPropagation(); playAndExpandSelectedTrack(event.currentTarget); });
         button.addEventListener('click', event => playAndExpandSelectedTrack(event.currentTarget));
-        li.append(button, createTrackActions(track)); list.append(li);
+        li.append(button, createTrackActions(track));
+        if (window.NCCSets?.isAdmin?.() && playlist.id !== 'radio') {
+            const adminActions = document.createElement('div'); adminActions.className = 'playlist-admin-actions';
+            const actualIndex = playlist.tracks.indexOf(track);
+            for (const [label, text, direction] of [['Subir en la lista', '↑', -1], ['Bajar en la lista', '↓', 1]]) {
+                const control = document.createElement('button'); control.type = 'button'; control.className = 'playlist-admin-action'; control.textContent = text; control.title = label; control.setAttribute('aria-label', `${label}: ${track.name}`);
+                control.disabled = direction < 0 ? actualIndex === 0 : actualIndex === playlist.tracks.length - 1;
+                control.addEventListener('click', event => { event.stopPropagation(); window.NCCSets.move(track, direction); }); adminActions.append(control);
+            }
+            const edit = document.createElement('button'); edit.type = 'button'; edit.className = 'playlist-admin-action playlist-admin-edit'; edit.textContent = 'Editar'; edit.setAttribute('aria-label', `Editar nombre y tags de ${track.name}`);
+            edit.addEventListener('click', event => { event.stopPropagation(); window.NCCSets.edit(track); }); adminActions.append(edit);
+            li.append(adminActions);
+        }
+        list.append(li);
     });
     root.append(list); syncActiveRows();
 }
@@ -189,12 +206,11 @@ function syncPlaybackUI() {
     $('play-button').title = playing ? 'Pausa' : 'Reproducir';
     ['play-button', 'prev-button', 'next-button'].forEach(id => { $(id).disabled = !available; });
     $('radio-button').disabled = !getPlaylistById('radio')?.tracks.length;
-    $('collection-play-button').disabled = !getPlaylistById('techno-freaks')?.tracks.length;
     const radioPlaying = playerState.radio && playing;
     $('radio-button').innerHTML = `${icon(radioPlaying ? 'pause' : 'play')}<span>${radioPlaying ? 'Pausar radio' : playerState.radio ? 'Continuar radio' : 'Escuchar radio'}</span>`;
     document.body.dataset.radio = playerState.radio ? 'on' : 'off';
     document.body.dataset.playing = playing && !playerState.isBuffering ? 'true' : 'false';
-    $('player-mode').textContent = playerState.radio ? 'NCC RADIO' : currentTrack() ? 'LIVE SET' : 'LISTO PARA ESCUCHAR';
+    $('player-mode').textContent = playerState.radio ? 'NCC RADIO' : currentTrack() ? 'DJ MIXES' : 'LISTO PARA ESCUCHAR';
     syncActiveRows();
     syncPlayerPreferences();
     if ('mediaSession' in navigator) navigator.mediaSession.playbackState = playing ? 'playing' : 'paused';
@@ -207,7 +223,7 @@ function selectTrack(playlistId, index, radio = false) {
     playerState.activePlaylistId = playlistId; playerState.currentTrackIndex = index;
     playerState.radio = playlistId === 'radio'; playerState.isPlaying = false; playerState.isBuffering = true;
     audio.src = track.url;
-    $('track-name').textContent = track.name; $('track-artist').textContent = track.artist;
+    $('track-name').textContent = track.name; $('track-artist').textContent = playerState.radio ? track.artist : 'CΔRDÚ';
     $('duration').textContent = formatTrackDuration(track.duration); $('current-time').textContent = '0:00';
     $('seek-slider').value = 0; $('seek-slider').disabled = true; paintRange($('seek-slider'), 0);
     showMessage(''); resetWaveform(audio); syncPlaybackUI();
@@ -342,7 +358,6 @@ function initPlayer() {
     $('next-button').addEventListener('click', () => nextTrack());
     $('prev-button').addEventListener('click', () => nextTrack(-1));
     $('radio-button').addEventListener('click', startRadio);
-    $('collection-play-button').addEventListener('click', () => playTrack('techno-freaks', 0));
     audio.addEventListener('play', () => { playerState.isPlaying = true; showMessage(''); syncPlaybackUI(); });
     audio.addEventListener('pause', () => { playerState.isPlaying = false; syncPlaybackUI(); });
     audio.addEventListener('waiting', () => { playerState.isBuffering = true; syncPlaybackUI(); });
