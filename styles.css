@@ -36,6 +36,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, canvas:focus-visible
 .nav-link:hover { color: var(--text); }
 .nav-link.active { color: var(--text); }
 .nav-link.active::after { content: ""; position: absolute; bottom: -1px; height: 2px; left: 0; right: 0; background: var(--accent); }
+.rabbit-link { min-width: 28px; justify-content: center; }
+.rabbit-glyph { display: inline-block; font-size: 20px; line-height: 1; filter: grayscale(1) brightness(1.8); transition: filter .18s ease, transform .18s ease; }
+.rabbit-link:hover .rabbit-glyph, .rabbit-link.active .rabbit-glyph { filter: grayscale(1) sepia(1) saturate(5) hue-rotate(32deg) brightness(1.25); transform: translateY(-1px); }
 main { max-width: 1120px; margin: 0 auto; padding: 54px 40px calc(var(--dock-height) + 36px); outline: none; }
 .page-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 30px; }
 h1 { font-size: 40px; font-weight: 620; letter-spacing: -1.5px; line-height: 1.2; }
