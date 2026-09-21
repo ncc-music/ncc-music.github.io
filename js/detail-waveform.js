@@ -4,30 +4,26 @@
     function mount(track, host) {
         dispose();
         const controller = new AbortController();
-        const frame = document.createElement('div'), canvas = document.createElement('canvas'), play = document.createElement('button'), controls = document.createElement('div'), toggle = document.createElement('button'), status = document.createElement('p');
+        const frame = document.createElement('div'), canvas = document.createElement('canvas'), play = document.createElement('button'), status = document.createElement('p');
         host.replaceChildren(); frame.className = 'waveform-frame';
         canvas.tabIndex = 0; canvas.setAttribute('role', 'slider');
-        canvas.setAttribute('aria-label', 'Posición en ' + track.name);
+        canvas.setAttribute('aria-label', 'Posición en ' + track.name + '. Mantené presionado y arrastrá para desplazarte.');
         canvas.setAttribute('aria-valuemin', '0'); canvas.setAttribute('aria-valuemax', '100');
         play.type = 'button'; play.className = host.id === 'expanded-waveform' ? 'waveform-play expanded-play' : 'waveform-play'; play.innerHTML = icon('play');
         if (host.id === 'expanded-waveform') play.id = 'expanded-play';
         play.setAttribute('aria-label', 'Reproducir ' + track.name); play.title = 'Reproducir';
-        controls.className = 'waveform-transport'; controls.hidden = true;
-        toggle.type = 'button'; toggle.className = 'waveform-transport-button'; controls.append(toggle);
         status.setAttribute('role', 'status'); status.textContent = 'Cargando forma de onda…';
-        frame.append(canvas, play); host.append(frame, controls, status);
-        let peaks = [], pointer = false, pendingSeek = null, playDismissed = false;
+        frame.append(canvas, play); host.append(frame, status);
+        let peaks = [], pointer = null, pendingSeek = null, playDismissed = false;
         const active = () => currentTrack()?.key === track.key;
         const position = () => active() && isSeekable(audio) ? audio.currentTime / audio.duration : 0;
         function syncPlay() {
             const playing = active() && !audio.paused && playerState.isPlaying;
-            const compact = playDismissed || (active() && (!audio.paused || audio.currentTime > 0));
-            play.hidden = compact;
-            play.setAttribute('aria-label', (active() ? 'Continuar ' : 'Reproducir ') + track.name);
-            controls.hidden = !compact;
-            toggle.innerHTML = icon(playing ? 'pause' : 'play');
-            toggle.setAttribute('aria-label', (playing ? 'Pausar ' : 'Reproducir ') + track.name);
-            toggle.title = playing ? 'Pausa' : 'Reproducir';
+            const invisible = playDismissed || (active() && (!audio.paused || audio.currentTime > 0));
+            play.classList.toggle('is-invisible', invisible);
+            play.innerHTML = icon(playing ? 'pause' : 'play');
+            play.setAttribute('aria-label', (playing ? 'Pausar ' : 'Reproducir ') + track.name);
+            play.title = playing ? 'Pausa' : 'Reproducir';
         }
         function draw() {
             if (!host.isConnected) return;
@@ -61,9 +57,25 @@
             applySeek();
         }
         const point = event => { const rect = canvas.getBoundingClientRect(); seek((event.clientX - rect.left) / rect.width); };
-        canvas.addEventListener('pointerdown', event => { pointer = true; canvas.setPointerCapture(event.pointerId); point(event); });
-        canvas.addEventListener('pointermove', event => { if (pointer) point(event); });
-        for (const type of ['pointerup', 'pointercancel']) canvas.addEventListener(type, () => { pointer = false; });
+        const stopScrub = event => {
+            if (!pointer || event.pointerId !== pointer.id) return;
+            clearTimeout(pointer.timer); pointer = null; canvas.classList.remove('is-scrubbing');
+        };
+        canvas.addEventListener('pointerdown', event => {
+            if (!event.isPrimary) return;
+            canvas.setPointerCapture(event.pointerId);
+            const heldEvent = { clientX: event.clientX };
+            pointer = { id: event.pointerId, scrubbing: false, latest: heldEvent, timer: setTimeout(() => {
+                if (!pointer || pointer.id !== event.pointerId) return;
+                pointer.scrubbing = true; canvas.classList.add('is-scrubbing'); point(pointer.latest);
+            }, 180) };
+        });
+        canvas.addEventListener('pointermove', event => {
+            if (!pointer || event.pointerId !== pointer.id) return;
+            pointer.latest = { clientX: event.clientX };
+            if (pointer.scrubbing) point(event);
+        });
+        for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(type, stopScrub);
         canvas.addEventListener('keydown', event => {
             const delta = active() && isSeekable(audio) ? 5 / audio.duration : .01;
             const positions = { ArrowRight: position() + delta, ArrowLeft: position() - delta, Home: 0, End: 1 };
@@ -71,23 +83,13 @@
         });
         play.addEventListener('click', event => {
             event.stopPropagation();
-            playDismissed = true; play.hidden = true;
+            playDismissed = true;
             if (!active()) {
                 const playlist = playerState.playlists.find(p => p.tracks.some(t => t.key === track.key));
                 if (!playlist) return;
                 selectTrack(playlist.id, playlist.tracks.findIndex(t => t.key === track.key));
             }
-            if (isSeekable(audio) && audio.currentTime >= audio.duration) audio.currentTime = 0;
-            startPlayback();
-        });
-        toggle.addEventListener('click', event => {
-            event.stopPropagation();
-            if (!active()) {
-                const playlist = playerState.playlists.find(p => p.tracks.some(t => t.key === track.key));
-                if (!playlist) return;
-                selectTrack(playlist.id, playlist.tracks.findIndex(t => t.key === track.key));
-            }
-            if (!audio.paused) audio.pause();
+            if (!audio.paused && playerState.isPlaying) audio.pause();
             else {
                 if (isSeekable(audio) && audio.currentTime >= audio.duration) audio.currentTime = 0;
                 startPlayback();
@@ -98,6 +100,7 @@
         window.addEventListener('resize', draw);
         dispose = () => {
             controller.abort(); pendingSeek = null;
+            if (pointer) clearTimeout(pointer.timer);
             for (const type of ['timeupdate', 'emptied', 'play', 'pause']) audio.removeEventListener(type, draw);
             audio.removeEventListener('loadedmetadata', applySeek); audio.removeEventListener('durationchange', applySeek);
             window.removeEventListener('resize', draw);
