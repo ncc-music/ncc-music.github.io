@@ -76,7 +76,7 @@
                 ]
             }
         </script>
-        <link rel="stylesheet" href="styles.css?v=20260921w">
+        <link rel="stylesheet" href="styles.css?v=20260921x">
         <link rel="icon" type="image/png" href="assets/player-cover.png">
     </head>
     <body>
@@ -205,7 +205,9 @@
                 <div class="waveform-community-card">
                     <div class="expanded-waveform detail-waveform" id="expanded-waveform"></div>
                     <div id="now-player-community-slot">
-                <section class="now-player-community waveform-community" id="community-panel" aria-labelledby="community-title">
+                        <div class="community-shell" id="community-shell">
+                            <button type="button" class="community-toggle" id="community-toggle" aria-expanded="false" aria-controls="community-panel"><span>FREAKS COMMENTS</span><span class="community-toggle-meta"><span id="community-toggle-count">0</span><span class="community-toggle-arrow" aria-hidden="true">⌄</span></span></button>
+                <section class="now-player-community waveform-community" id="community-panel" aria-labelledby="community-title" hidden>
                     <form class="comment-form waveform-comment-form" id="comment-form">
                         <div class="comment-composer">
                             <span class="comment-composer-avatar" aria-hidden="true">AF</span>
@@ -221,6 +223,7 @@
                     <div class="community-heading"><div><h3 id="community-title">FREAKS COMMENTS · 0</h3><p>Comentarios vinculados al tiempo</p></div><button type="button" class="fire-reaction" id="community-fire" aria-label="Reaccionar con fuego" aria-pressed="false" disabled><span aria-hidden="true">🔥</span><span id="community-fire-count">—</span></button></div>
                     <div class="comment-list" id="comment-list" aria-live="polite"><p class="empty-state">Cargando comentarios…</p></div>
                 </section>
+                        </div>
                     </div>
                 </div>
                 <div class="now-player-actions"><button type="button" class="track-action" id="expanded-like" aria-label="Me gusta" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#i-heart"/></svg><span class="like-count">—</span></button><button type="button" class="track-action" id="expanded-share" aria-label="Compartir"><svg class="icon" aria-hidden="true"><use href="#i-share"/></svg><span>Compartir</span></button></div>
@@ -238,7 +241,7 @@
         <script src="js/gdrive-player.js?v=20260921l"></script>
         <script src="js/detail-waveform.js?v=20260921l"></script>
         <script src="js/tracklist-search.js?v=20260921b"></script>
-        <script src="js/sets.js?v=20260921q"></script>
+        <script src="js/sets.js?v=20260921r"></script>
         <script src="js/content.js?v=20260921b"></script>
         <script src="js/visits.js?v=20260914"></script>
     </body>
