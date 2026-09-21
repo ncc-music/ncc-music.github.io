@@ -608,7 +608,8 @@ main { padding-bottom: calc(var(--dock-height) + 64px); }
 
 /* Keep the bottom navigation grouped and aligned to the right. */
 .page-footer .admin-entry { font-size: 23px; min-width: 44px; }
-.detail-waveform canvas { display: block; width: 100%; height: 128px; cursor: crosshair; touch-action: none; }
+.detail-waveform canvas { display: block; width: 100%; height: 128px; cursor: grab; touch-action: none; }
+.detail-waveform canvas.is-scrubbing { cursor: grabbing; }
 .detail-waveform p { font-size: 12px; color: var(--muted); }
 .share-option { text-align: center; }
 
@@ -659,12 +660,9 @@ body.player-expanded { overflow: hidden; }
 .waveform-play { position: absolute; top: 50%; left: 50%; z-index: 1; display: grid; place-items: center; width: 66px; height: 66px; transform: translate(-50%,-50%); color: #111; background: var(--accent); border: 5px solid #101112cc; border-radius: 50%; box-shadow: 0 8px 30px #000a; }
 .waveform-play:hover { transform: translate(-50%,-50%) scale(1.06); background: #def8a8; }
 .waveform-play .icon { width: 30px; height: 30px; }
+.waveform-play.is-invisible { opacity: 0; }
 .expanded-waveform .waveform-play { width: 62px; height: 62px; color: #111; background: var(--text); }
 .expanded-waveform .waveform-play:hover { background: var(--accent); }
-.waveform-transport { display: flex; justify-content: flex-end; margin-top: 8px; }
-.waveform-transport-button { display: grid; place-items: center; width: 44px; height: 44px; color: #111; background: var(--text); border-radius: 50%; box-shadow: 0 5px 18px #0007; }
-.waveform-transport-button:hover { background: var(--accent); }
-.waveform-transport-button .icon { width: 22px; height: 22px; }
 
 @media (max-width: 760px) {
     .now-player-backdrop { display: none; }
