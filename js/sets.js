@@ -404,6 +404,12 @@
     function renderNowPlayer() {
         const track = nowPlayerTrack || currentTrack(); if (!track || !nowPlayerOpen) return;
         nowPlayerTrackKey = track.key;
+        const poster = $('expanded-skull-poster'), animation = $('expanded-skull-video');
+        const posterSource = track.animationPosterUrl || 'assets/skull-pieces.png';
+        const animationSource = track.animationVideoUrl || 'assets/skull-pieces.mp4';
+        if (poster.getAttribute('src') !== posterSource) poster.src = posterSource;
+        animation.poster = posterSource;
+        if (animation.getAttribute('src') !== animationSource) { animation.src = animationSource; animation.load(); }
         moveCommunity($('now-player-community-slot'));
         setCommunityExpanded(false);
         $('now-player').setAttribute('aria-label', 'Reproductor ampliado: ' + track.name);
@@ -427,6 +433,11 @@
         $('expanded-like').setAttribute('aria-pressed', String(socialLikes.has(track.id)));
         $('expanded-like').disabled = !track.id || pendingLikes.has(track.id);
         $('expanded-like').querySelector('.like-count').textContent = track.likes ?? '—';
+        const animation = $('expanded-skull-video'), poster = $('expanded-skull-poster');
+        const animate = active && playerState.isPlaying && !playerState.isBuffering && !audio.paused;
+        animation.hidden = !animate; poster.hidden = animate;
+        if (animate && animation.paused) animation.play().catch(() => { animation.hidden = true; poster.hidden = false; });
+        else if (!animate && !animation.paused) animation.pause();
         syncCommentPosition();
     }
     function openNowPlayer(trigger, requestedTrack = null) {
@@ -443,6 +454,7 @@
         panel.classList.remove('is-dragging'); panel.style.removeProperty('transform'); panel.style.removeProperty('transition');
         $('now-player-backdrop').style.removeProperty('opacity');
         nowPlayerOpen = false; nowPlayerTrackKey = ''; nowPlayerTrack = null; communityRequest++; panel.hidden = true; $('now-player-backdrop').hidden = true;
+        $('expanded-skull-video').pause(); $('expanded-skull-video').hidden = true; $('expanded-skull-poster').hidden = false;
         document.body.classList.remove('player-expanded'); $('expand-player').setAttribute('aria-expanded', 'false');
         window.NCCDetailWaveform.dispose();
         if (detailTrack && $('detail-waveform-host')?.isConnected) {
@@ -546,23 +558,45 @@
             document.body.classList.add('admin-mode'); renderCatalogue(); renderTracklists(); route();
         } catch (error) { showMessage(error.message); }
     }
+    async function uploadSetMedia(id, kind, file) {
+        const response = await fetch(`${api}/admin/sets/${id}/media/${kind}`, {
+            method: 'PUT', credentials: 'same-origin', headers: { 'Content-Type': file.type }, body: file,
+            signal: AbortSignal.timeout(120000)
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'No se pudo subir el archivo.');
+        return data;
+    }
     function editSet(track) {
         editorTrack = { ...(adminTracks.find(item => item.id === track.id) || track) };
         $('edit-title').value = editorTrack.name; $('edit-date').value = editorTrack.date || '';
         $('edit-tags').value = (editorTrack.tags || []).join(', ');
         $('edit-tracklist').value = editorTrack.tracklist.join('\n'); $('edit-published').checked = editorTrack.published;
+        $('edit-animation-poster').value = ''; $('edit-animation-video').value = '';
+        $('edit-animation-poster-default').checked = !editorTrack.animationPosterKey;
+        $('edit-animation-video-default').checked = !editorTrack.animationVideoKey;
+        $('edit-animation-poster-state').textContent = editorTrack.animationPosterKey ? 'Imagen personalizada actual' : 'Imagen predeterminada';
+        $('edit-animation-video-state').textContent = editorTrack.animationVideoKey ? 'Video personalizado actual' : 'Video predeterminado';
         $('edit-audio').textContent = editorTrack.key; $('edit-status').textContent = ''; $('edit-dialog').showModal();
     }
     async function saveSet(event) {
         event.preventDefault(); if (!editorTrack) return;
         const button = $('save-set'); button.disabled = true; $('edit-status').textContent = 'Guardando…';
         try {
+            const posterFile = $('edit-animation-poster-default').checked ? null : $('edit-animation-poster').files[0];
+            const videoFile = $('edit-animation-video-default').checked ? null : $('edit-animation-video').files[0];
+            if (posterFile && (posterFile.type !== 'image/png' || posterFile.size > 5 * 1024 * 1024)) throw new Error('Elegí una imagen PNG de hasta 5 MB.');
+            if (videoFile && (videoFile.type !== 'video/mp4' || videoFile.size > 25 * 1024 * 1024)) throw new Error('Elegí un video MP4 de hasta 25 MB.');
+            let animationPosterKey = $('edit-animation-poster-default').checked ? '' : editorTrack.animationPosterKey || '';
+            let animationVideoKey = $('edit-animation-video-default').checked ? '' : editorTrack.animationVideoKey || '';
+            if (posterFile) { $('edit-status').textContent = 'Subiendo imagen…'; animationPosterKey = (await uploadSetMedia(editorTrack.id, 'poster', posterFile)).key; }
+            if (videoFile) { $('edit-status').textContent = 'Subiendo video…'; animationVideoKey = (await uploadSetMedia(editorTrack.id, 'video', videoFile)).key; }
             if (editorTrack.available && editorTrack.format === 'FLAC' && !editorTrack.peaks?.length) {
                 editorTrack.peaks = await analyzeFLAC(editorTrack, undefined, progress => { $('edit-status').textContent = `Preparando waveform… ${progress}%`; });
             }
             $('edit-status').textContent = 'Guardando…';
             const tags = [...new Set($('edit-tags').value.split(',').map(tag => tag.trim().replace(/^#/, '')).filter(Boolean))];
-            await request('/admin/sets/' + editorTrack.id, { method: 'PUT', body: JSON.stringify({ title: $('edit-title').value, date: $('edit-date').value, tags, sortOrder: editorTrack.sortOrder, tracklist: $('edit-tracklist').value.split('\n').map(line => line.trim()).filter(Boolean), published: $('edit-published').checked, version: editorTrack.version, peaks: editorTrack.peaks }) });
+            await request('/admin/sets/' + editorTrack.id, { method: 'PUT', body: JSON.stringify({ title: $('edit-title').value, date: $('edit-date').value, tags, sortOrder: editorTrack.sortOrder, tracklist: $('edit-tracklist').value.split('\n').map(line => line.trim()).filter(Boolean), animationPosterKey, animationVideoKey, published: $('edit-published').checked, version: editorTrack.version, peaks: editorTrack.peaks }) });
             $('edit-dialog').close(); await loadCatalogue(); await loadAdmin(); showMessage('Set guardado.');
         } catch (error) { $('edit-status').textContent = error.message; }
         finally { button.disabled = false; }
@@ -685,7 +719,7 @@
         $('comment-form').addEventListener('submit', submitComment);
         $('comment-body').addEventListener('input', event => { $('comment-count').textContent = `${event.target.value.length}/600`; });
         try { $('comment-name').value = localStorage.getItem('ncc-comment-name-v1') || 'AnonymousFreak'; } catch { $('comment-name').value = 'AnonymousFreak'; }
-        for (const eventName of ['timeupdate', 'loadedmetadata', 'durationchange']) audio.addEventListener(eventName, syncNowPlayer);
+        for (const eventName of ['play', 'pause', 'playing', 'waiting', 'timeupdate', 'loadedmetadata', 'durationchange']) audio.addEventListener(eventName, syncNowPlayer);
         document.addEventListener('keydown', event => { if (event.key === 'Escape' && nowPlayerOpen) { event.preventDefault(); closeNowPlayer(); } });
         document.querySelectorAll('a[href^="#"]').forEach(link => link.addEventListener('click', event => {
             if (link.classList.contains('skip-link')) return;
@@ -709,7 +743,15 @@
             catch { input.focus(); input.select(); $('share-status').textContent = 'Seleccioná y copiá el enlace.'; }
         }); linkRow.append(copy); sharing.append(linkRow); const status = el('p'); status.id = 'share-status'; status.setAttribute('role', 'status'); sharing.append(status);
         const editor = makeDialog('edit-dialog', 'Editar set'); const form = el('form', 'set-form');
-        form.innerHTML = '<label for="edit-title">Nombre del set</label><input id="edit-title" required maxlength="240"><label for="edit-date">Fecha</label><input id="edit-date" type="date"><label for="edit-tags">Tags · separados por comas</label><input id="edit-tags" maxlength="400" placeholder="techno, live, warehouse"><label for="edit-tracklist">Tracklist · una pista por línea</label><textarea id="edit-tracklist" rows="12"></textarea><p class="audio-reference" id="edit-audio"></p><label class="published-label"><input type="checkbox" id="edit-published"> Publicado</label><p id="edit-status" role="status"></p><button id="save-set" class="primary-button" type="submit">Guardar</button>';
+        form.innerHTML = '<label for="edit-title">Nombre del set</label><input id="edit-title" required maxlength="240"><label for="edit-date">Fecha</label><input id="edit-date" type="date"><label for="edit-tags">Tags · separados por comas</label><input id="edit-tags" maxlength="400" placeholder="techno, live, warehouse"><label for="edit-tracklist">Tracklist · una pista por línea</label><textarea id="edit-tracklist" rows="12"></textarea><fieldset class="set-media-editor"><legend>Imagen del reproductor ampliado</legend><div class="set-media-field"><label for="edit-animation-poster">Imagen fija · PNG</label><span id="edit-animation-poster-state"></span><input id="edit-animation-poster" type="file" accept="image/png"><label class="set-media-default"><input type="checkbox" id="edit-animation-poster-default"> Usar imagen predeterminada</label></div><div class="set-media-field"><label for="edit-animation-video">Animación al reproducir · MP4</label><span id="edit-animation-video-state"></span><input id="edit-animation-video" type="file" accept="video/mp4"><label class="set-media-default"><input type="checkbox" id="edit-animation-video-default"> Usar video predeterminado</label></div><p>Cada set puede usar sus propios archivos. Si no elegís otros, se mantiene la calavera predeterminada.</p></fieldset><p class="audio-reference" id="edit-audio"></p><label class="published-label"><input type="checkbox" id="edit-published"> Publicado</label><p id="edit-status" role="status"></p><button id="save-set" class="primary-button" type="submit">Guardar</button>';
+        for (const kind of ['poster', 'video']) {
+            const file = form.querySelector(`#edit-animation-${kind}`), useDefault = form.querySelector(`#edit-animation-${kind}-default`), state = form.querySelector(`#edit-animation-${kind}-state`);
+            file.addEventListener('change', () => { if (file.files.length) { useDefault.checked = false; state.textContent = 'Nuevo archivo seleccionado'; } });
+            useDefault.addEventListener('change', () => {
+                if (useDefault.checked) { file.value = ''; state.textContent = kind === 'poster' ? 'Imagen predeterminada' : 'Video predeterminado'; }
+                else state.textContent = editorTrack?.[kind === 'poster' ? 'animationPosterKey' : 'animationVideoKey'] ? `${kind === 'poster' ? 'Imagen' : 'Video'} personalizado actual` : 'Elegí un archivo para personalizar';
+            });
+        }
         form.addEventListener('submit', saveSet); editor.append(form);
         $('admin-entry').addEventListener('click', async () => {
             if (admin) { navigate('/#tracklists'); return; }

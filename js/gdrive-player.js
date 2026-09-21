@@ -46,6 +46,8 @@ function normalizeR2Playlist(data, source) {
         const extension = (track.key || url).split('?')[0].split('.').pop().toUpperCase();
         return {
             id: track.id, slug: track.slug, date: track.date || '', tracklist: track.tracklist || [], tags: Array.isArray(track.tags) ? track.tags : [], sortOrder: Number.isSafeInteger(track.sortOrder) ? track.sortOrder : null, uploaded: track.uploaded || '', likes: track.likes ?? null, peaks: track.peaks || null, size: track.size, version: track.version || 0, published: track.published !== false, available, key: track.key || '', name: track.name, artist: track.artist || 'Nicolás Cardú', url,
+            animationPosterKey: track.animationPosterKey || '', animationVideoKey: track.animationVideoKey || '',
+            animationPosterUrl: safeMediaUrl(track.animationPosterUrl || ''), animationVideoUrl: safeMediaUrl(track.animationVideoUrl || ''),
             waveformUrl: safeMediaUrl(usesHostedProxy ? fallback : (track.waveformUrl || track.waveform_url || fallback || url)),
             duration: normalizeDuration(track.duration || track.durationSeconds || track.duration_seconds),
             format: ['FLAC', 'WAV', 'MP3', 'OGG', 'M4A', 'AAC'].includes(extension) ? extension : 'AUDIO',
