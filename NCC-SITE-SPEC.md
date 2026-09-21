@@ -10,7 +10,7 @@ Secciones: Sets, Tracklists, Radio, About, Tour Dates y el Manifesto existente. 
 
 El reproductor es fijo, compacto y redondeado, con progreso simple, nombre clickeable, corazón con contador y compartir. Se quita la etiqueta LOSSLESS del reproductor; la etiqueta de la página y las descripciones de formato se conservan. El audio continúa al navegar.
 
-Cada ficha muestra nombre, fecha si está cargada, tracklist completo, controles/likes/compartir y waveform interactivo al final. El waveform tiene una parte principal y un reflejo inferior reducido. Sin BPM, estilo, timestamps ni asociación entre pistas y tiempos. Las fichas y Tracklists comparten la misma información. El slug se conserva al editar.
+Cada ficha muestra nombre, fecha si está cargada, tracklist completo, controles/likes/compartir, waveform interactivo y una sección Freak Comments. El nombre del comentarista es opcional y usa `AnonymousFreak` por defecto. Cada navegador puede sumar o retirar una reacción 🔥 por set. El waveform tiene una parte principal y un reflejo inferior reducido. Sin BPM, estilo, timestamps ni asociación entre pistas y tiempos. Las fichas y Tracklists comparten la misma información. El slug se conserva al editar.
 
 ## Administración
 
@@ -20,7 +20,7 @@ El acceso de edición requiere Cloudflare Access y validación del JWT en el Wor
 
 ## Activación en ncc.ar
 
-1. Ejecutar `scripts/schema.sql` en la base D1 de producción `ncdata`. Las sentencias `CREATE TABLE IF NOT EXISTS` conservan los datos existentes y agregan `site_content` si falta.
+1. Ejecutar `scripts/schema.sql` en la base D1 de producción `ncdata`. Las sentencias `CREATE TABLE IF NOT EXISTS` conservan los datos existentes y agregan `site_content`, `comments` y `fire_reactions` si faltan.
 2. Conectar esa base al Worker `rapid-silence-8ef7` con el binding `SITE_DB`. Conservar el binding R2 `MUSIC_BUCKET` existente.
 3. Proteger `ncc.ar/api/admin/*` con una aplicación Cloudflare Access y una política que permita únicamente el correo elegido por el propietario. Hacer lo mismo para `www.ncc.ar/api/admin/*` si ese host sirve la web sin redirigir al canónico.
 4. Configurar `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD` y `ADMIN_EMAIL` en el Worker con los valores reales de esa aplicación. No guardar secretos ni tokens en GitHub.
