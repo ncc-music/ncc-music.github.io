@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS comments (
   visitor_id TEXT NOT NULL,
   author TEXT NOT NULL DEFAULT 'AnonymousFreak',
   body TEXT NOT NULL,
+  position_seconds REAL CHECK (position_seconds IS NULL OR (position_seconds >= 0 AND position_seconds <= 86400)),
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
