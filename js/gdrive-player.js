@@ -138,8 +138,11 @@ function renderCatalogue() {
         duration.textContent = formatTrackDuration(track.duration);
         button.append(number, main, collection, duration);
         const playAndExpandSelectedTrack = trigger => {
-            if (currentTrack()?.url !== track.url) playTrack(playlist.id, index, false);
-            else if (audio.paused) startPlayback();
+            const playbackInProgress = Boolean(currentTrack() && !audio.paused && playerState.isPlaying);
+            if (!playbackInProgress) {
+                if (currentTrack()?.url !== track.url) playTrack(playlist.id, index, false);
+                else startPlayback();
+            }
             if (window.NCCSets) window.NCCSets.expand(trigger);
         };
         number.addEventListener('click', event => { event.stopPropagation(); playAndExpandSelectedTrack(event.currentTarget); });
