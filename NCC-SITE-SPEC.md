@@ -1,6 +1,6 @@
 # NCC.ar — decisiones y puesta en producción
 
-Consolidado el 20 de septiembre de 2026 a partir de las conversaciones «Cambios para compartir sets» y «Costo plan ChatGPT».
+Consolidado el 20 de septiembre de 2026 a partir de las conversaciones «Cambios para compartir sets» «Costo plan ChatGPT» y «Mejoras de compartir sociales».
 
 ## Arquitectura y alcance
 
@@ -14,7 +14,7 @@ Cada ficha muestra nombre, fecha si está cargada, tracklist completo, controles
 
 ## Administración
 
-El panel permite editar los metadatos de los audios presentes en R2, publicar u ocultar un set, preparar waveform FLAC, editar los textos de Sets, About y Tour Dates, y exportar el contenido. Los nuevos audios se incorporan desde R2 al actualizar. La subida de audio continúa en R2; no se añade una subida de archivos grandes al panel.
+El panel permite editar los metadatos de los audios presentes en R2, publicar u ocultar un set, preparar waveform FLAC, editar los textos de Sets, About, Tour Dates y Manifesto en ambos idiomas, y exportar el contenido. Los nuevos audios se incorporan desde R2 al actualizar. La subida de audio continúa en R2; no se añade una subida de archivos grandes al panel.
 
 El acceso de edición requiere Cloudflare Access y validación del JWT en el Worker. Sin configuración, las operaciones de administración se rechazan. Los textos se muestran como texto, no como HTML ejecutable. Los guardados detectan conflictos de versión.
 
@@ -46,3 +46,11 @@ La configuración está publicada en ncc.ar y verificada:
 Radio todavía no tiene audios en su carpeta radio/ y permanece deshabilitada hasta que se carguen. Es contenido pendiente, no una conexión con las otras colecciones.
 
 Para administrar: abrir https://ncc.ar/api/admin/login e ingresar con la cuenta Cloudflare del correo autorizado. Desde Tracklists se editan sets y las secciones del sitio; los audios nuevos se siguen subiendo a R2.
+
+## Mejoras de compartir sociales — 21 de septiembre de 2026
+
+- Menú de compartir con Facebook, Instagram, WhatsApp y Telegram; enlace permanente y símbolo universal de tres nodos. Instagram copia el enlace para pegarlo en un mensaje o historia.
+- El pie intercambia About y Administración; esta última se muestra como π, manteniendo su nombre accesible.
+- Waveform automático en cada ficha, independiente del audio actual hasta que el oyente lo utiliza para desplazarse. Verificado en la ficha pública con los picos guardados y avance por teclado.
+- Manifesto editable en inglés y español desde el panel, con validación y control de versiones. El texto original se conserva hasta su primera edición.
+- Las 29 pruebas pasan. Worker publicado con soporte de Manifesto y cambios del sitio disponibles en ncc.ar.

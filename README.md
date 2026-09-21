@@ -209,11 +209,12 @@ Los corazones muestran un total público guardado en D1. Un identificador aleato
 
 Las decisiones consolidadas y la configuración de producción están en [NCC-SITE-SPEC.md](NCC-SITE-SPEC.md).
 
-- **Administrar** abre Tracklists después de iniciar sesión. Allí se editan nombre, fecha, tracklist y estado publicado de los audios de R2. Un audio nuevo se incorpora al actualizar el catálogo; el audio pesado se sigue subiendo a R2.
-- **Editar Sets**, **Editar About** y **Editar Tour Dates** permiten cambiar los textos desde la web. El guardado utiliza versiones para impedir que una ventana sobrescriba cambios más recientes de otra.
+- **π (Administrar)** abre Tracklists después de iniciar sesión. Allí se editan nombre, fecha, tracklist y estado publicado de los audios de R2. Un audio nuevo se incorpora al actualizar el catálogo; el audio pesado se sigue subiendo a R2.
+- **Editar Sets**, **Editar About**, **Editar Tour Dates** y **Editar Manifesto** permiten cambiar los textos desde la web. El guardado utiliza versiones para impedir que una ventana sobrescriba cambios más recientes de otra.
 - **Exportar contenido** descarga los metadatos de los sets y los textos del sitio. No incluye los archivos de audio.
 - Cada set tiene una dirección permanente `/set/slug`. Cambiar el título no cambia el slug. El nombre del reproductor y las fichas usan esa misma dirección.
-- Compartir usa el menú nativo en dispositivos táctiles compatibles y un menú con WhatsApp, Telegram, Facebook y copiar enlace en los demás. Los enlaces compartidos siempre apuntan a `https://ncc.ar`.
+- Compartir muestra Facebook, Instagram, WhatsApp, Telegram y copiar enlace. Instagram copia el enlace para pegarlo en un mensaje o en el sticker Enlace; «Más opciones» abre el menú nativo cuando está disponible. Los enlaces compartidos siempre apuntan a `https://ncc.ar`.
+- La forma de onda aparece automáticamente al abrir la ficha, usando los picos guardados o analizando el audio. Abrir una ficha no cambia el audio que está sonando.
 - La portada y las fichas incluyen Open Graph y Twitter con la calavera original sobre fondo negro (`assets/player-cover.jpg`). Estos datos se entregan en el HTML, sin depender de JavaScript. Los servicios de mensajería pueden conservar una vista previa anterior en su caché.
 
 ### Desarrollo y comprobación
