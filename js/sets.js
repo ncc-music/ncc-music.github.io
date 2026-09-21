@@ -382,6 +382,11 @@
         $('now-cover').addEventListener('keydown', event => { if (['Enter', ' '].includes(event.key)) { event.preventDefault(); openNowPlayer(event.currentTarget); } });
         $('now-info').addEventListener('click', event => { if (!event.target.closest('#track-name')) openNowPlayer(event.currentTarget); });
         $('expand-player').addEventListener('click', event => openNowPlayer(event.currentTarget));
+        const miniPlayer = document.querySelector('.player-dock');
+        miniPlayer.addEventListener('click', event => {
+            if (event.target.closest('.now-info, .now-cover, button, a, input, label, canvas, .waveform-panel')) return;
+            openNowPlayer(miniPlayer);
+        });
         $('now-player-backdrop').addEventListener('click', closeNowPlayer);
         $('now-player-close').addEventListener('click', closeNowPlayer);
         $('expanded-like').addEventListener('click', () => toggleLike(currentTrack()));
