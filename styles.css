@@ -635,6 +635,7 @@ main { padding-bottom: calc(var(--dock-height) + 64px); }
 .expand-player .icon { width: 19px; height: 19px; }
 .now-player-backdrop { position: fixed; inset: 0 0 75% 0; z-index: 59; background: #0008; cursor: default; animation: now-player-fade-in .24s ease-out; }
 .now-player { position: fixed; inset: auto 0 0; z-index: 60; width: 100%; height: 75dvh; overflow-y: auto; padding: max(24px, env(safe-area-inset-top)) 34px max(42px, env(safe-area-inset-bottom)); background: radial-gradient(circle at 50% 0, #24272a 0, #111214 44%, #090a0b 100%); box-shadow: 0 -24px 70px #0009; animation: now-player-rise .3s cubic-bezier(.2,.75,.25,1); }
+.now-player.is-dragging { animation: none; user-select: none; }
 body.player-expanded { overflow: hidden; }
 @keyframes now-player-rise { from { transform: translateY(100%); } to { transform: translateY(0); } }
 @keyframes now-player-fade-in { from { opacity: 0; } to { opacity: 1; } }
@@ -664,6 +665,7 @@ body.player-expanded { overflow: hidden; }
 @media (max-width: 760px) {
     .now-player-backdrop { display: none; }
     .now-player { height: 100dvh; padding-inline: 18px; box-shadow: none; }
+    .now-player::before { content: ""; position: absolute; top: max(8px, env(safe-area-inset-top)); left: 50%; width: 42px; height: 4px; transform: translateX(-50%); background: #ffffff5c; border-radius: 999px; }
     .expanded-waveform canvas { height: 150px; }
     .tracklist-record summary { display: block; }
     .tracklist-record-meta { display: block; margin-top: 5px; text-align: left; }
