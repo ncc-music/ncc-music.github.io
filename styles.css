@@ -696,7 +696,10 @@ body.player-expanded { overflow: hidden; }
 @keyframes now-player-rise { from { transform: translateY(100%); } to { transform: translateY(0); } }
 @keyframes now-player-fade-in { from { opacity: 0; } to { opacity: 1; } }
 .now-player-close { position: sticky; top: 0; z-index: 2; display: grid; place-items: center; width: 48px; height: 48px; margin: 0 0 6px auto; color: var(--text); background: #1b1c1fcc; border: 1px solid #ffffff24; border-radius: 50%; backdrop-filter: blur(10px); }
-.now-player-layout { width: min(960px,100%); margin: 0 auto; }
+.now-player-layout { width: min(1080px,100%); margin: 0 auto; }
+.waveform-community-card { margin-top: 8px; padding: 18px; background: linear-gradient(180deg,#151719 0,#0d0f10 100%); border: 1px solid #ffffff1f; border-radius: 10px; box-shadow: inset 0 1px #ffffff08, 0 18px 50px #0005; }
+.detail-waveform-card { margin-top: 28px; }
+.detail-waveform-card .detail-waveform { margin-top: 0; }
 .expanded-waveform-heading { display: flex; align-items: center; gap: 16px; min-width: 0; margin: 0 0 10px; }
 .expanded-waveform-heading img { width: 76px; height: 76px; flex: 0 0 auto; object-fit: contain; border-radius: 4px; filter: drop-shadow(0 8px 18px #0009); }
 .expanded-waveform-heading > div { min-width: 0; }
@@ -705,9 +708,9 @@ body.player-expanded { overflow: hidden; }
 .expanded-play { display: grid; place-items: center; width: 62px; height: 62px; color: #111; background: var(--text); border-radius: 50%; }
 .expanded-play:hover { background: var(--accent); }
 .expanded-play .icon { width: 30px; height: 30px; }
-.now-player-time { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
-.expanded-waveform { margin: 8px 0 0; }
-.expanded-waveform canvas { height: 180px; }
+.waveform-time-row { display: flex; justify-content: space-between; margin-top: 3px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.expanded-waveform { margin: 0; }
+.waveform-community-card .detail-waveform canvas { height: 220px; }
 .now-player-actions { display: flex; justify-content: center; gap: 14px; margin: 18px 0 0; }
 .now-player-actions .track-action span { display: inline; }
 .now-player-tracklist { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); }
@@ -716,8 +719,8 @@ body.player-expanded { overflow: hidden; }
 .now-player-tracklist li { padding: 6px 0 6px 8px; }
 .now-player-tracklist li::marker { color: var(--muted); }
 .now-player-tracklist p { color: var(--muted); }
-.now-player-community { margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--line); }
-.waveform-community { margin-top: 4px; padding: 12px 0 18px; border-top: 0; border-bottom: 1px solid var(--line); }
+.now-player-community { margin-top: 0; padding-top: 0; border-top: 0; }
+.waveform-community { margin-top: 0; padding: 0; border: 0; }
 .community-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .community-heading h3 { color: var(--muted); font-size: 14px; letter-spacing: .1em; }
 .community-heading p { margin-top: 2px; color: #7f8582; font-size: 11px; }
@@ -725,10 +728,11 @@ body.player-expanded { overflow: hidden; }
 .fire-reaction:hover:not(:disabled), .fire-reaction[aria-pressed=true] { color: var(--text); border-color: #ff743d99; background: #ff5a1f1a; }
 .fire-reaction > span:first-child { font-size: 20px; filter: grayscale(1); }
 .fire-reaction[aria-pressed=true] > span:first-child { filter: none; }
-.comment-form { margin-top: 10px; }
-.comment-composer { display: grid; grid-template-columns: auto minmax(160px,1fr) auto auto auto; align-items: center; gap: 7px; padding: 6px; background: #08090a; border: 1px solid #ffffff2d; border-radius: 7px; box-shadow: inset 0 1px #ffffff08; }
+.waveform-community .community-heading { margin-top: 16px; padding-top: 14px; border-top: 1px solid #ffffff14; }
+.comment-form { margin: 10px 0 0; }
+.comment-composer { display: grid; grid-template-columns: auto minmax(160px,1fr) auto auto auto; align-items: center; gap: 7px; padding: 6px; background: #08090a; border: 1px solid #ffffff38; border-radius: 10px; box-shadow: inset 0 1px #ffffff08; }
 .comment-composer:focus-within { border-color: #c7f37599; box-shadow: 0 0 0 2px #c7f37517; }
-.comment-composer-avatar { display: grid; place-items: center; width: 34px; height: 34px; color: #111; background: var(--accent); border-radius: 3px; font-size: 12px; font-weight: 900; }
+.comment-composer-avatar { display: grid; place-items: center; width: 34px; height: 34px; color: #111; background: var(--accent); border: 2px solid #101112; border-radius: 50%; font-size: 10px; font-weight: 900; }
 .comment-form textarea { min-width: 0; min-height: 34px; max-height: 86px; padding: 7px 8px; color: var(--text); background: transparent; border: 0; resize: vertical; font: inherit; font-size: 14px; line-height: 1.35; }
 .comment-form textarea:focus { outline: none; }
 .comment-position-button { min-height: 34px; padding: 6px 10px; color: var(--muted); background: #ffffff08; border: 1px solid #ffffff1c; border-radius: 4px; font-size: 11px; white-space: nowrap; }
@@ -746,7 +750,7 @@ body.player-expanded { overflow: hidden; }
 #comment-position-help { margin: 6px 0 0 41px; color: var(--muted); font-size: 11px; }
 .comment-status { min-height: 18px; color: var(--muted); font-size: 12px; }
 .waveform-comment-form .comment-status { margin: 3px 0 0 41px; }
-.detail-community-slot { margin-top: 4px; }
+.detail-community-slot { margin-top: 0; }
 .comment-list { display: grid; grid-template-columns: 1fr; gap: 0; margin-top: 12px; }
 .comment-list .empty-state { padding: 16px 0; color: var(--muted); }
 .comment-card { display: grid; grid-template-columns: 38px minmax(0,1fr); gap: 11px; padding: 13px 4px; background: transparent; border-top: 1px solid #ffffff10; }
@@ -764,16 +768,16 @@ body.player-expanded { overflow: hidden; }
 .comment-action { padding: 2px 0; color: var(--muted); background: transparent; font-size: 11px; }
 .comment-action:hover, .comment-action[aria-pressed=true] { color: var(--accent); }
 .comment-like[aria-pressed=true]::before { content: "♥ "; }
-.waveform-frame { position: relative; }
+.waveform-frame { position: relative; border-radius: 6px; background: #ffffff03; }
 .waveform-play { position: absolute; top: 50%; left: 50%; z-index: 3; display: grid; place-items: center; width: 66px; height: 66px; transform: translate(-50%,-50%); color: #111; background: var(--accent); border: 5px solid #101112cc; border-radius: 50%; box-shadow: 0 8px 30px #000a; }
 .waveform-play:hover { transform: translate(-50%,-50%) scale(1.06); background: #def8a8; }
 .waveform-play .icon { width: 30px; height: 30px; }
 .waveform-play.is-invisible { opacity: 0; pointer-events: none; }
-.waveform-guide { position: absolute; top: 50%; z-index: 2; width: 2px; height: 38px; transform: translate(-50%,-50%); background: var(--accent); border-radius: 2px; box-shadow: 0 0 0 1px #10111299, 0 0 10px #c7f37588; pointer-events: none; }
+.waveform-guide { position: absolute; top: 8%; bottom: 8%; z-index: 2; width: 2px; transform: translateX(-50%); background: var(--accent); border-radius: 2px; box-shadow: 0 0 0 1px #10111299, 0 0 10px #c7f37588; pointer-events: none; }
 .waveform-comment-markers { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
-.waveform-comment-marker { position: absolute; bottom: 8px; display: grid; place-items: center; width: 28px; height: 28px; padding: 0; transform: translateX(-50%); color: #111; background: transparent; border: 0; border-radius: 3px; filter: drop-shadow(0 3px 5px #000b); pointer-events: auto; }
+.waveform-comment-marker { position: absolute; top: 73.5%; display: grid; place-items: center; width: 30px; height: 30px; padding: 0; transform: translate(-50%,-35%); color: #111; background: transparent; border: 0; border-radius: 50%; filter: drop-shadow(0 3px 5px #000b); pointer-events: auto; }
 .waveform-comment-marker::after { content: ""; position: absolute; bottom: 25px; left: 50%; width: 1px; height: 28px; transform: translateX(-50%); background: #f0f1f266; pointer-events: none; }
-.waveform-comment-avatar { display: grid; place-items: center; width: 26px; height: 26px; color: #111; background: #f0f1f2; border: 2px solid #101112; border-radius: 3px; font-size: 9px; font-weight: 900; }
+.waveform-comment-avatar { display: grid; place-items: center; width: 28px; height: 28px; color: #111; background: #f0f1f2; border: 2px solid #101112; border-radius: 50%; font-size: 9px; font-weight: 900; }
 .waveform-comment-marker:hover .waveform-comment-avatar, .waveform-comment-marker:focus-visible .waveform-comment-avatar, .waveform-comment-marker.is-open .waveform-comment-avatar { background: var(--accent); }
 .waveform-comment-bubble { position: absolute; bottom: 36px; left: 50%; z-index: 5; display: block; width: max-content; max-width: min(260px,70vw); padding: 8px 10px; transform: translate(-50%,5px); color: var(--text); background: #111315f5; border: 1px solid #ffffff28; border-radius: 5px; box-shadow: 0 8px 28px #000c; opacity: 0; visibility: hidden; text-align: left; pointer-events: none; }
 .waveform-comment-bubble-meta, .waveform-comment-bubble-body { display: block; }
@@ -793,7 +797,8 @@ body.player-expanded { overflow: hidden; }
     .now-player-backdrop { display: none; }
     .now-player { height: 100dvh; padding-inline: 18px; box-shadow: none; }
     .now-player::before { content: ""; position: absolute; top: max(8px, env(safe-area-inset-top)); left: 50%; width: 42px; height: 4px; transform: translateX(-50%); background: #ffffff5c; border-radius: 999px; }
-    .expanded-waveform canvas { height: 150px; }
+    .waveform-community-card { padding: 12px; }
+    .waveform-community-card .detail-waveform canvas { height: 178px; }
     .expanded-waveform-heading img { width: 62px; height: 62px; }
     .expanded-waveform-heading h2 { font-size: 21px; }
     .tracklist-record summary { display: block; }
