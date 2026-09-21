@@ -40,17 +40,18 @@ function normalizeR2Playlist(data, source) {
     const tracks = Array.isArray(data) ? data : data?.tracks;
     if (!Array.isArray(tracks)) throw new Error('Invalid catalogue');
     return tracks.filter(track => typeof track.name === 'string' && track.name.trim()).map(track => {
-        const fallback = track.key ? new URL(`/audio/${encodePath(track.key)}`, playlistApiUrl).href : '';
-        const url = safeMediaUrl(track.url || fallback);
+        const available = track.available !== false;
+        const fallback = available && track.key ? new URL(`/audio/${encodePath(track.key)}`, playlistApiUrl).href : '';
+        const url = available ? safeMediaUrl(track.url || fallback) : '';
         const extension = (track.key || url).split('?')[0].split('.').pop().toUpperCase();
         return {
-            id: track.id, slug: track.slug, date: track.date || '', tracklist: track.tracklist || [], likes: track.likes ?? null, peaks: track.peaks || null, size: track.size, version: track.version || 0, published: track.published !== false, key: track.key || '', name: track.name, artist: track.artist || 'Nicolás Cardú', url,
+            id: track.id, slug: track.slug, date: track.date || '', tracklist: track.tracklist || [], likes: track.likes ?? null, peaks: track.peaks || null, size: track.size, version: track.version || 0, published: track.published !== false, available, key: track.key || '', name: track.name, artist: track.artist || 'Nicolás Cardú', url,
             waveformUrl: safeMediaUrl(usesHostedProxy ? fallback : (track.waveformUrl || track.waveform_url || fallback || url)),
             duration: normalizeDuration(track.duration || track.durationSeconds || track.duration_seconds),
             format: ['FLAC', 'WAV', 'MP3', 'OGG', 'M4A', 'AAC'].includes(extension) ? extension : 'AUDIO',
             playlistId: source.id, playlistTitle: source.title, cover: source.cover
         };
-    }).filter(track => track.url);
+    }).filter(track => track.url || !track.available);
 }
 async function loadPlaylistSource(source) {
     try {
