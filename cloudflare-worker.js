@@ -247,7 +247,9 @@ async function catalogue(env, origin, includeDrafts = false) {
     const likes = new Map(counts.map(row => [row.set_id, row.count]));
     const groups = await Promise.all(COLLECTIONS.map(prefix => listAllAudioObjects(bucket, prefix)));
     const base = (env.R2_PUBLIC_URL || R2_PUBLIC_URL).replace(/\/$/, '');
-    const tracks = await Promise.all(groups.flat().map(async object => {
+    const objects = groups.flat();
+    const activeKeys = new Set(objects.map(object => object.key));
+    const activeTracks = await Promise.all(objects.map(async object => {
         const saved = metadata.get(object.key);
         const id = saved?.id || await stableId(object.key);
         const name = saved?.title || object.customMetadata?.title || titleFromKey(object.key);
@@ -259,9 +261,18 @@ async function catalogue(env, origin, includeDrafts = false) {
             peaks: saved?.peaks ? JSON.parse(saved.peaks) : null,
             likes: env.SITE_DB ? likes.get(id) || 0 : null,
             url: `${base}/${encodePath(object.key)}`, waveformUrl: `${origin}/api/audio/${encodePath(object.key)}`,
-            size: object.size, contentType: object.httpMetadata?.contentType || contentTypeFromKey(object.key)
+            size: object.size, contentType: object.httpMetadata?.contentType || contentTypeFromKey(object.key), available: true
         };
     }));
+    // Keep published tracklists searchable after an audio object is retired from R2.
+    const archivedTracks = rows.filter(row => !activeKeys.has(row.audio_key)).map(row => ({
+        id: row.id, key: row.audio_key, name: row.title, artist: 'Nicolás Cardú', slug: row.slug,
+        date: row.date || '', tracklist: JSON.parse(row.tracklist || '[]'), published: Boolean(row.published),
+        version: row.version || 0, peaks: row.peaks ? JSON.parse(row.peaks) : null,
+        likes: env.SITE_DB ? likes.get(row.id) || 0 : null, url: '', waveformUrl: '', size: 0,
+        contentType: contentTypeFromKey(row.audio_key), available: false
+    }));
+    const tracks = [...activeTracks, ...archivedTracks];
     return tracks.filter(track => includeDrafts || track.published);
 }
 function writeOriginAllowed(request, env) {

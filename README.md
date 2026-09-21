@@ -215,6 +215,8 @@ Las decisiones consolidadas y la configuración de producción están en [NCC-SI
 - Cada set tiene una dirección permanente `/set/slug`. Cambiar el título no cambia el slug. El nombre del reproductor y las fichas usan esa misma dirección.
 - Compartir muestra Facebook, Instagram, WhatsApp, Telegram y copiar enlace. Instagram copia el enlace para pegarlo en un mensaje o en el sticker Enlace; «Más opciones» abre el menú nativo cuando está disponible. Los enlaces compartidos siempre apuntan a `https://ncc.ar`.
 - La forma de onda aparece automáticamente al abrir la ficha, usando los picos guardados o analizando el audio. Abrir una ficha no cambia el audio que está sonando.
+- El miniplayer abre una vista Now Playing sin crear otro audio. La ficha y la vista ampliada muestran un botón Play central sobre la waveform cuando el set está detenido.
+- Tracklists incluye un buscador por artista, track, remix, set y fecha. Los resultados se agrupan por set y los tracklists archivados permanecen disponibles aunque se retire su audio.
 - La portada y las fichas incluyen Open Graph y Twitter con la calavera original sobre fondo negro (`assets/player-cover.jpg`). Estos datos se entregan en el HTML, sin depender de JavaScript. Los servicios de mensajería pueden conservar una vista previa anterior en su caché.
 
 ### Desarrollo y comprobación

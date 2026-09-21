@@ -41,7 +41,7 @@ La configuración está publicada en ncc.ar y verificada:
 - El acceso anónimo al panel redirige al inicio de sesión. El acceso directo al Worker sin identidad válida devuelve 401.
 - Los likes se probaron agregando y retirando uno; el total quedó restaurado. La reproducción continuó al navegar de About a Tracklists. Compartir muestra el enlace permanente y copiar devuelve confirmación. La ficha servida por el Worker contiene la calavera en Open Graph y Twitter.
 - El set NCC Records 001 - RAW Preview tiene fecha 18.09.2026, 13 pistas y 1400 valores de waveform guardados. Conserva el slug ncc-records-raw-preview-001-d6a88456 después de cambiar el título.
-- Las 29 pruebas locales pasaron durante esta revisión. No fue necesario cambiar el código de la aplicación para completar la activación.
+- Las 32 pruebas locales pasan después de incorporar las mejoras de reproducción y archivo.
 
 Radio todavía no tiene audios en su carpeta radio/ y permanece deshabilitada hasta que se carguen. Es contenido pendiente, no una conexión con las otras colecciones.
 
@@ -53,4 +53,13 @@ Para administrar: abrir https://ncc.ar/api/admin/login e ingresar con la cuenta 
 - El pie intercambia About y Administración; esta última se muestra como π, manteniendo su nombre accesible.
 - Waveform automático en cada ficha, independiente del audio actual hasta que el oyente lo utiliza para desplazarse. Verificado en la ficha pública con los picos guardados y avance por teclado.
 - Manifesto editable en inglés y español desde el panel, con validación y control de versiones. El texto original se conserva hasta su primera edición.
-- Las 29 pruebas pasan. Worker publicado con soporte de Manifesto y cambios del sitio disponibles en ncc.ar.
+- El Worker publicado admite Manifesto y los cambios sociales están disponibles en ncc.ar.
+
+## mejorasncc1 — 21 de septiembre de 2026
+
+- El miniplayer inferior y la vista ampliada Now Playing controlan la misma instancia de audio. El nombre, la imagen y el control de expansión abren la vista; minimizar o navegar conserva el set y la posición.
+- Now Playing muestra identidad, nombre y fecha, controles, tiempo, waveform, likes, compartir y tracklist completo. Escape minimiza la vista en escritorio.
+- La waveform de la ficha y de Now Playing incluye un botón Play central. El botón desaparece durante la reproducción y nunca se interpreta como un salto al centro del audio.
+- La sección conserva el nombre **Tracklists** y funciona como archivo compacto con búsqueda por artista, track, remix, set o fecha. La búsqueda ignora mayúsculas y acentos, agrupa por set y conserva todas las apariciones.
+- Los tracklists publicados permanecen en el archivo si el audio se retira de R2, claramente identificados como archivo y sin ofrecer reproducción.
+- Al guardar un set FLAC sin picos, el CMS prepara automáticamente su waveform antes de publicar el cambio.
