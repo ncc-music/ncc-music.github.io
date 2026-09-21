@@ -10,13 +10,13 @@ Secciones: Sets, Tracklists, Radio, About, Tour Dates y el Manifesto existente. 
 
 El reproductor es fijo, compacto y redondeado, con progreso simple, nombre clickeable, corazón con contador y compartir. Se quita la etiqueta LOSSLESS del reproductor; la etiqueta de la página y las descripciones de formato se conservan. El audio continúa al navegar.
 
-Cada ficha muestra nombre, fecha si está cargada, tracklist completo, controles/likes/compartir, waveform interactivo y una sección Freak Comments. El nombre del comentarista es opcional y usa `AnonymousFreak` por defecto. Cada navegador puede sumar o retirar una reacción 🔥 por set. El waveform tiene una parte principal y un reflejo inferior reducido. Sin BPM, estilo, timestamps ni asociación entre pistas y tiempos. Las fichas y Tracklists comparten la misma información. El slug se conserva al editar.
+Cada ficha muestra nombre, fecha si está cargada, tracklist completo, controles/likes/compartir y waveform interactivo. Freaks Comments forma parte del bloque del waveform: el compositor permite comentar en el momento actual o marcar otro punto, y las marcas muestran iniciales, hora y vista previa sobre la onda. El nombre del comentarista es opcional y usa `AnonymousFreak` por defecto. Cada navegador puede sumar o retirar una reacción 🔥 por set. El waveform tiene una parte principal y un reflejo inferior reducido. Sin BPM, estilo ni asociación entre pistas y tiempos. Las fichas y Tracklists comparten la misma información. El slug se conserva al editar.
 
 ## Administración
 
 El panel permite editar los metadatos de los audios presentes en R2, publicar u ocultar un set, preparar waveform FLAC, editar los textos de Sets, About, Tour Dates y Manifesto en ambos idiomas, y exportar el contenido. Los nuevos audios se incorporan desde R2 al actualizar. La subida de audio continúa en R2; no se añade una subida de archivos grandes al panel.
 
-El acceso de edición requiere Cloudflare Access y validación del JWT en el Worker. Sin configuración, las operaciones de administración se rechazan. Los textos se muestran como texto, no como HTML ejecutable. Los guardados detectan conflictos de versión.
+El acceso de edición requiere Cloudflare Access y validación del JWT en el Worker. Sin configuración, las operaciones de administración se rechazan. El administrador puede editar nombre y tags desde la lista, además de subir o bajar cada set; el orden se guarda por colección. Sin un orden manual, los sets se ordenan cronológicamente con el más reciente al final. Los textos se muestran como texto, no como HTML ejecutable. Los guardados detectan conflictos de versión.
 
 ## Activación en ncc.ar
 
