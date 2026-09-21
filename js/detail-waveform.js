@@ -1,5 +1,7 @@
 // A set's waveform is independent of the global player until the listener seeks.
 (() => {
+    const HOLD_TO_SCRUB_MS = 650;
+    const DRAG_TOLERANCE_PX = 6;
     let dispose = () => {};
     function mount(track, host) {
         dispose();
@@ -68,7 +70,7 @@
                 startPlayback();
             }
         }
-        const point = event => { const rect = canvas.getBoundingClientRect(); seek((event.clientX - rect.left) / rect.width); };
+        const point = clientX => { const rect = canvas.getBoundingClientRect(); seek((clientX - rect.left) / rect.width); };
         const showGuide = clientX => {
             const rect = canvas.getBoundingClientRect();
             guide.style.left = `${clamp((clientX - rect.left) / rect.width, 0, 1) * 100}%`;
@@ -76,13 +78,20 @@
         };
         const stopScrub = event => {
             if (!pointer || event.pointerId !== pointer.id) return;
+            clearTimeout(pointer.holdTimer);
             pointer = null; canvas.classList.remove('is-scrubbing');
             if (event.pointerType !== 'mouse') guide.hidden = true;
         };
         canvas.addEventListener('pointerdown', event => {
             if (!event.isPrimary) return;
             canvas.setPointerCapture(event.pointerId);
-            pointer = { id: event.pointerId, startX: event.clientX, scrubbing: false };
+            const id = event.pointerId;
+            pointer = { id, startX: event.clientX, lastX: event.clientX, moved: false, held: false, scrubbing: false, holdTimer: 0 };
+            pointer.holdTimer = setTimeout(() => {
+                if (!pointer || pointer.id !== id) return;
+                pointer.held = true; canvas.classList.add('is-scrubbing');
+                if (pointer.moved) { pointer.scrubbing = true; point(pointer.lastX); }
+            }, HOLD_TO_SCRUB_MS);
             showGuide(event.clientX);
         });
         canvas.addEventListener('pointermove', event => {
@@ -91,15 +100,17 @@
                 return;
             }
             showGuide(event.clientX);
-            if (!pointer.scrubbing && Math.abs(event.clientX - pointer.startX) >= 4) {
-                pointer.scrubbing = true; canvas.classList.add('is-scrubbing');
+            pointer.lastX = event.clientX;
+            if (Math.abs(event.clientX - pointer.startX) >= DRAG_TOLERANCE_PX) pointer.moved = true;
+            if (pointer.held && pointer.moved) {
+                pointer.scrubbing = true;
+                point(event.clientX);
             }
-            if (pointer.scrubbing) point(event);
         });
         canvas.addEventListener('pointerup', event => {
             if (!pointer || event.pointerId !== pointer.id) return;
-            const wasScrubbing = pointer.scrubbing; stopScrub(event);
-            if (!wasScrubbing) togglePlayback();
+            const wasScrubbing = pointer.scrubbing, wasHeld = pointer.held, wasMoved = pointer.moved; stopScrub(event);
+            if (!wasScrubbing && !wasHeld && !wasMoved) togglePlayback();
         });
         for (const type of ['pointercancel', 'lostpointercapture']) canvas.addEventListener(type, stopScrub);
         canvas.addEventListener('pointerleave', event => { if (!pointer && event.pointerType === 'mouse') guide.hidden = true; });
@@ -116,6 +127,7 @@
         audio.addEventListener('loadedmetadata', applySeek); audio.addEventListener('durationchange', applySeek);
         window.addEventListener('resize', draw);
         dispose = () => {
+            if (pointer) clearTimeout(pointer.holdTimer);
             controller.abort(); pendingSeek = null;
             for (const type of ['timeupdate', 'emptied', 'play', 'pause']) audio.removeEventListener(type, draw);
             audio.removeEventListener('loadedmetadata', applySeek); audio.removeEventListener('durationchange', applySeek);
