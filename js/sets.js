@@ -162,7 +162,8 @@
         event.preventDefault();
         const track = activeCommunityTrack() || currentTrack(); if (!track?.id) return;
         setCommunityExpanded(true);
-        const name = $('comment-name').value.trim(), body = $('comment-body').value.trim();
+        const name = $('comment-name').value.trim() || 'AnonymousFreak', body = $('comment-body').value.trim();
+        $('comment-name').value = name;
         if (!body) { $('comment-status').textContent = 'Escribí un comentario.'; $('comment-body').focus(); return; }
         let visitor;
         try { visitor = communityVisitor(); } catch (error) { $('comment-status').textContent = error.message; return; }
@@ -682,7 +683,7 @@
         $('community-toggle').addEventListener('click', () => setCommunityExpanded($('community-toggle').getAttribute('aria-expanded') !== 'true'));
         $('comment-form').addEventListener('submit', submitComment);
         $('comment-body').addEventListener('input', event => { $('comment-count').textContent = `${event.target.value.length}/600`; });
-        try { $('comment-name').value = localStorage.getItem('ncc-comment-name-v1') || ''; } catch {}
+        try { $('comment-name').value = localStorage.getItem('ncc-comment-name-v1') || 'AnonymousFreak'; } catch { $('comment-name').value = 'AnonymousFreak'; }
         for (const eventName of ['timeupdate', 'loadedmetadata', 'durationchange']) audio.addEventListener(eventName, syncNowPlayer);
         document.addEventListener('keydown', event => { if (event.key === 'Escape' && nowPlayerOpen) { event.preventDefault(); closeNowPlayer(); } });
         document.querySelectorAll('a[href^="#"]').forEach(link => link.addEventListener('click', event => {

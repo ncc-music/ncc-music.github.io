@@ -117,7 +117,7 @@ function renderCatalogue() {
     }
     const heading = document.createElement('div'); heading.className = 'track-table-head';
     heading.setAttribute('aria-hidden', 'true');
-    heading.innerHTML = `<span>#</span><span>Título</span><span>Colección</span>${icon('clock')}`;
+    heading.innerHTML = `<span>#</span><span>Título</span>${icon('clock')}`;
     root.append(heading);
     const list = document.createElement('ol'); list.className = 'track-list';
     tracks.forEach(({ track, index, playlist }, order) => {
@@ -132,15 +132,10 @@ function renderCatalogue() {
         const copy = document.createElement('span'); copy.className = 'track-text';
         const title = document.createElement('button'); title.type = 'button'; title.className = 'track-title'; title.textContent = track.name; title.setAttribute('aria-label', `Reproducir y abrir reproductor ampliado: ${track.name}`);
         copy.append(title); main.append(cover, copy);
-        const collection = document.createElement('span'); collection.className = 'track-collection';
-        const collectionName = document.createElement('span'); collectionName.textContent = playlist.title; collection.append(collectionName);
-        if (track.tags.length) {
-            const tags = document.createElement('span'); tags.className = 'track-tags'; tags.textContent = track.tags.map(tag => `#${tag}`).join(' '); collection.append(tags);
-        }
         const duration = document.createElement('span'); duration.className = 'track-duration';
         duration.dataset.playlistId = playlist.id; duration.dataset.trackDuration = index;
         duration.textContent = formatTrackDuration(track.duration);
-        button.append(number, main, collection, duration);
+        button.append(number, main, duration);
         const playAndExpandSelectedTrack = trigger => {
             const playbackInProgress = Boolean(currentTrack() && !audio.paused && playerState.isPlaying);
             const previewingAnotherSet = playbackInProgress && currentTrack()?.key !== track.key;
