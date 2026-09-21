@@ -247,8 +247,7 @@
     function renderNowPlayer() {
         const track = currentTrack(); if (!track || !nowPlayerOpen) return;
         nowPlayerTrackKey = track.key;
-        $('expanded-cover').src = track.cover; $('expanded-title').textContent = track.name;
-        $('expanded-date').textContent = track.date ? track.date.split('-').reverse().join('.') : '';
+        $('now-player').setAttribute('aria-label', 'Reproductor ampliado: ' + track.name);
         const list = $('expanded-tracklist'); list.replaceChildren();
         $('expanded-tracklist-empty').hidden = Boolean(track.tracklist?.length);
         for (const line of track.tracklist || []) list.append(el('li', '', line.replace(/^\s*\d+[.)\-]?\s+/, '')));
@@ -260,9 +259,6 @@
         if (!nowPlayerOpen || !$('now-player')) return;
         const track = currentTrack(); if (!track) { closeNowPlayer(); return; }
         if (track.key !== nowPlayerTrackKey) { renderNowPlayer(); return; }
-        const playing = !audio.paused && playerState.isPlaying;
-        $('expanded-play').innerHTML = icon(playing ? 'pause' : 'play');
-        $('expanded-play').setAttribute('aria-label', playing ? 'Pausa' : 'Reproducir');
         $('expanded-current').textContent = formatTime(audio.currentTime);
         $('expanded-duration').textContent = formatTrackDuration(audio.duration || track.duration);
         $('expanded-like').setAttribute('aria-pressed', String(socialLikes.has(track.id)));
@@ -388,9 +384,6 @@
         $('expand-player').addEventListener('click', event => openNowPlayer(event.currentTarget));
         $('now-player-backdrop').addEventListener('click', closeNowPlayer);
         $('now-player-close').addEventListener('click', closeNowPlayer);
-        $('expanded-play').addEventListener('click', togglePlay);
-        $('expanded-prev').addEventListener('click', () => nextTrack(-1));
-        $('expanded-next').addEventListener('click', () => nextTrack());
         $('expanded-like').addEventListener('click', () => toggleLike(currentTrack()));
         $('expanded-share').addEventListener('click', () => shareSet(currentTrack()));
         for (const eventName of ['timeupdate', 'loadedmetadata', 'durationchange']) audio.addEventListener(eventName, syncNowPlayer);

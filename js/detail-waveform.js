@@ -9,7 +9,8 @@
         canvas.tabIndex = 0; canvas.setAttribute('role', 'slider');
         canvas.setAttribute('aria-label', 'Posición en ' + track.name);
         canvas.setAttribute('aria-valuemin', '0'); canvas.setAttribute('aria-valuemax', '100');
-        play.type = 'button'; play.className = 'waveform-play'; play.innerHTML = icon('play');
+        play.type = 'button'; play.className = host.id === 'expanded-waveform' ? 'waveform-play expanded-play' : 'waveform-play'; play.innerHTML = icon('play');
+        if (host.id === 'expanded-waveform') play.id = 'expanded-play';
         play.setAttribute('aria-label', 'Reproducir ' + track.name); play.title = 'Reproducir';
         status.setAttribute('role', 'status'); status.textContent = 'Cargando forma de onda…';
         frame.append(canvas, play); host.append(frame, status);
