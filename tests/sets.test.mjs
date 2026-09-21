@@ -10,7 +10,16 @@ const entries = [
     { key: 'radio/Radio 01.mp3', size: 123 },
     { key: 'chill-out/Music 01.flac', size: 123 }
 ];
-function env() { return { SITE_DB: database(), MY_BUCKET: { list: async ({ prefix }) => ({ objects: entries.filter(e => e.key.startsWith(prefix)), truncated: false }) } }; }
+function env() {
+    const uploads = new Map();
+    return {
+        SITE_DB: database(), uploads,
+        MY_BUCKET: {
+            list: async ({ prefix }) => ({ objects: entries.filter(e => e.key.startsWith(prefix)), truncated: false }),
+            put: async (key, body, options) => { uploads.set(key, { body: new Uint8Array(body), options }); }
+        }
+    };
+}
 function req(path, method = 'GET', body, headers = {}) { return new Request('https://ncc.ar/api' + path, { method, headers: { Origin: 'https://ncc.ar', 'Content-Type': 'application/json', ...headers }, body: body ? JSON.stringify(body) : undefined }); }
 async function tracks(environment) { return (await (await worker.fetch(req('/sets'), environment)).json()).tracks; }
 const visitor = 'a1234567-abcd-1234-abcd-123456789abc';
@@ -112,12 +121,27 @@ test('signed admin saves validate JWT, preserve slug and reject stale updates', 
         const claims = { iss: 'https://ncc-test.cloudflareaccess.com', aud: ['test-aud'], email: environment.ADMIN_EMAIL, exp: Math.floor(Date.now()/1000)+600 };
         const token = await tokenFor(claims), headers = { 'Cf-Access-Jwt-Assertion': token };
         const [track] = await tracks(environment);
-        const input = { title: 'Renamed', date: '2026-09-19', tags: ['techno', 'live'], sortOrder: null, tracklist: ['Artist — Track'], published: true, version: 0 };
+        const upload = (kind, type, bytes) => worker.fetch(new Request(`https://ncc.ar/api/admin/sets/${track.id}/media/${kind}`, { method:'PUT', headers:{ Origin:'https://ncc.ar', 'Content-Type':type, ...headers }, body:new Uint8Array(bytes) }), environment);
+        const poster = await upload('poster', 'image/png', [137,80,78,71,13,10,26,10]);
+        const video = await upload('video', 'video/mp4', [0,0,0,20,102,116,121,112,105,115,111,109]);
+        assert.equal(poster.status, 200); assert.equal(video.status, 200);
+        const posterData = await poster.json(), videoData = await video.json();
+        assert.equal(posterData.key, `__site/set-media/${track.id}/poster.png`);
+        assert.equal(videoData.key, `__site/set-media/${track.id}/animation.mp4`);
+        assert.equal(environment.uploads.size, 2);
+        assert.equal((await upload('poster', 'image/jpeg', [137,80,78,71,13,10,26,10])).status, 400);
+        assert.equal((await upload('video', 'video/mp4', [0,1,2,3])).status, 400);
+        const input = { title: 'Renamed', date: '2026-09-19', tags: ['techno', 'live'], sortOrder: null, tracklist: ['Artist — Track'], animationPosterKey:posterData.key, animationVideoKey:videoData.key, published: true, version: 0 };
         assert.equal((await worker.fetch(req('/admin/sets/'+track.id, 'PUT', input, headers), environment)).status, 200);
         const saved = (await tracks(environment)).find(item => item.id === track.id); assert.equal(saved.name, 'Renamed'); assert.equal(saved.slug, track.slug); assert.equal(saved.version, 1); assert.deepEqual(saved.tags, ['techno', 'live']);
+        assert.equal(saved.animationPosterKey, posterData.key); assert.equal(new URL(saved.animationPosterUrl).pathname.endsWith('/poster.png'), true); assert.match(saved.animationPosterUrl, /\?v=1$/);
+        assert.equal(saved.animationVideoKey, videoData.key); assert.equal(new URL(saved.animationVideoUrl).pathname.endsWith('/animation.mp4'), true); assert.match(saved.animationVideoUrl, /\?v=1$/);
         assert.equal((await worker.fetch(req('/admin/sets/'+track.id, 'PUT', input, headers), environment)).status, 409);
         assert.equal((await worker.fetch(req('/admin/sets/'+track.id, 'PUT', { ...input, version:1, date:'2026-02-31' }, headers), environment)).status, 400);
         assert.equal((await worker.fetch(req('/admin/sets/'+track.id, 'PUT', { ...input, version:1, tags:['x'.repeat(33)] }, headers), environment)).status, 400);
+        assert.equal((await worker.fetch(req('/admin/sets/'+track.id, 'PUT', { ...input, version:1, animationPosterKey:'', animationVideoKey:'' }, headers), environment)).status, 200);
+        const defaults = (await tracks(environment)).find(item => item.id === track.id);
+        assert.equal(defaults.animationPosterKey, ''); assert.equal(defaults.animationPosterUrl, ''); assert.equal(defaults.animationVideoKey, ''); assert.equal(defaults.animationVideoUrl, '');
         const techno = (await tracks(environment)).filter(item => item.key.startsWith('techno-freaks/'));
         assert.equal((await worker.fetch(req('/admin/order', 'PUT', { ids: techno.map(item => item.id).reverse() }, headers), environment)).status, 200);
         assert.deepEqual((await tracks(environment)).filter(item => item.key.startsWith('techno-freaks/')).map(item => item.id), techno.map(item => item.id).reverse());
