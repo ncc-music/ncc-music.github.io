@@ -152,7 +152,7 @@ async function ensureCommunityPosition(env) {
 }
 const DEFAULT_CONTENT = {
     sets: { title: 'CARDÚ', genres: '[Experimental / Industrial]', description: 'MUSIC 4 FREAKS.' },
-    about: { title: 'Nicølás Cardú', body: 'Does it matter?\nEnjoy the music! x)\n\nSets en audio lossless, FLAC y WAV.', bookingEmail: 'bookings@ncc.ar' },
+    about: { title: 'Nicølás Cardú', body: 'Does it matter?\nEnjoy the music! x)\n\nSets en audio lossless, FLAC y WAV.', bookingEmail: 'info@ncc.ar' },
     tour: { title: 'Próximas fechas', body: 'Las nuevas fechas se anunciarán acá.' }
 };
 async function siteContent(env) {
