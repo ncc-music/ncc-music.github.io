@@ -117,8 +117,8 @@ test('shared pages include the original skull and escaped set metadata without J
         const response = await worker.fetch(new Request('https://ncc.ar/set/' + track.slug), environment);
         assert.equal(response.status, 200);
         const html = await response.text();
-        assert.match(html, /property="og:image" content="https:\/\/ncc.ar\/assets\/player-cover.jpg"/);
-        assert.match(html, /name="twitter:image" content="https:\/\/ncc.ar\/assets\/player-cover.jpg"/);
+        assert.match(html, /property="og:image" content="https:\/\/ncc.ar\/assets\/player-cover-clean.jpg"/);
+        assert.match(html, /name="twitter:image" content="https:\/\/ncc.ar\/assets\/player-cover-clean.jpg"/);
         assert.match(html, /Set &lt;special&gt; &quot;NCC&quot;/);
         assert.ok(html.includes('rel="canonical" href="https://ncc.ar/set/' + track.slug + '"'));
         const missing = await worker.fetch(new Request('https://ncc.ar/set/missing'), environment);
