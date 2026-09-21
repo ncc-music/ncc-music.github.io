@@ -131,8 +131,7 @@ function renderCatalogue() {
         const cover = document.createElement('img'); cover.className = 'track-thumb'; cover.src = track.cover; cover.alt = ''; cover.loading = 'lazy';
         const copy = document.createElement('span'); copy.className = 'track-text';
         const title = document.createElement('button'); title.type = 'button'; title.className = 'track-title'; title.textContent = track.name; title.setAttribute('aria-label', `Abrir reproductor ampliado: ${track.name}`);
-        const artist = document.createElement('span'); artist.className = 'track-artist'; artist.textContent = `${track.artist} · ${track.format}`;
-        copy.append(title, artist); main.append(cover, copy);
+        copy.append(title); main.append(cover, copy);
         const collection = document.createElement('span'); collection.className = 'track-collection'; collection.textContent = playlist.title;
         const duration = document.createElement('span'); duration.className = 'track-duration';
         duration.dataset.playlistId = playlist.id; duration.dataset.trackDuration = index;
