@@ -6,7 +6,7 @@ const playlistApiUrl = usesHostedProxy
 const playlistSources = [
     // Set enabled to true to show MUSIC again; its catalogue and artwork are preserved.
     { id: 'chill-out', enabled: false, title: 'MUSIC', prefix: 'chill-out/', cover: 'assets/chill-cover.jpg' },
-    { id: 'techno-freaks', title: 'CARDÚ', prefix: 'techno-freaks/', cover: 'assets/player-cover.jpg' },
+    { id: 'techno-freaks', title: 'CARDÚ', prefix: 'techno-freaks/', cover: 'assets/player-cover-clean.jpg' },
     { id: 'radio', title: 'NCC Radio', prefix: 'radio/', cover: 'assets/player-cover.png' }
 ];
 const enabledPlaylistSources = playlistSources.filter(source => source.enabled !== false);
