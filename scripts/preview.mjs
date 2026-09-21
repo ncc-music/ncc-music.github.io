@@ -11,11 +11,15 @@ const source = await readFile(resolve(root,'cloudflare-worker.js'),'utf8');
 const { default: worker } = await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 const remote = 'https://rapid-silence-8ef7.nc-music-87a.workers.dev';
 let entries = [];
+const previewUploads = new Map();
 for (const prefix of ['techno-freaks/', 'chill-out/', 'radio/']) {
     const response = await originalFetch(remote+'/?prefix='+encodeURIComponent(prefix));
     for (const track of (await response.json()).tracks || []) entries.push({ key:track.key,size:track.size,customMetadata:{title:track.name,artist:track.artist},httpMetadata:{contentType:track.contentType} });
 }
-const env = { SITE_DB: database(resolve(root,'.work/preview.db')), ALLOWED_ORIGINS:'http://127.0.0.1:8765', MY_BUCKET: { list: async ({prefix}) => ({ objects:entries.filter(e=>e.key.startsWith(prefix)),truncated:false }) } };
+const env = { SITE_DB: database(resolve(root,'.work/preview.db')), ALLOWED_ORIGINS:'http://127.0.0.1:8765', R2_PUBLIC_URL:'http://127.0.0.1:8765/__uploads', MY_BUCKET: {
+    list: async ({prefix}) => ({ objects:entries.filter(e=>e.key.startsWith(prefix)),truncated:false }),
+    put: async (key, body, options) => { previewUploads.set(key, { body:Buffer.from(body), type:options?.httpMetadata?.contentType || 'application/octet-stream' }); }
+} };
 // Optional local administrator preview, signed with an ephemeral test key.
 // This never creates or forwards credentials to the production service.
 let previewToken, previewJWK;
@@ -41,6 +45,13 @@ http.createServer(async (request,response) => {
             const text = await readFile(resolve(root, url.pathname === '/__schema' ? 'scripts/schema.sql' : 'cloudflare-worker.js'), 'utf8');
             const html = `<meta charset="utf-8"><title>NCC deployment review</title><button onclick="navigator.clipboard.writeText(document.querySelector('textarea').value).then(()=>document.querySelector('p').textContent='Copied')">Copy Worker</button><p></p><textarea readonly style="width:100%;height:85vh">${text.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</textarea>`;
             response.writeHead(200, {'Content-Type':'text/html; charset=utf-8'}); response.end(html); return;
+        }
+        if (url.pathname.startsWith('/__uploads/')) {
+            const key = decodeURIComponent(url.pathname.slice('/__uploads/'.length));
+            const item = previewUploads.get(key);
+            if (item) { response.writeHead(200, {'Content-Type':item.type,'Cache-Control':'no-store'}); response.end(item.body); return; }
+            const result = await originalFetch(remote + '/' + key.split('/').map(encodeURIComponent).join('/'), { headers:request.headers.range ? {Range:request.headers.range} : {} });
+            response.writeHead(result.status,Object.fromEntries(result.headers)); if (result.body) Readable.fromWeb(result.body).pipe(response); else response.end(); return;
         }
         if (url.pathname.startsWith('/api/audio/')) {
             const result = await originalFetch(remote + url.pathname.replace(/^\/api/, ''));

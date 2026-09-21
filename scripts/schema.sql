@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS sets (
   tracklist TEXT NOT NULL DEFAULT '[]',
   tags TEXT NOT NULL DEFAULT '[]',
   sort_order INTEGER,
+  animation_poster_key TEXT NOT NULL DEFAULT '',
+  animation_video_key TEXT NOT NULL DEFAULT '',
   published INTEGER NOT NULL DEFAULT 1 CHECK (published IN (0, 1)),
   peaks TEXT,
   version INTEGER NOT NULL DEFAULT 1,
