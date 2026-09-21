@@ -76,7 +76,7 @@
                 ]
             }
         </script>
-        <link rel="stylesheet" href="styles.css?v=20260921r">
+        <link rel="stylesheet" href="styles.css?v=20260921s">
         <link rel="icon" type="image/png" href="assets/player-cover.png">
     </head>
     <body>
@@ -211,6 +211,14 @@
                     <form class="comment-form" id="comment-form">
                         <label for="comment-name">Nombre <span>opcional</span></label><input id="comment-name" name="name" maxlength="32" autocomplete="nickname" placeholder="AnonymousFreak">
                         <label for="comment-body">Comentario</label><textarea id="comment-body" name="comment" maxlength="600" rows="3" required placeholder="Dejá una señal…"></textarea>
+                        <div class="comment-position" aria-labelledby="comment-position-label">
+                            <span class="comment-position-label" id="comment-position-label">POSICIÓN EN EL SET</span>
+                            <div class="comment-position-controls" role="group" aria-label="Elegir posición del comentario">
+                                <button type="button" id="comment-position-current" class="comment-position-button" aria-pressed="true">Ahora · <span id="comment-position-current-time">0:00</span></button>
+                                <button type="button" id="comment-position-pick" class="comment-position-button" aria-pressed="false">Elegir en waveform</button>
+                            </div>
+                            <p id="comment-position-help">Podés comentar en el momento actual o marcar otro punto del waveform.</p>
+                        </div>
                         <div class="comment-submit"><span id="comment-count">0/600</span><button type="submit" class="primary-button" id="comment-submit">Publicar</button></div>
                         <p class="comment-status" id="comment-status" role="status"></p>
                     </form>
@@ -227,9 +235,9 @@
         <audio id="audio-player" preload="metadata"></audio>
         <script src="js/waveform-stream.js?v=20260920"></script>
         <script src="js/gdrive-player.js?v=20260921h"></script>
-        <script src="js/detail-waveform.js?v=20260921h"></script>
+        <script src="js/detail-waveform.js?v=20260921i"></script>
         <script src="js/tracklist-search.js?v=20260921a"></script>
-        <script src="js/sets.js?v=20260921j"></script>
+        <script src="js/sets.js?v=20260921k"></script>
         <script src="js/content.js?v=20260921"></script>
         <script src="js/visits.js?v=20260914"></script>
     </body>

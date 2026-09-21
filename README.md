@@ -205,7 +205,7 @@ La vista previa local utiliza un contador SQLite separado en el servidor de edic
 
 Los corazones muestran un total público guardado en D1. Un identificador aleatorio por navegador evita contar dos veces la misma selección; no es un conteo de personas verificadas. Se puede retirar el like. Los favoritos siguen siendo personales y se guardan en el navegador. Si el servicio no está conectado, los likes se muestran como no disponibles; no se inventan totales.
 
-Cada ficha ampliada incluye **Freak Comments** y una reacción 🔥 por set. El nombre es opcional: si queda vacío, el comentario se publica como `AnonymousFreak`. Los comentarios y las reacciones se guardan en D1; cada navegador puede publicar hasta cinco comentarios por hora y su reacción de fuego es reversible. La interfaz muestra los 100 comentarios más recientes y nunca interpreta su texto como HTML.
+Cada ficha ampliada incluye **Freak Comments** y una reacción 🔥 por set. El nombre es opcional: si queda vacío, el comentario se publica como `AnonymousFreak`. Cada comentario puede fijarse al momento actual o a un punto elegido del waveform; su marcador queda visible sobre la forma de onda. Los comentarios y las reacciones se guardan en D1; cada navegador puede publicar hasta cinco comentarios por hora y su reacción de fuego es reversible. La interfaz muestra los 100 comentarios más recientes y nunca interpreta su texto como HTML.
 
 ## Edición y enlaces de sets
 

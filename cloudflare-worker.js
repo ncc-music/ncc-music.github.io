@@ -231,6 +231,7 @@ const COLLECTIONS = ['techno-freaks/', 'chill-out/', 'radio/'];
 const ORIGIN = 'https://ncc.ar';
 const jwksCache = new Map();
 const encoder = new TextEncoder();
+let communityPositionReady = false;
 async function stableId(key) {
     const bytes = await crypto.subtle.digest('SHA-256', encoder.encode(key));
     return Array.from(new Uint8Array(bytes), b => b.toString(16).padStart(2, '0')).join('').slice(0, 20);
@@ -338,6 +339,15 @@ function validSetInput(value) {
 }
 const validVisitor = value => /^[a-f0-9-]{36}$/.test(value || '');
 const cleanCommunityText = (value, max) => typeof value === 'string' && value.trim().length > 0 && value.trim().length <= max && !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value) ? value.trim() : '';
+async function ensureCommunityPosition(env) {
+    if (communityPositionReady) return;
+    try { await env.SITE_DB.prepare('SELECT position_seconds FROM comments LIMIT 0').all(); }
+    catch {
+        try { await env.SITE_DB.prepare('ALTER TABLE comments ADD COLUMN position_seconds REAL').run(); }
+        catch (error) { if (!/duplicate column/i.test(String(error?.message || error))) throw error; }
+    }
+    communityPositionReady = true;
+}
 const DEFAULT_CONTENT = {
     sets: { title: 'CARDÚ', genres: '[Experimental / Industrial]', description: 'MUSIC 4 FREAKS.' },
     about: { title: 'Nicølás Cardú', body: 'Does it matter?\nEnjoy the music! x)\n\nSets en audio lossless, FLAC y WAV.', bookingEmail: 'bookings@ncc.ar' },
@@ -430,13 +440,14 @@ async function handleSetService(request, env) {
         const communityMatch = path.match(/^\/sets\/([a-f0-9]{20})\/(community|comments|fire)$/);
         if (communityMatch) {
             if (!env.SITE_DB) return reply({ error: 'Comentarios no disponibles.' }, 503);
+            await ensureCommunityPosition(env);
             const track = (await catalogue(env, url.origin)).find(item => item.id === communityMatch[1]);
             if (!track) return reply({ error: 'Set no encontrado.' }, 404);
             const section = communityMatch[2];
             if (section === 'community' && request.method === 'GET') {
                 const [fireResult, commentResult] = await env.SITE_DB.batch([
                     env.SITE_DB.prepare('SELECT COUNT(*) AS count FROM fire_reactions WHERE set_id = ?').bind(track.id),
-                    env.SITE_DB.prepare('SELECT id, author, body, created_at AS createdAt FROM comments WHERE set_id = ? ORDER BY created_at DESC, id DESC LIMIT 100').bind(track.id)
+                    env.SITE_DB.prepare('SELECT id, author, body, position_seconds AS positionSeconds, created_at AS createdAt FROM comments WHERE set_id = ? ORDER BY created_at DESC, id DESC LIMIT 100').bind(track.id)
                 ]);
                 return reply({ fireCount: fireResult.results[0].count, comments: commentResult.results });
             }
@@ -459,12 +470,14 @@ async function handleSetService(request, env) {
                 const body = cleanCommunityText(input.body, 600);
                 const suppliedAuthor = typeof input.author === 'string' ? input.author.trim() : '';
                 const author = suppliedAuthor ? cleanCommunityText(suppliedAuthor, 32) : 'AnonymousFreak';
-                if (!body || !author) return reply({ error: 'Revisá el nombre y el comentario.' }, 400);
+                const rawPosition = input.positionSeconds;
+                const positionSeconds = rawPosition === undefined || rawPosition === null ? null : Math.round(Number(rawPosition) * 10) / 10;
+                if (!body || !author || positionSeconds !== null && (!Number.isFinite(positionSeconds) || positionSeconds < 0 || positionSeconds > 86400)) return reply({ error: 'Revisá el nombre, el comentario y su posición.' }, 400);
                 const recent = await env.SITE_DB.prepare("SELECT COUNT(*) AS count FROM comments WHERE visitor_id = ? AND created_at >= datetime('now', '-1 hour')").bind(visitor).all();
                 if (recent.results[0].count >= 5) return reply({ error: 'Esperá un poco antes de publicar otro comentario.' }, 429);
-                const comment = { id: crypto.randomUUID(), author, body, createdAt: new Date().toISOString() };
-                await env.SITE_DB.prepare('INSERT INTO comments (id, set_id, visitor_id, author, body, created_at) VALUES (?, ?, ?, ?, ?, ?)')
-                    .bind(comment.id, track.id, visitor, comment.author, comment.body, comment.createdAt).run();
+                const comment = { id: crypto.randomUUID(), author, body, positionSeconds, createdAt: new Date().toISOString() };
+                await env.SITE_DB.prepare('INSERT INTO comments (id, set_id, visitor_id, author, body, position_seconds, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+                    .bind(comment.id, track.id, visitor, comment.author, comment.body, comment.positionSeconds, comment.createdAt).run();
                 return reply({ comment }, 201);
             }
             return reply({ error: 'Método no permitido.' }, 405);
