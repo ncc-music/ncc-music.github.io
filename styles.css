@@ -677,3 +677,34 @@ body.player-expanded { overflow: hidden; }
     .tracklist-clear, .tracklist-search-status { grid-column: 1; }
     .tracklist-record-body { padding-left: 6px; }
 }
+
+/* Mobile keeps a compact SoundCloud-style player bar so the page remains visible. */
+@media (max-width: 760px) {
+    :root { --dock-height: 72px; }
+    main { padding-bottom: calc(var(--dock-height) + 24px); }
+    .player-dock {
+        left: 0;
+        right: 0;
+        bottom: 0;
+        grid-template-columns: minmax(0,1fr) 44px;
+        min-height: 0;
+        padding: 8px 10px max(8px, env(safe-area-inset-bottom));
+        gap: 8px;
+        background: #141517f5;
+        border: 0;
+        border-top: 1px solid #ffffff24;
+        border-radius: 0;
+        box-shadow: 0 -8px 26px #0008;
+        backdrop-filter: blur(14px);
+    }
+    .player-dock .now-playing { grid-column: 1; grid-row: 1; gap: 10px; }
+    .player-dock .now-cover { width: 44px; height: 44px; }
+    .player-dock .player-mode { display: none; }
+    .player-dock .now-info h2 { font-size: 13px; }
+    .player-dock .now-info p { margin-top: 1px; font-size: 11px; }
+    .player-dock .expand-player { width: 32px; height: 32px; }
+    .player-dock .transport { display: block; grid-column: 2; grid-row: 1; }
+    .player-dock .transport-buttons { display: flex; justify-content: center; gap: 0; }
+    .player-dock #prev-button, .player-dock #next-button, .player-dock .progress-control, .player-dock .player-options { display: none; }
+    .player-dock .play-button { width: 40px; height: 40px; }
+}
