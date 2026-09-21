@@ -391,7 +391,7 @@
             openNowPlayer(miniPlayer);
         });
         const expandedPlayer = $('now-player'), expandedBackdrop = $('now-player-backdrop');
-        let swipe = null;
+        let swipe = null, suppressExpandedClick = false;
         const resetSwipe = () => {
             if (!swipe) return;
             expandedPlayer.classList.remove('is-dragging');
@@ -419,9 +419,17 @@
             expandedPlayer.style.transform = `translateY(${swipe.offset}px)`;
             expandedBackdrop.style.opacity = String(Math.max(0, 1 - swipe.offset / (expandedPlayer.clientHeight * .75)));
         };
-        const finishSwipe = id => {
+        const finishSwipe = (id, x, y) => {
             if (!swipe || id !== swipe.id) return;
+            const dy = Number.isFinite(y) ? y - swipe.y : 0;
+            if (!swipe.dragging && dy >= 8 && Math.abs(x - swipe.x) <= dy) {
+                swipe.dragging = true; swipe.offset = Math.min(dy, expandedPlayer.clientHeight * .75);
+            }
             const shouldClose = swipe.dragging && swipe.offset >= Math.max(90, expandedPlayer.clientHeight * .12);
+            if (swipe.dragging) {
+                suppressExpandedClick = true;
+                setTimeout(() => { suppressExpandedClick = false; }, 800);
+            }
             if (shouldClose) { swipe = null; closeNowPlayer(); }
             else resetSwipe();
         };
@@ -431,16 +439,21 @@
         expandedPlayer.addEventListener('pointermove', event => {
             if (event.pointerType !== 'touch') moveSwipe(event.pointerId, event.clientX, event.clientY, event);
         }, { passive: false });
-        expandedPlayer.addEventListener('pointerup', event => finishSwipe(event.pointerId));
-        expandedPlayer.addEventListener('pointercancel', event => finishSwipe(event.pointerId));
+        expandedPlayer.addEventListener('pointerup', event => finishSwipe(event.pointerId, event.clientX, event.clientY));
+        expandedPlayer.addEventListener('pointercancel', event => finishSwipe(event.pointerId, event.clientX, event.clientY));
         expandedPlayer.addEventListener('touchstart', event => {
             if (event.touches.length === 1) beginSwipe('touch', event.touches[0].clientX, event.touches[0].clientY, event.target);
         }, { passive: true });
         expandedPlayer.addEventListener('touchmove', event => {
             if (event.touches.length === 1) moveSwipe('touch', event.touches[0].clientX, event.touches[0].clientY, event);
         }, { passive: false });
-        expandedPlayer.addEventListener('touchend', () => finishSwipe('touch'));
-        expandedPlayer.addEventListener('touchcancel', () => finishSwipe('touch'));
+        expandedPlayer.addEventListener('touchend', event => finishSwipe('touch', event.changedTouches[0]?.clientX, event.changedTouches[0]?.clientY));
+        expandedPlayer.addEventListener('touchcancel', event => finishSwipe('touch', event.changedTouches[0]?.clientX, event.changedTouches[0]?.clientY));
+        expandedPlayer.addEventListener('click', event => {
+            if (suppressExpandedClick) { suppressExpandedClick = false; return; }
+            if (event.target.closest('.now-player-tracklist, .expanded-waveform, .now-player-actions, button, input, canvas, a, label')) return;
+            closeNowPlayer();
+        });
         $('now-player-backdrop').addEventListener('click', closeNowPlayer);
         $('now-player-close').addEventListener('click', closeNowPlayer);
         $('expanded-like').addEventListener('click', () => toggleLike(currentTrack()));
