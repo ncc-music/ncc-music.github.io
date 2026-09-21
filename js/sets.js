@@ -1,13 +1,15 @@
 // Shared set details, administration and social actions; one persistent audio element.
 (() => {
     const api = '/api';
-    let admin = false, adminTracks = [], detailTrack = null, editorTrack = null, shareTrack = null;
+    let admin = false, adminTracks = [], archiveTracks = [], detailTrack = null, editorTrack = null, shareTrack = null;
+    let tracklistQuery = '', nowPlayerOpen = false, nowPlayerTrackKey = '', playerReturnFocus = null;
     let socialLikes = new Set(), pendingLikes = new Set();
     try { socialLikes = new Set(JSON.parse(localStorage.getItem('ncc-public-likes-v1') || '[]')); } catch {}
     const el = (tag, className, text) => {
         const node = document.createElement(tag); if (className) node.className = className; if (text !== undefined) node.textContent = text; return node;
     };
     const allTracks = () => playerState.playlists.flatMap(p => p.tracks);
+    const allKnownTracks = () => admin ? adminTracks : archiveTracks.length ? archiveTracks : allTracks().filter(track => track.playlistId !== 'radio');
     const setURL = track => new URL('/set/' + track.slug, 'https://ncc.ar').href;
     async function request(path, options = {}) {
         const response = await fetch(api + path, { credentials: 'same-origin', ...options, headers: { 'Content-Type': 'application/json', ...options.headers }, signal: AbortSignal.timeout(20000) });
@@ -51,7 +53,7 @@
             playerLike.setAttribute('aria-pressed', String(socialLikes.has(track?.id)));
         }
         document.querySelectorAll('[data-like-id]').forEach(button => {
-            const item = [...allTracks(), ...adminTracks, detailTrack].filter(Boolean).find(item => item.id === button.dataset.likeId);
+            const item = [...allTracks(), ...archiveTracks, ...adminTracks, detailTrack].filter(Boolean).find(item => item.id === button.dataset.likeId);
             button.disabled = !item?.id || pendingLikes.has(item.id);
             button.setAttribute('aria-pressed', String(socialLikes.has(item?.id)));
             const count = button.querySelector('.like-count'); if (count) count.textContent = item?.likes ?? '—';
@@ -61,10 +63,11 @@
         else $('track-name').removeAttribute('href');
         document.querySelectorAll('[data-play-set]').forEach(button => {
             const active = track?.id === button.dataset.playSet && !audio.paused;
-            const item = [...allTracks(), ...adminTracks].find(item => item.id === button.dataset.playSet);
+            const item = [...allTracks(), ...archiveTracks, ...adminTracks].find(item => item.id === button.dataset.playSet);
             button.setAttribute('aria-label', (active ? 'Pausar ' : 'Reproducir ') + (item?.name || 'set'));
-            button.innerHTML = icon(active ? 'pause' : 'play') + `<span>${active ? 'Pausar' : 'Reproducir'}</span>`;
+            button.innerHTML = icon(active ? 'pause' : 'play') + `<span>${item?.available === false ? 'Audio no disponible' : active ? 'Pausar' : 'Reproducir'}</span>`;
         });
+        syncNowPlayer();
     }
     const originalActions = createTrackActions;
     createTrackActions = track => {
@@ -88,7 +91,9 @@
             if (!Array.isArray(data.tracks)) throw new Error('Invalid catalogue');
             if (requestId !== catalogueRequest) return;
             const selected = currentTrack();
-            playerState.playlists = enabledPlaylistSources.map(source => ({ ...source, error: '', tracks: normalizeR2Playlist({ tracks: data.tracks.filter(track => track.key.startsWith(source.prefix)) }, source) }));
+            const normalized = enabledPlaylistSources.map(source => ({ source, tracks: normalizeR2Playlist({ tracks: data.tracks.filter(track => track.key.startsWith(source.prefix)) }, source) }));
+            archiveTracks = normalized.flatMap(group => group.tracks).filter(track => track.playlistId !== 'radio');
+            playerState.playlists = normalized.map(group => ({ ...group.source, error: '', tracks: group.tracks.filter(track => track.available) }));
             playerState.loaded = true;
             const playlist = getPlaylistById(playerState.activePlaylistId);
             const index = playlist?.tracks.findIndex(track => track.key === selected?.key) ?? -1;
@@ -111,13 +116,46 @@
             if (requestId === catalogueRequest) { $('loading-initial').hidden = true; renderCatalogue(); renderTracklists(); route(); syncSocial(); }
         }
     };
-    function navigate(path) { history.pushState({}, '', path); route(); window.scrollTo({ top: 0 }); }
-    function openSet(track) { if (track?.slug) navigate('/set/' + track.slug); }
+    function navigate(path, state = {}) { history.pushState(state, '', path); route(); window.scrollTo({ top: 0 }); }
+    function openSet(track, focusIndex = null) {
+        if (!track?.slug) return;
+        const fromTracklists = location.hash === '#tracklists';
+        if (fromTracklists) history.replaceState({ ...(history.state || {}), tracklistQuery, tracklistScroll: window.scrollY }, '');
+        navigate('/set/' + track.slug, { fromTracklists, tracklistFocus: focusIndex === null ? null : { slug: track.slug, index: focusIndex, query: tracklistQuery } });
+    }
     function playSet(track) {
+        if (!track?.available) { showMessage('El audio de este set ya no está disponible; su tracklist permanece en el archivo.'); return; }
         const current = currentTrack();
         if (current?.key === track.key) { togglePlay(); return; }
         const playlist = playerState.playlists.find(p => p.tracks.some(item => item.key === track.key));
         if (playlist) playTrack(playlist.id, playlist.tracks.findIndex(item => item.key === track.key));
+    }
+    function appendHighlighted(parent, text, tokens) {
+        if (!tokens?.length) { parent.textContent = text; return; }
+        let normalized = '', map = [];
+        for (let i = 0; i < text.length; i++) {
+            const part = window.NCCTracklistSearch.normalize(text[i]);
+            for (const char of part) { normalized += char; map.push(i); }
+        }
+        const ranges = [];
+        for (const token of tokens) {
+            let start = 0;
+            while ((start = normalized.indexOf(token, start)) >= 0) {
+                ranges.push([map[start], map[start + token.length - 1] + 1]); start += token.length;
+            }
+        }
+        ranges.sort((a, b) => a[0] - b[0]);
+        const merged = [];
+        for (const range of ranges) {
+            const last = merged.at(-1);
+            if (last && range[0] <= last[1]) last[1] = Math.max(last[1], range[1]); else merged.push(range);
+        }
+        let cursor = 0;
+        for (const [start, end] of merged) {
+            if (start > cursor) parent.append(document.createTextNode(text.slice(cursor, start)));
+            const mark = el('mark', '', text.slice(start, end)); parent.append(mark); cursor = end;
+        }
+        if (cursor < text.length) parent.append(document.createTextNode(text.slice(cursor)));
     }
     function buildCard(track, detailed = false) {
         const card = el('article', 'set-card');
@@ -127,10 +165,17 @@
         if (track.date) { const date = el('time', 'set-date', track.date.split('-').reverse().join('.')); date.dateTime = track.date; card.append(date); }
         const label = el('h3', 'tracklist-label', 'TRACKLIST'); card.append(label);
         if (track.tracklist?.length) {
-            const list = el('ol', 'set-tracklist'); track.tracklist.forEach(line => list.append(el('li', '', line.replace(/^\s*\d+[.)\-]?\s+/, '')))); card.append(list);
+            const focus = detailed && history.state?.tracklistFocus?.slug === track.slug ? history.state.tracklistFocus : null;
+            const tokens = focus?.query ? window.NCCTracklistSearch.search([track], focus.query).tokens : [];
+            const list = el('ol', 'set-tracklist'); track.tracklist.forEach((line, index) => {
+                const item = el('li'); item.dataset.tracklistIndex = index;
+                appendHighlighted(item, line.replace(/^\s*\d+[.)\-]?\s+/, ''), tokens);
+                if (focus?.index === index) item.classList.add('tracklist-focus');
+                list.append(item);
+            }); card.append(list);
         } else card.append(el('p', 'empty-tracklist', 'Todavía no hay un tracklist publicado para este set.'));
         const actions = el('div', 'set-card-actions');
-        const play = action('Reproducir ' + track.name, 'play', () => playSet(track)); play.dataset.playSet = track.id; play.classList.add('set-play'); play.append(el('span', '', 'Reproducir')); play.disabled = !track.published || !allTracks().some(item => item.key === track.key);
+        const play = action('Reproducir ' + track.name, 'play', () => playSet(track)); play.dataset.playSet = track.id; play.classList.add('set-play'); play.append(el('span', '', track.available ? 'Reproducir' : 'Audio no disponible')); play.disabled = !track.published || !track.available || !allTracks().some(item => item.key === track.key);
         actions.append(play, likeButton(track), action('Compartir ' + track.name, 'share', () => shareSet(track)));
         if (admin) { const edit = el('button', 'edit-set', 'Editar'); edit.type = 'button'; edit.addEventListener('click', () => editSet(track)); actions.append(edit); }
         if (!track.published) card.append(el('p', 'draft-label', 'No publicado'));
@@ -141,7 +186,30 @@
         }
         return card;
     }
-    function parkWaveform() { window.NCCDetailWaveform?.dispose(); }
+    function parkWaveform() { if (!nowPlayerOpen) window.NCCDetailWaveform?.dispose(); }
+    function archiveRecord(result, searching) {
+        const { track, matches } = result;
+        const details = el('details', 'tracklist-record'); details.open = searching;
+        const summary = el('summary');
+        const heading = el('span', 'tracklist-record-title', track.name);
+        const meta = el('span', 'tracklist-record-meta', [track.date ? track.date.split('-').reverse().join('.') : '', searching ? `${matches.length} coincidencia${matches.length === 1 ? '' : 's'}` : `${track.tracklist.length} tracks`, track.available ? '' : 'ARCHIVO'].filter(Boolean).join(' · '));
+        summary.append(heading, meta); details.append(summary);
+        const body = el('div', 'tracklist-record-body');
+        const rows = searching ? matches : track.tracklist.map((text, index) => ({ text, index }));
+        if (rows.length) {
+            const list = el('ol', 'set-tracklist');
+            for (const row of rows) {
+                const item = el('li'); item.dataset.tracklistIndex = row.index;
+                appendHighlighted(item, row.text.replace(/^\s*\d+[.)\-]?\s+/, ''), searching ? window.NCCTracklistSearch.search([track], tracklistQuery).tokens : []);
+                list.append(item);
+            }
+            body.append(list);
+        } else body.append(el('p', 'empty-tracklist', 'Todavía no hay un tracklist publicado para este set.'));
+        const actions = el('div', 'set-card-actions');
+        const play = action('Reproducir ' + track.name, 'play', () => playSet(track)); play.dataset.playSet = track.id; play.classList.add('set-play'); play.append(el('span', '', track.available ? 'Reproducir set' : 'Audio no disponible')); play.disabled = !track.available;
+        const view = el('button', 'track-action', 'Ver ficha'); view.type = 'button'; view.addEventListener('click', () => openSet(track, searching && matches.length ? matches[0].index : null));
+        actions.append(play, view); body.append(actions); details.append(body); return details;
+    }
     function renderTracklists() {
         const root = $('tracklists-section'); if (!root) return;
         root.replaceChildren();
@@ -155,10 +223,65 @@
             }
             root.append(tools);
         }
-        const tracks = admin ? adminTracks : allTracks().filter(track => track.playlistId !== 'radio');
-        if (!tracks.length) root.append(el('p', 'empty-state', playerState.loaded ? 'Todavía no hay sets disponibles.' : 'Cargando sets…'));
-        tracks.forEach(track => root.append(buildCard(track)));
+        const search = el('div', 'tracklist-search');
+        const label = el('label', 'sr-only', 'Buscar en Tracklists'); label.htmlFor = 'tracklist-search-input';
+        const input = el('input'); input.type = 'search'; input.id = 'tracklist-search-input'; input.placeholder = 'Buscar artista, track, remix o set…'; input.value = tracklistQuery;
+        const clear = el('button', 'tracklist-clear', 'Limpiar'); clear.type = 'button'; clear.hidden = !tracklistQuery;
+        const status = el('p', 'tracklist-search-status'); status.setAttribute('role', 'status');
+        search.append(label, input, clear, status); root.append(search);
+        const tracks = allKnownTracks();
+        const result = window.NCCTracklistSearch.search(tracks, tracklistQuery);
+        const searching = Boolean(result.tokens.length);
+        status.textContent = searching ? `${result.matchCount} coincidencia${result.matchCount === 1 ? '' : 's'} en ${result.sets.length} set${result.sets.length === 1 ? '' : 's'}` : `${result.sets.length} tracklist${result.sets.length === 1 ? '' : 's'} publicados`;
+        input.addEventListener('input', () => {
+            tracklistQuery = input.value;
+            history.replaceState({ ...(history.state || {}), tracklistQuery, tracklistScroll: window.scrollY }, '');
+            renderTracklists(); const next = $('tracklist-search-input'); next.focus(); next.setSelectionRange(next.value.length, next.value.length);
+        });
+        clear.addEventListener('click', () => { tracklistQuery = ''; history.replaceState({ ...(history.state || {}), tracklistQuery: '' }, ''); renderTracklists(); $('tracklist-search-input').focus(); });
+        if (!tracks.length) root.append(el('p', 'empty-state', playerState.loaded ? 'Todavía no hay tracklists publicados.' : 'Cargando tracklists…'));
+        else if (!result.sets.length) root.append(el('p', 'empty-state', 'No encontramos tracks o sets con esa búsqueda.'));
+        else { const archive = el('div', 'tracklist-archive'); result.sets.forEach(item => archive.append(archiveRecord(item, searching))); root.append(archive); }
         syncSocial();
+    }
+    function renderNowPlayer() {
+        const track = currentTrack(); if (!track || !nowPlayerOpen) return;
+        nowPlayerTrackKey = track.key;
+        $('expanded-cover').src = track.cover; $('expanded-title').textContent = track.name;
+        $('expanded-date').textContent = track.date ? track.date.split('-').reverse().join('.') : '';
+        const list = $('expanded-tracklist'); list.replaceChildren();
+        $('expanded-tracklist-empty').hidden = Boolean(track.tracklist?.length);
+        for (const line of track.tracklist || []) list.append(el('li', '', line.replace(/^\s*\d+[.)\-]?\s+/, '')));
+        $('expanded-like').dataset.likeId = track.id || '';
+        $('expanded-waveform').replaceChildren(); window.NCCDetailWaveform.mount(track, $('expanded-waveform'));
+        syncNowPlayer();
+    }
+    function syncNowPlayer() {
+        if (!nowPlayerOpen || !$('now-player')) return;
+        const track = currentTrack(); if (!track) { closeNowPlayer(); return; }
+        if (track.key !== nowPlayerTrackKey) { renderNowPlayer(); return; }
+        const playing = !audio.paused && playerState.isPlaying;
+        $('expanded-play').innerHTML = icon(playing ? 'pause' : 'play');
+        $('expanded-play').setAttribute('aria-label', playing ? 'Pausa' : 'Reproducir');
+        $('expanded-current').textContent = formatTime(audio.currentTime);
+        $('expanded-duration').textContent = formatTrackDuration(audio.duration || track.duration);
+        $('expanded-like').setAttribute('aria-pressed', String(socialLikes.has(track.id)));
+        $('expanded-like').disabled = !track.id || pendingLikes.has(track.id);
+        $('expanded-like').querySelector('.like-count').textContent = track.likes ?? '—';
+    }
+    function openNowPlayer(trigger) {
+        if (!currentTrack()) { showMessage('Elegí un set para abrir el reproductor.'); return; }
+        playerReturnFocus = trigger || document.activeElement; nowPlayerOpen = true;
+        $('now-player').hidden = false; document.body.classList.add('player-expanded');
+        $('expand-player').setAttribute('aria-expanded', 'true'); renderNowPlayer(); $('now-player-close').focus();
+    }
+    function closeNowPlayer() {
+        if (!nowPlayerOpen) return;
+        nowPlayerOpen = false; nowPlayerTrackKey = ''; $('now-player').hidden = true;
+        document.body.classList.remove('player-expanded'); $('expand-player').setAttribute('aria-expanded', 'false');
+        window.NCCDetailWaveform.dispose();
+        if (detailTrack && $('detail-waveform-host')?.isConnected) window.NCCDetailWaveform.mount(detailTrack, $('detail-waveform-host'));
+        playerReturnFocus?.focus?.(); playerReturnFocus = null;
     }
     const originalRoute = route;
     route = () => {
@@ -166,13 +289,24 @@
         const root = $('set-detail-section'); if (!root) return;
         const match = location.pathname.match(/^\/set\/([^/]+)\/?$/);
         root.hidden = !match; detailTrack = null;
-        if (!match) { document.title = 'NCC Music | Lossless DJ Mixes by Nicolás Cardú'; return; }
+        if (!match) {
+            document.title = 'NCC Music | Lossless DJ Mixes by Nicolás Cardú';
+            if (location.hash === '#tracklists') {
+                if (typeof history.state?.tracklistQuery === 'string') tracklistQuery = history.state.tracklistQuery;
+                renderTracklists();
+                if (Number.isFinite(history.state?.tracklistScroll)) requestAnimationFrame(() => window.scrollTo({ top: history.state.tracklistScroll }));
+            }
+            return;
+        }
         ['radio-feature','collections-section','sets-section','tracklists-section','about-section','tour-section','manifesto-section','mix-signature','page-quality','collection-filters','favorites-filter'].forEach(id => $(id).hidden = true);
         $('page-title').textContent = 'SET'; root.replaceChildren();
-        detailTrack = allTracks().find(track => track.slug === match[1]);
-        const back = el('a', 'back-to-sets', '← Tracklists'); back.href = '/#tracklists'; back.addEventListener('click', event => { event.preventDefault(); navigate('/#tracklists'); }); root.append(back);
+        detailTrack = allKnownTracks().find(track => track.slug === match[1]);
+        const back = el('a', 'back-to-sets', '← Tracklists'); back.href = '/#tracklists'; back.addEventListener('click', event => { event.preventDefault(); if (history.state?.fromTracklists) history.back(); else navigate('/#tracklists'); }); root.append(back);
         if (!detailTrack) { root.append(el('p', 'empty-state', playerState.loaded ? 'Este set no existe o no está publicado.' : 'Cargando set…')); return; }
-        root.append(buildCard(detailTrack, true)); window.NCCDetailWaveform.mount(detailTrack, $('detail-waveform-host')); document.title = detailTrack.name + ' | NCC Music'; syncSocial();
+        root.append(buildCard(detailTrack, true));
+        if (!nowPlayerOpen && detailTrack.available) window.NCCDetailWaveform.mount(detailTrack, $('detail-waveform-host'));
+        const focus = root.querySelector('.tracklist-focus'); if (focus) requestAnimationFrame(() => focus.scrollIntoView({ block: 'center' }));
+        document.title = detailTrack.name + ' | NCC Music'; syncSocial();
     };
     function makeDialog(id, title) {
         const dialog = el('dialog', 'set-dialog'); dialog.id = id;
@@ -230,6 +364,10 @@
         event.preventDefault(); if (!editorTrack) return;
         const button = $('save-set'); button.disabled = true; $('edit-status').textContent = 'Guardando…';
         try {
+            if (editorTrack.available && editorTrack.format === 'FLAC' && !editorTrack.peaks?.length) {
+                editorTrack.peaks = await analyzeFLAC(editorTrack, undefined, progress => { $('edit-status').textContent = `Preparando waveform… ${progress}%`; });
+            }
+            $('edit-status').textContent = 'Guardando…';
             await request('/admin/sets/' + editorTrack.id, { method: 'PUT', body: JSON.stringify({ title: $('edit-title').value, date: $('edit-date').value, tracklist: $('edit-tracklist').value.split('\n').map(line => line.trim()).filter(Boolean), published: $('edit-published').checked, version: editorTrack.version, peaks: editorTrack.peaks }) });
             $('edit-dialog').close(); await loadCatalogue(); await loadAdmin(); showMessage('Set guardado.');
         } catch (error) { $('edit-status').textContent = error.message; }
@@ -243,7 +381,19 @@
     }
     document.addEventListener('DOMContentLoaded', () => {
         const share = action('Compartir set actual', 'share', () => shareSet(currentTrack())); share.id = 'player-share'; document.querySelector('.player-preferences').append(share);
-        $('track-name').addEventListener('click', event => { event.preventDefault(); openSet(currentTrack()); });
+        $('track-name').addEventListener('click', event => { event.preventDefault(); openNowPlayer(event.currentTarget); });
+        $('now-cover').addEventListener('click', event => openNowPlayer(event.currentTarget));
+        $('now-cover').addEventListener('keydown', event => { if (['Enter', ' '].includes(event.key)) { event.preventDefault(); openNowPlayer(event.currentTarget); } });
+        $('now-info').addEventListener('click', event => { if (!event.target.closest('a')) openNowPlayer(event.currentTarget); });
+        $('expand-player').addEventListener('click', event => openNowPlayer(event.currentTarget));
+        $('now-player-close').addEventListener('click', closeNowPlayer);
+        $('expanded-play').addEventListener('click', togglePlay);
+        $('expanded-prev').addEventListener('click', () => nextTrack(-1));
+        $('expanded-next').addEventListener('click', () => nextTrack());
+        $('expanded-like').addEventListener('click', () => toggleLike(currentTrack()));
+        $('expanded-share').addEventListener('click', () => shareSet(currentTrack()));
+        for (const eventName of ['timeupdate', 'loadedmetadata', 'durationchange']) audio.addEventListener(eventName, syncNowPlayer);
+        document.addEventListener('keydown', event => { if (event.key === 'Escape' && nowPlayerOpen) { event.preventDefault(); closeNowPlayer(); } });
         document.querySelectorAll('a[href^="#"]').forEach(link => link.addEventListener('click', event => {
             if (link.id === 'track-name' || link.classList.contains('skip-link')) return;
             event.preventDefault(); navigate('/' + link.getAttribute('href'));
@@ -258,18 +408,7 @@
         }); sharing.append(copy); const status = el('p'); status.id = 'share-status'; status.setAttribute('role', 'status'); sharing.append(status);
         const editor = makeDialog('edit-dialog', 'Editar set'); const form = el('form', 'set-form');
         form.innerHTML = '<label for="edit-title">Nombre del set</label><input id="edit-title" required maxlength="240"><label for="edit-date">Fecha</label><input id="edit-date" type="date"><label for="edit-tracklist">Tracklist · una pista por línea</label><textarea id="edit-tracklist" rows="12"></textarea><p class="audio-reference" id="edit-audio"></p><label class="published-label"><input type="checkbox" id="edit-published"> Publicado</label><p id="edit-status" role="status"></p><button id="save-set" class="primary-button" type="submit">Guardar</button>';
-        const prepare = el('button', 'waveform-load', 'Preparar waveform'); prepare.type = 'button';
-        prepare.addEventListener('click', async () => {
-            if (!editorTrack) return;
-            const target = editorTrack; prepare.disabled = true; $('save-set').disabled = true;
-            try {
-                if (target.format !== 'FLAC') throw new Error('La preparación automática está disponible para audios FLAC.');
-                target.peaks = await analyzeFLAC(target, undefined, progress => { $('edit-status').textContent = `Preparando waveform… ${progress}%`; });
-                $('edit-status').textContent = 'Waveform listo. Tocá Guardar para publicarlo con el set.';
-            } catch (error) { $('edit-status').textContent = error.message; }
-            finally { prepare.disabled = false; $('save-set').disabled = false; }
-        });
-        form.insertBefore(prepare, form.querySelector('#save-set')); form.addEventListener('submit', saveSet); editor.append(form);
+        form.addEventListener('submit', saveSet); editor.append(form);
         $('admin-entry').addEventListener('click', async () => {
             if (admin) { navigate('/#tracklists'); return; }
             try { await request('/admin/session'); await loadAdmin(); navigate('/#tracklists'); }
@@ -278,5 +417,5 @@
         request('/admin/session').then(() => loadAdmin()).catch(() => {});
         window.addEventListener('storage', event => { if (event.key === 'ncc-public-likes-v1') { try { socialLikes = new Set(JSON.parse(event.newValue || '[]')); syncSocial(); } catch {} } });
     });
-    window.NCCSets = { open: openSet, toggleLike };
+    window.NCCSets = { open: openSet, toggleLike, share: shareSet, expand: openNowPlayer, collapse: closeNowPlayer };
 })();
