@@ -9,7 +9,7 @@
         dispose();
         const controller = new AbortController();
         const expanded = host.id === 'expanded-waveform';
-        const frame = document.createElement('div'), canvas = document.createElement('canvas'), markerLayer = document.createElement('div'), guide = document.createElement('span'), play = document.createElement('button'), status = document.createElement('p');
+        const frame = document.createElement('div'), canvas = document.createElement('canvas'), markerLayer = document.createElement('div'), guide = document.createElement('span'), play = document.createElement('button'), timeRow = document.createElement('div'), currentLabel = document.createElement('span'), durationLabel = document.createElement('span'), status = document.createElement('p');
         host.replaceChildren(); frame.className = 'waveform-frame';
         if (expanded) {
             const heading = document.createElement('div'), cover = document.createElement('img'), copy = document.createElement('div'), eyebrow = document.createElement('span'), title = document.createElement('h2');
@@ -25,8 +25,11 @@
         play.type = 'button'; play.className = expanded ? 'waveform-play expanded-play' : 'waveform-play'; play.innerHTML = icon('play');
         if (expanded) play.id = 'expanded-play';
         play.setAttribute('aria-label', 'Reproducir ' + track.name); play.title = 'Reproducir';
+        timeRow.className = 'waveform-time-row'; currentLabel.textContent = '0:00'; durationLabel.textContent = formatTrackDuration(track.duration);
+        if (expanded) { currentLabel.id = 'expanded-current'; durationLabel.id = 'expanded-duration'; }
+        timeRow.append(currentLabel, durationLabel);
         status.setAttribute('role', 'status'); status.textContent = 'Cargando forma de onda…';
-        frame.append(canvas, markerLayer, guide, play); host.append(frame, status);
+        frame.append(canvas, markerLayer, guide, play); host.append(frame, timeRow, status);
         let peaks = [], pointer = null, pendingSeek = null, comments = [], draftPosition = null, pickHandler = null, renderedDuration = -1;
         const active = () => currentTrack()?.key === track.key;
         const position = () => active() && isSeekable(audio) ? audio.currentTime / audio.duration : 0;
@@ -54,6 +57,7 @@
                     const open = !marker.classList.contains('is-open');
                     markerLayer.querySelectorAll('.waveform-comment-marker.is-open').forEach(item => item.classList.remove('is-open'));
                     marker.classList.toggle('is-open', open);
+                    seekTo(seconds);
                 });
                 markerLayer.append(marker);
             }
@@ -96,6 +100,9 @@
                 ctx.fillStyle = at < ratio ? '#c7f375' : 'rgba(190,198,193,.5)';
                 ctx.fillRect(x, height * .72 - h, 3, h); ctx.globalAlpha = .35; ctx.fillRect(x, height * .75, 3, h * .34); ctx.globalAlpha = 1;
             }
+            ctx.fillStyle = 'rgba(240,241,242,.34)'; ctx.fillRect(0, Math.round(height * .735), width, 1);
+            currentLabel.textContent = active() && isSeekable(audio) ? formatTime(audio.currentTime) : '0:00';
+            durationLabel.textContent = formatTrackDuration(duration());
             canvas.setAttribute('aria-valuenow', String(Math.round(ratio * 100)));
             canvas.setAttribute('aria-valuetext', Math.round(ratio * 100) + '%');
             syncPlay(); renderMarkers();

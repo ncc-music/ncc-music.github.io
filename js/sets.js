@@ -69,6 +69,7 @@
         const visible = activeCommunityTrack();
         if (!track?.id || visible?.id !== track.id) return;
         window.NCCDetailWaveform?.setComments(data?.comments || []);
+        $('community-title').textContent = `FREAKS COMMENTS · ${data?.comments?.length ?? 0}`;
         const fire = $('community-fire');
         fire.disabled = pendingFire.has(track.id) || !data;
         fire.setAttribute('aria-pressed', String(fireReactions.has(track.id)));
@@ -314,9 +315,11 @@
         if (track.date) { const date = el('time', 'set-date', track.date.split('-').reverse().join('.')); date.dateTime = track.date; card.append(date); }
         if (track.tags?.length) card.append(el('p', 'set-tags', track.tags.map(tag => `#${tag}`).join(' ')));
         if (detailed) {
+            const waveformCard = el('div', 'waveform-community-card detail-waveform-card');
             const host = el('div', 'detail-waveform'); host.id = 'detail-waveform-host';
-            card.append(host);
-            const communitySlot = el('div', 'detail-community-slot'); communitySlot.id = 'detail-community-slot'; card.append(communitySlot);
+            waveformCard.append(host);
+            const communitySlot = el('div', 'detail-community-slot'); communitySlot.id = 'detail-community-slot'; waveformCard.append(communitySlot);
+            card.append(waveformCard);
             if (!nowPlayerOpen) moveCommunity(communitySlot);
         }
         const label = el('h3', 'tracklist-label', 'TRACKLIST'); card.append(label);
