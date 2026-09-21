@@ -143,7 +143,7 @@ function renderCatalogue() {
                 if (currentTrack()?.url !== track.url) playTrack(playlist.id, index, false);
                 else startPlayback();
             }
-            if (window.NCCSets) window.NCCSets.expand(trigger);
+            if (window.NCCSets) window.NCCSets.expand(trigger, track);
         };
         number.addEventListener('click', event => { event.stopPropagation(); playAndExpandSelectedTrack(event.currentTarget); });
         title.addEventListener('click', event => { event.stopPropagation(); playAndExpandSelectedTrack(event.currentTarget); });

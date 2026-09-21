@@ -2,7 +2,7 @@
 (() => {
     const api = '/api';
     let admin = false, adminTracks = [], archiveTracks = [], detailTrack = null, editorTrack = null, shareTrack = null;
-    let tracklistQuery = '', nowPlayerOpen = false, nowPlayerTrackKey = '', playerReturnFocus = null;
+    let tracklistQuery = '', nowPlayerOpen = false, nowPlayerTrackKey = '', nowPlayerTrack = null, playerReturnFocus = null;
     let socialLikes = new Set(), pendingLikes = new Set();
     try { socialLikes = new Set(JSON.parse(localStorage.getItem('ncc-public-likes-v1') || '[]')); } catch {}
     const el = (tag, className, text) => {
@@ -245,7 +245,7 @@
         syncSocial();
     }
     function renderNowPlayer() {
-        const track = currentTrack(); if (!track || !nowPlayerOpen) return;
+        const track = nowPlayerTrack || currentTrack(); if (!track || !nowPlayerOpen) return;
         nowPlayerTrackKey = track.key;
         $('now-player').setAttribute('aria-label', 'Reproductor ampliado: ' + track.name);
         const list = $('expanded-tracklist'); list.replaceChildren();
@@ -257,16 +257,19 @@
     }
     function syncNowPlayer() {
         if (!nowPlayerOpen || !$('now-player')) return;
-        const track = currentTrack(); if (!track) { closeNowPlayer(); return; }
+        const track = nowPlayerTrack || currentTrack(); if (!track) { closeNowPlayer(); return; }
         if (track.key !== nowPlayerTrackKey) { renderNowPlayer(); return; }
-        $('expanded-current').textContent = formatTime(audio.currentTime);
-        $('expanded-duration').textContent = formatTrackDuration(audio.duration || track.duration);
+        const active = currentTrack()?.key === track.key;
+        $('expanded-current').textContent = active ? formatTime(audio.currentTime) : '0:00';
+        $('expanded-duration').textContent = formatTrackDuration(active ? audio.duration || track.duration : track.duration);
         $('expanded-like').setAttribute('aria-pressed', String(socialLikes.has(track.id)));
         $('expanded-like').disabled = !track.id || pendingLikes.has(track.id);
         $('expanded-like').querySelector('.like-count').textContent = track.likes ?? '—';
     }
-    function openNowPlayer(trigger) {
-        if (!currentTrack()) { showMessage('Elegí un set para abrir el reproductor.'); return; }
+    function openNowPlayer(trigger, requestedTrack = null) {
+        const track = requestedTrack || currentTrack();
+        if (!track) { showMessage('Elegí un set para abrir el reproductor.'); return; }
+        nowPlayerTrack = track;
         playerReturnFocus = trigger || document.activeElement; nowPlayerOpen = true;
         $('now-player-backdrop').hidden = false; $('now-player').hidden = false; document.body.classList.add('player-expanded');
         $('expand-player').setAttribute('aria-expanded', 'true'); renderNowPlayer(); $('now-player-close').focus();
@@ -276,7 +279,7 @@
         const panel = $('now-player');
         panel.classList.remove('is-dragging'); panel.style.removeProperty('transform'); panel.style.removeProperty('transition');
         $('now-player-backdrop').style.removeProperty('opacity');
-        nowPlayerOpen = false; nowPlayerTrackKey = ''; panel.hidden = true; $('now-player-backdrop').hidden = true;
+        nowPlayerOpen = false; nowPlayerTrackKey = ''; nowPlayerTrack = null; panel.hidden = true; $('now-player-backdrop').hidden = true;
         document.body.classList.remove('player-expanded'); $('expand-player').setAttribute('aria-expanded', 'false');
         window.NCCDetailWaveform.dispose();
         if (detailTrack && $('detail-waveform-host')?.isConnected) window.NCCDetailWaveform.mount(detailTrack, $('detail-waveform-host'));
@@ -391,7 +394,7 @@
             openNowPlayer(miniPlayer);
         });
         const expandedPlayer = $('now-player'), expandedBackdrop = $('now-player-backdrop');
-        let swipe = null, suppressExpandedClick = false;
+        let swipe = null, suppressExpandedClick = false, expandedClickStart = null;
         const resetSwipe = () => {
             if (!swipe) return;
             expandedPlayer.classList.remove('is-dragging');
@@ -434,6 +437,7 @@
             else resetSwipe();
         };
         expandedPlayer.addEventListener('pointerdown', event => {
+            expandedClickStart = { x: event.clientX, y: event.clientY };
             if (event.pointerType !== 'touch' && event.isPrimary) beginSwipe(event.pointerId, event.clientX, event.clientY, event.target);
         });
         expandedPlayer.addEventListener('pointermove', event => {
@@ -442,7 +446,10 @@
         expandedPlayer.addEventListener('pointerup', event => finishSwipe(event.pointerId, event.clientX, event.clientY));
         expandedPlayer.addEventListener('pointercancel', event => finishSwipe(event.pointerId, event.clientX, event.clientY));
         expandedPlayer.addEventListener('touchstart', event => {
-            if (event.touches.length === 1) beginSwipe('touch', event.touches[0].clientX, event.touches[0].clientY, event.target);
+            if (event.touches.length === 1) {
+                expandedClickStart = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+                beginSwipe('touch', event.touches[0].clientX, event.touches[0].clientY, event.target);
+            }
         }, { passive: true });
         expandedPlayer.addEventListener('touchmove', event => {
             if (event.touches.length === 1) moveSwipe('touch', event.touches[0].clientX, event.touches[0].clientY, event);
@@ -450,14 +457,19 @@
         expandedPlayer.addEventListener('touchend', event => finishSwipe('touch', event.changedTouches[0]?.clientX, event.changedTouches[0]?.clientY));
         expandedPlayer.addEventListener('touchcancel', event => finishSwipe('touch', event.changedTouches[0]?.clientX, event.changedTouches[0]?.clientY));
         expandedPlayer.addEventListener('click', event => {
+            if (expandedClickStart) {
+                const moved = Math.hypot(event.clientX - expandedClickStart.x, event.clientY - expandedClickStart.y);
+                expandedClickStart = null;
+                if (moved > 8) return;
+            }
             if (suppressExpandedClick) { suppressExpandedClick = false; return; }
             if (event.target.closest('.now-player-tracklist, .expanded-waveform, .now-player-actions, button, input, canvas, a, label')) return;
             closeNowPlayer();
         });
         $('now-player-backdrop').addEventListener('click', closeNowPlayer);
         $('now-player-close').addEventListener('click', closeNowPlayer);
-        $('expanded-like').addEventListener('click', () => toggleLike(currentTrack()));
-        $('expanded-share').addEventListener('click', () => shareSet(currentTrack()));
+        $('expanded-like').addEventListener('click', () => toggleLike(nowPlayerTrack || currentTrack()));
+        $('expanded-share').addEventListener('click', () => shareSet(nowPlayerTrack || currentTrack()));
         for (const eventName of ['timeupdate', 'loadedmetadata', 'durationchange']) audio.addEventListener(eventName, syncNowPlayer);
         document.addEventListener('keydown', event => { if (event.key === 'Escape' && nowPlayerOpen) { event.preventDefault(); closeNowPlayer(); } });
         document.querySelectorAll('a[href^="#"]').forEach(link => link.addEventListener('click', event => {
