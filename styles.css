@@ -113,7 +113,7 @@ body[data-playing=true] .now-cover { animation-play-state: running; }
 body[data-radio=on] .player-mode { color: var(--accent); }
 .now-info h2 { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .track-name-button { display: block; max-width: 100%; padding: 0; overflow: hidden; color: inherit; background: transparent; font-weight: inherit; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
-.now-info p { margin: 0 0 2px; color: var(--muted); font-size: 12px; line-height: 1.2; }
+.now-info p { margin: 0 0 3px; color: var(--text); font-size: 16px; font-weight: 800; letter-spacing: .08em; line-height: 1.05; }
 .transport { display: grid; gap: 10px; }
 .transport-buttons { display: flex; align-items: center; justify-content: center; gap: 25px; }
 .icon-button { display: grid; place-items: center; background: transparent; width: 34px; height: 34px; padding: 6px; color: var(--muted); border-radius: 4px; }
@@ -601,18 +601,13 @@ main { padding-bottom: calc(var(--dock-height) + 64px); }
 .share-preview-waveform span { width: 3px; height: calc(10% + var(--share-peak) * 80%); flex: 1 1 auto; background: #c9cbce; border-radius: 1px; opacity: .82; }
 .share-section-label { display: block; margin: 20px 0 10px; color: var(--muted); font-size: 12px !important; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .share-links { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); gap: 10px; margin-bottom: 4px; }
-.share-option { display: grid; place-items: center; gap: 7px; min-width: 0; padding: 4px 2px; color: var(--muted); border: 0; border-radius: 8px; }
+.share-option { display: grid; place-items: center; gap: 5px; min-width: 0; padding: 5px 2px; color: var(--muted); border: 0; border-radius: 8px; }
 .share-option:hover { color: var(--text); }
-.share-platform-icon { display: grid; place-items: center; width: 50px; height: 50px; color: #fff; background: #34363a; border-radius: 50%; transition: transform .18s ease, filter .18s ease; }
-.share-option:hover .share-platform-icon { transform: translateY(-2px); filter: brightness(1.12); }
-.share-platform-icon svg { width: 25px; height: 25px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-.share-platform-name { overflow: hidden; width: 100%; font-size: 11px; text-align: center; text-overflow: ellipsis; }
-.share-twitter .share-platform-icon { background: #14171a; border: 1px solid #ffffff38; }
-.share-facebook .share-platform-icon { background: #1877f2; }
-.share-instagram .share-platform-icon { background: radial-gradient(circle at 32% 100%,#ffd600 0 24%,#ff7a00 39%,#ff0169 58%,#d300c5 74%,#7638fa 100%); }
-.share-whatsapp .share-platform-icon { background: #25d366; }
-.share-telegram .share-platform-icon { background: #229ed9; }
-.share-reddit .share-platform-icon { background: #ff4500; }
+.share-platform-icon { display: grid; place-items: center; width: 58px; height: 58px; border-radius: 50%; filter: drop-shadow(0 7px 10px #0009); transition: transform .2s cubic-bezier(.2,.8,.2,1), filter .2s ease; }
+.share-platform-icon img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.share-option:hover .share-platform-icon { transform: translateY(-3px) rotate(-3deg) scale(1.06); filter: drop-shadow(0 10px 13px #000b) brightness(1.08); }
+.share-option:nth-child(even):hover .share-platform-icon { transform: translateY(-3px) rotate(3deg) scale(1.06); }
+.share-platform-name { overflow: hidden; width: 100%; color: #dedee0; font-family: "Road Rage", Impact, sans-serif; font-size: 18px; font-weight: 400; letter-spacing: .035em; line-height: 1; text-align: center; text-overflow: ellipsis; text-transform: uppercase; }
 .share-link-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; }
 .set-dialog .share-link-row input { min-width: 0; margin: 0; color: #d7d8da; background: #1b1d20; border-radius: 5px; }
 .share-copy { min-width: 88px; margin: 0 !important; border-radius: 5px; }
@@ -653,7 +648,7 @@ main { padding-bottom: calc(var(--dock-height) + 64px); }
     .share-preview-top div > span { font-size: 10px; }
     .share-preview-waveform { height: 34px; }
     .share-links { grid-template-columns: repeat(3,1fr); row-gap: 13px; }
-    .share-platform-icon { width: 46px; height: 46px; }
+    .share-platform-icon { width: 54px; height: 54px; }
     .share-link-row { grid-template-columns: 1fr; }
     .share-copy { width: 100%; }
 }
@@ -726,6 +721,7 @@ body.player-expanded { overflow: hidden; }
 .waveform-user-row input { flex: 1 1 auto; min-width: 0; padding: 4px 2px; color: var(--text); background: transparent; border: 0; font: inherit; font-size: 12px; }
 .waveform-user-row input:focus { outline: none; }
 .waveform-user-row > span { flex: 0 0 auto; color: var(--muted); font-size: 10px; font-variant-numeric: tabular-nums; }
+.waveform-community .waveform-user-row { margin: 12px 0 6px; }
 .waveform-action-row > .track-action { width: 36px; min-width: 36px; min-height: 36px; padding: 6px; border: 1px solid #ffffff24; border-radius: 50%; }
 .waveform-action-row > .track-action .like-count { display: none; }
 .waveform-action-row > .track-action.is-copied { color: var(--accent); border-color: #c7f37588; background: #c7f37514; }
@@ -854,7 +850,7 @@ body.player-expanded { overflow: hidden; }
     .player-dock .player-mode { display: none; }
     body[data-radio=on] .player-dock .player-mode { display: block; margin-bottom: 1px; font-size: 8px; line-height: 1.1; }
     .player-dock .now-info h2 { font-size: 13px; }
-    .player-dock .now-info p { margin: 0 0 2px; color: var(--text); font-size: 13px; font-weight: 750; letter-spacing: .08em; }
+    .player-dock .now-info p { margin: 0 0 2px; color: var(--text); font-size: 15px; font-weight: 800; letter-spacing: .08em; }
     .player-dock .expand-player { grid-column: 3; grid-row: 1; align-self: center; width: 32px; height: 32px; }
     .player-dock .transport { display: flex; grid-column: 2 / 4; grid-row: 2; align-items: center; gap: 8px; min-width: 0; }
     .player-dock .transport-buttons { display: flex; flex: 0 0 auto; order: 2; justify-content: flex-end; gap: 0; }
