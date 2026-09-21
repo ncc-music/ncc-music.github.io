@@ -19,7 +19,9 @@ async function catalogue(env, origin, includeDrafts = false) {
     const likes = new Map(counts.map(row => [row.set_id, row.count]));
     const groups = await Promise.all(COLLECTIONS.map(prefix => listAllAudioObjects(bucket, prefix)));
     const base = (env.R2_PUBLIC_URL || R2_PUBLIC_URL).replace(/\/$/, '');
-    const tracks = await Promise.all(groups.flat().map(async object => {
+    const objects = groups.flat();
+    const activeKeys = new Set(objects.map(object => object.key));
+    const activeTracks = await Promise.all(objects.map(async object => {
         const saved = metadata.get(object.key);
         const id = saved?.id || await stableId(object.key);
         const name = saved?.title || object.customMetadata?.title || titleFromKey(object.key);
@@ -31,9 +33,18 @@ async function catalogue(env, origin, includeDrafts = false) {
             peaks: saved?.peaks ? JSON.parse(saved.peaks) : null,
             likes: env.SITE_DB ? likes.get(id) || 0 : null,
             url: `${base}/${encodePath(object.key)}`, waveformUrl: `${origin}/api/audio/${encodePath(object.key)}`,
-            size: object.size, contentType: object.httpMetadata?.contentType || contentTypeFromKey(object.key)
+            size: object.size, contentType: object.httpMetadata?.contentType || contentTypeFromKey(object.key), available: true
         };
     }));
+    // Keep published tracklists searchable after an audio object is retired from R2.
+    const archivedTracks = rows.filter(row => !activeKeys.has(row.audio_key)).map(row => ({
+        id: row.id, key: row.audio_key, name: row.title, artist: 'Nicolás Cardú', slug: row.slug,
+        date: row.date || '', tracklist: JSON.parse(row.tracklist || '[]'), published: Boolean(row.published),
+        version: row.version || 0, peaks: row.peaks ? JSON.parse(row.peaks) : null,
+        likes: env.SITE_DB ? likes.get(row.id) || 0 : null, url: '', waveformUrl: '', size: 0,
+        contentType: contentTypeFromKey(row.audio_key), available: false
+    }));
+    const tracks = [...activeTracks, ...archivedTracks];
     return tracks.filter(track => includeDrafts || track.published);
 }
 function writeOriginAllowed(request, env) {
@@ -97,6 +108,8 @@ function validSetInput(value) {
         && typeof value.published === 'boolean' && Number.isSafeInteger(value.version) && value.version >= 0
         && (value.peaks === undefined || value.peaks === null || Array.isArray(value.peaks) && value.peaks.length >= 50 && value.peaks.length <= 2000 && value.peaks.every(p => Number.isFinite(p) && p >= 0 && p <= 1));
 }
+const validVisitor = value => /^[a-f0-9-]{36}$/.test(value || '');
+const cleanCommunityText = (value, max) => typeof value === 'string' && value.trim().length > 0 && value.trim().length <= max && !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value) ? value.trim() : '';
 const DEFAULT_CONTENT = {
     sets: { title: 'CARDÚ', genres: '[Experimental / Industrial]', description: 'MUSIC 4 FREAKS.' },
     about: { title: 'Nicølás Cardú', body: 'Does it matter?\nEnjoy the music! x)\n\nSets en audio lossless, FLAC y WAV.', bookingEmail: 'bookings@ncc.ar' },
@@ -185,6 +198,48 @@ async function handleSetService(request, env) {
                 env.SITE_DB.prepare('SELECT COUNT(*) AS count FROM likes WHERE set_id = ?').bind(track.id)];
             const results = await env.SITE_DB.batch(statements);
             return reply({ count: results[1].results[0].count, liked: input.liked });
+        }
+        const communityMatch = path.match(/^\/sets\/([a-f0-9]{20})\/(community|comments|fire)$/);
+        if (communityMatch) {
+            if (!env.SITE_DB) return reply({ error: 'Comentarios no disponibles.' }, 503);
+            const track = (await catalogue(env, url.origin)).find(item => item.id === communityMatch[1]);
+            if (!track) return reply({ error: 'Set no encontrado.' }, 404);
+            const section = communityMatch[2];
+            if (section === 'community' && request.method === 'GET') {
+                const [fireResult, commentResult] = await env.SITE_DB.batch([
+                    env.SITE_DB.prepare('SELECT COUNT(*) AS count FROM fire_reactions WHERE set_id = ?').bind(track.id),
+                    env.SITE_DB.prepare('SELECT id, author, body, created_at AS createdAt FROM comments WHERE set_id = ? ORDER BY created_at DESC, id DESC LIMIT 100').bind(track.id)
+                ]);
+                return reply({ fireCount: fireResult.results[0].count, comments: commentResult.results });
+            }
+            if (!writeOriginAllowed(request, env)) return reply({ error: 'Origin not allowed' }, 403);
+            let input;
+            try { input = await readSmallJSON(request); } catch { return reply({ error: 'Datos inválidos.' }, 400); }
+            if (!validVisitor(input.visitor)) return reply({ error: 'Datos inválidos.' }, 400);
+            const visitor = await stableId(input.visitor);
+            if (section === 'fire' && request.method === 'PUT') {
+                if (typeof input.reacted !== 'boolean') return reply({ error: 'Reacción inválida.' }, 400);
+                const results = await env.SITE_DB.batch([
+                    input.reacted
+                        ? env.SITE_DB.prepare('INSERT OR IGNORE INTO fire_reactions (set_id, visitor_id) VALUES (?, ?)').bind(track.id, visitor)
+                        : env.SITE_DB.prepare('DELETE FROM fire_reactions WHERE set_id = ? AND visitor_id = ?').bind(track.id, visitor),
+                    env.SITE_DB.prepare('SELECT COUNT(*) AS count FROM fire_reactions WHERE set_id = ?').bind(track.id)
+                ]);
+                return reply({ count: results[1].results[0].count, reacted: input.reacted });
+            }
+            if (section === 'comments' && request.method === 'POST') {
+                const body = cleanCommunityText(input.body, 600);
+                const suppliedAuthor = typeof input.author === 'string' ? input.author.trim() : '';
+                const author = suppliedAuthor ? cleanCommunityText(suppliedAuthor, 32) : 'AnonymousFreak';
+                if (!body || !author) return reply({ error: 'Revisá el nombre y el comentario.' }, 400);
+                const recent = await env.SITE_DB.prepare("SELECT COUNT(*) AS count FROM comments WHERE visitor_id = ? AND created_at >= datetime('now', '-1 hour')").bind(visitor).all();
+                if (recent.results[0].count >= 5) return reply({ error: 'Esperá un poco antes de publicar otro comentario.' }, 429);
+                const comment = { id: crypto.randomUUID(), author, body, createdAt: new Date().toISOString() };
+                await env.SITE_DB.prepare('INSERT INTO comments (id, set_id, visitor_id, author, body, created_at) VALUES (?, ?, ?, ?, ?, ?)')
+                    .bind(comment.id, track.id, visitor, comment.author, comment.body, comment.createdAt).run();
+                return reply({ comment }, 201);
+            }
+            return reply({ error: 'Método no permitido.' }, 405);
         }
         return reply({ error: 'Not found' }, 404);
     } catch { return reply({ error: 'El servicio no está disponible. Volvé a intentar.' }, 503); }
