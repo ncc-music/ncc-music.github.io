@@ -76,12 +76,15 @@ test('signed admin saves validate JWT, preserve slug and reject stale updates', 
         const originalContent = await (await worker.fetch(req('/content'), environment)).json();
         assert.equal(originalContent.version, 0);
         const content = structuredClone(originalContent.content); content.about.body = 'Una biografía editada'; content.tour.body = '20.10.2026 · Buenos Aires';
+        content.manifesto = { title_en: 'Manifesto', author_en: '', body_en: 'English text', title_es: 'Manifiesto', author_es: '', body_es: 'Texto español' };
         const update = { content, version: 0 };
         assert.equal((await worker.fetch(req('/admin/content', 'PUT', update), environment)).status, 401);
         assert.equal((await worker.fetch(req('/admin/content', 'PUT', update, { ...headers, Origin: 'https://foreign.example' }), environment)).status, 403);
         assert.equal((await worker.fetch(req('/admin/content', 'PUT', update, headers), environment)).status, 200);
         assert.deepEqual(await (await worker.fetch(req('/content'), environment)).json(), { content, version: 1 });
         assert.equal((await worker.fetch(req('/admin/content', 'PUT', update, headers), environment)).status, 409);
+        const invalidManifesto = structuredClone(content); invalidManifesto.manifesto.body_es = ['not text'];
+        assert.equal((await worker.fetch(req('/admin/content', 'PUT', { content: invalidManifesto, version: 1 }, headers), environment)).status, 400);
         const invalid = structuredClone(content); invalid.about.bookingEmail = 'javascript:alert(1)';
         assert.equal((await worker.fetch(req('/admin/content', 'PUT', { content: invalid, version: 1 }, headers), environment)).status, 400);
         assert.deepEqual((await (await worker.fetch(req('/admin/export', 'GET', null, headers), environment)).json()).site.content, content);

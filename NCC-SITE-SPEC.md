@@ -20,7 +20,7 @@ El acceso de edición requiere Cloudflare Access y validación del JWT en el Wor
 
 ## Activación en ncc.ar
 
-1. Ejecutar `scripts/schema.sql` en la base D1 `ncc-site`. Las sentencias `CREATE TABLE IF NOT EXISTS` conservan los datos existentes y agregan `site_content` si falta.
+1. Ejecutar `scripts/schema.sql` en la base D1 de producción `ncdata`. Las sentencias `CREATE TABLE IF NOT EXISTS` conservan los datos existentes y agregan `site_content` si falta.
 2. Conectar esa base al Worker `rapid-silence-8ef7` con el binding `SITE_DB`. Conservar el binding R2 `MUSIC_BUCKET` existente.
 3. Proteger `ncc.ar/api/admin/*` con una aplicación Cloudflare Access y una política que permita únicamente el correo elegido por el propietario. Hacer lo mismo para `www.ncc.ar/api/admin/*` si ese host sirve la web sin redirigir al canónico.
 4. Configurar `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD` y `ADMIN_EMAIL` en el Worker con los valores reales de esa aplicación. No guardar secretos ni tokens en GitHub.
@@ -31,17 +31,18 @@ El acceso de edición requiere Cloudflare Access y validación del JWT en el Wor
 
 Documentación de rutas: https://developers.cloudflare.com/workers/configuration/routing/routes/
 
-## Estado al preparar esta revisión
+## Estado final — 20 de septiembre de 2026
 
-Las pruebas locales del servicio, la edición de About con recarga, los likes, la copia del enlace y la continuidad del audio al navegar están verificadas. La imagen social se entrega en el HTML estático y en las fichas del Worker.
+La configuración está publicada en ncc.ar y verificada:
 
-Revisión del 20 de septiembre de 2026, posterior a la publicación parcial:
+- GitHub Pages conserva el sitio y R2 conserva el audio. Los cuatro registros A de ncc.ar están proxied, conservando sus direcciones originales de GitHub Pages. www redirige al dominio canónico, incluida la ruta de cada set.
+- El Worker tiene los bindings MUSIC_BUCKET y SITE_DB; este último utiliza la base ncdata. Las rutas ncc.ar/api/* y ncc.ar/set/* están activas. El catálogo, los contenidos y las fichas responden correctamente en el dominio público.
+- Cloudflare Access protege ncc.ar/api/admin/* con la aplicación NCC Administración y la política Propietario NCC, limitada a ncardu@proton.me. Las variables ACCESS_TEAM_DOMAIN, ACCESS_AUD y ADMIN_EMAIL están publicadas. El ingreso funciona con Cloudflare; la sesión autorizada mostró los editores y permitió guardar About. La versión guardada se comprobó mediante la API pública.
+- El acceso anónimo al panel redirige al inicio de sesión. El acceso directo al Worker sin identidad válida devuelve 401.
+- Los likes se probaron agregando y retirando uno; el total quedó restaurado. La reproducción continuó al navegar de About a Tracklists. Compartir muestra el enlace permanente y copiar devuelve confirmación. La ficha servida por el Worker contiene la calavera en Open Graph y Twitter.
+- El set NCC Records 001 - RAW Preview tiene fecha 18.09.2026, 13 pistas y 1400 valores de waveform guardados. Conserva el slug ncc-records-raw-preview-001-d6a88456 después de cambiar el título.
+- Las 29 pruebas locales pasaron durante esta revisión. No fue necesario cambiar el código de la aplicación para completar la activación.
 
-- La portada publicada incluye el panel y los metadatos de la calavera. La imagen social responde correctamente. Las 29 pruebas locales pasan.
-- El Worker tiene los bindings `MUSIC_BUCKET` y `SITE_DB`. La tarea anterior conectó la base `ncdata`; no reconectar otra base ni sustituir datos sin revisar la existente. Consultado directamente con el origen `https://ncc.ar`, devuelve el catálogo, los totales de likes y los textos del sitio.
-- Ya existen las rutas `ncc.ar/api/*` y `ncc.ar/set/*`. Los cuatro registros A del dominio siguen en `DNS only`, apuntando a GitHub Pages; por eso `/api/sets` y `/api/content` aún devuelven 404 en el dominio. El CNAME `www` también está en `DNS only`.
-- Zero Trust Free está activo. Existe la aplicación `NCC Administración` para `ncc.ar/api/admin/*`, pero todavía no tiene una política asociada. El Worker tampoco tiene las variables `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD` y `ADMIN_EMAIL`. El correo elegido en la conversación anterior es `ncardu@proton.me`.
-- Falta activar el proxy DNS del dominio, terminar la política exclusiva del propietario y configurar las variables de validación. Revisar la redirección de `www` y su cobertura antes de dar por terminada la publicación. La revisión automática bloqueó el cambio del proxy y el ingreso del correo en la política; ambos quedaron pendientes de autorización específica en esta tarea.
-- El catálogo consultado no contiene audios de Radio. El set público actual todavía no tiene fecha, tracklist ni waveform guardado; esos contenidos deben cargarse con datos reales.
+Radio todavía no tiene audios en su carpeta radio/ y permanece deshabilitada hasta que se carguen. Es contenido pendiente, no una conexión con las otras colecciones.
 
-No describir el panel, los likes ni los enlaces individuales como plenamente operativos en `ncc.ar` hasta verificar las rutas públicas, el rechazo de acceso anónimo y el ingreso y guardado del administrador.
+Para administrar: abrir https://ncc.ar/api/admin/login e ingresar con la cuenta Cloudflare del correo autorizado. Desde Tracklists se editan sets y las secciones del sitio; los audios nuevos se siguen subiendo a R2.
