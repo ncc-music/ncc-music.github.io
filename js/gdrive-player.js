@@ -398,7 +398,20 @@ function initPlayer() {
         });
         renderCatalogue();
     }));
-    window.addEventListener('hashchange', () => { route(); window.scrollTo({ top: 0 }); $('main-content').focus({ preventScroll: true }); });
+    function scrollToCollection(collectionId, behavior = 'smooth') {
+        const target = document.getElementById(collectionId);
+        if (target) requestAnimationFrame(() => target.scrollIntoView({ behavior, block: 'start' }));
+    }
+    document.querySelectorAll('[data-collection]').forEach(card => card.addEventListener('click', () => {
+        scrollToCollection(card.dataset.collection);
+    }));
+    window.addEventListener('hashchange', () => {
+        route();
+        const requested = location.hash.slice(1);
+        const collection = enabledPlaylistSources.find(source => source.id === requested && source.id !== 'radio');
+        if (collection) scrollToCollection(collection.id);
+        else { window.scrollTo({ top: 0 }); $('main-content').focus({ preventScroll: true }); }
+    });
     document.addEventListener('keydown', event => {
         if (event.key === 'Escape') { $('waveform-panel').hidden = true; $('waveform-toggle').setAttribute('aria-expanded', 'false'); }
         if (event.altKey || event.ctrlKey || event.metaKey || event.target.closest('input,button,a,textarea,select,[contenteditable="true"],[role="slider"]')) return;
