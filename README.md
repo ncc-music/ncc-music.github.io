@@ -5,7 +5,7 @@ Un reproductor de audio moderno y elegante para archivos de alta calidad, incluy
 
 ## Reproductor NCC Music
 
-El sitio presenta una interfaz oscura y minimalista: live sets, filtros de colección, acceso directo a la radio y un reproductor fijo. El logo de NCC gira durante la reproducción y se detiene al pausar o cargar el audio; respeta la preferencia de movimiento reducido del dispositivo.
+El sitio presenta una interfaz oscura y minimalista: live sets, filtros de colección, acceso directo a la radio y un reproductor fijo. La calavera mostaza identifica el encabezado y el miniplayer; la animación por piezas del reproductor ampliado se activa durante la reproducción y respeta la preferencia de movimiento reducido del dispositivo.
 
 - **NCC Radio** reproduce únicamente su catálogo independiente de `radio/`. No incluye las colecciones MUSIC ni TECHNO.
 - **Mis sets** permite filtrar por colección y reproducir un set puntual. Elegir un set sale del modo radio.
@@ -207,19 +207,19 @@ La vista previa local utiliza un contador SQLite separado en el servidor de edic
 
 Los corazones muestran un total público guardado en D1. Un identificador aleatorio por navegador evita contar dos veces la misma selección; no es un conteo de personas verificadas. Se puede retirar el like. Los favoritos siguen siendo personales y se guardan en el navegador. Si el servicio no está conectado, los likes se muestran como no disponibles; no se inventan totales.
 
-Cada ficha ampliada integra **Freaks Comments** con el waveform y una reacción 🔥 por set. El nombre es opcional: si queda vacío, el comentario se publica como `AnonymousFreak`. El compositor aparece inmediatamente debajo de la onda y permite usar el momento actual o marcar otro punto. Cada comentario aparece sobre el waveform con iniciales, hora y una vista previa al tocarlo; la hora de la lista lleva la reproducción a ese punto. Los comentarios y las reacciones se guardan en D1; cada navegador puede publicar hasta cinco comentarios por hora y su reacción de fuego es reversible. La interfaz muestra los 100 comentarios más recientes y nunca interpreta su texto como HTML.
+Cada ficha ampliada integra **Freaks Comments** con el waveform y una reacción 🔥 por set. El nombre es opcional: si queda vacío, el comentario se publica como `AnonymousFreak`. Cada comentario se asocia automáticamente al momento que está sonando al enviarlo. Aparece sobre el waveform con iniciales, hora y una vista previa al tocarlo; la hora de la lista lleva la reproducción a ese punto. Los comentarios y las reacciones se guardan en D1; cada navegador puede publicar hasta cinco comentarios por hora y su reacción de fuego es reversible. La interfaz muestra los 100 comentarios más recientes y nunca interpreta su texto como HTML.
 
 ## Edición y enlaces de sets
 
 Las decisiones consolidadas y la configuración de producción están en [NCC-SITE-SPEC.md](NCC-SITE-SPEC.md).
 
-- **π (Administrar)** abre Tracklists después de iniciar sesión. Allí se editan nombre, fecha, tags, tracklist y estado publicado de los audios de R2. En la lista principal aparecen controles para subir, bajar o editar cada set. El orden manual queda guardado; antes de editarlo, la colección se muestra de la más antigua a la más reciente. Un audio nuevo se incorpora al final al actualizar el catálogo; el audio pesado se sigue subiendo a R2.
+- **π (Administrar)** abre Tracklists después de iniciar sesión. Allí se editan nombre, fecha, tags, tracklist y estado publicado de los audios de R2. En la lista principal, el botón verde **Editar ficha** da acceso directo al editor completo, junto con los controles para subir o bajar cada set. El orden manual queda guardado; antes de editarlo, la colección se muestra de la más antigua a la más reciente. Un audio nuevo se incorpora al final al actualizar el catálogo; el audio pesado se sigue subiendo a R2.
 - **Editar Sets**, **Editar About**, **Editar Tour Dates** y **Editar Manifesto** permiten cambiar los textos desde la web. El guardado utiliza versiones para impedir que una ventana sobrescriba cambios más recientes de otra.
 - **Exportar contenido** descarga los metadatos de los sets y los textos del sitio. No incluye los archivos de audio.
 - Cada set tiene una dirección permanente `/set/slug`. Cambiar el título no cambia el slug. El nombre del reproductor y las fichas usan esa misma dirección.
 - Compartir muestra Facebook, Instagram, WhatsApp, Telegram y copiar enlace. Instagram copia el enlace para pegarlo en un mensaje o en el sticker Enlace; «Más opciones» abre el menú nativo cuando está disponible. Los enlaces compartidos siempre apuntan a `https://ncc.ar`.
 - La forma de onda aparece automáticamente al abrir la ficha, usando los picos guardados o analizando el audio. Abrir una ficha no cambia el audio que está sonando.
-- El miniplayer abre una vista Now Playing sin crear otro audio. La ficha y la vista ampliada muestran un botón Play central sobre la waveform cuando el set está detenido.
+- El miniplayer abre una vista Now Playing sin crear otro audio. En escritorio la vista ampliada usa más ancho para priorizar el waveform. La calavera situada a su derecha alterna reproducción y pausa, igual que el botón central de la onda cuando el set está detenido.
 - Tracklists incluye un buscador por artista, track, remix, set, fecha y tags. Los resultados se agrupan por set y los tracklists archivados permanecen disponibles aunque se retire su audio.
 - La portada y las fichas incluyen Open Graph y Twitter con la calavera limpia sobre fondo negro (`assets/player-cover-clean.jpg`). Estos datos se entregan en el HTML, sin depender de JavaScript. Los servicios de mensajería pueden conservar una vista previa anterior en su caché.
 

@@ -10,13 +10,13 @@ Secciones: Sets, Tracklists, Radio, About, Tour Dates y el Manifesto existente. 
 
 El reproductor es fijo, compacto y redondeado, con progreso simple, nombre clickeable, corazón con contador y compartir. Se quita la etiqueta LOSSLESS del reproductor; la etiqueta de la página y las descripciones de formato se conservan. El audio continúa al navegar.
 
-Cada ficha muestra nombre, fecha si está cargada, tracklist completo, controles/likes/compartir y waveform interactivo. Freaks Comments forma parte del bloque del waveform: el compositor permite comentar en el momento actual o marcar otro punto, y las marcas muestran iniciales, hora y vista previa sobre la onda. El nombre del comentarista es opcional y usa `AnonymousFreak` por defecto. Cada navegador puede sumar o retirar una reacción 🔥 por set. El waveform tiene una parte principal y un reflejo inferior reducido. Sin BPM, estilo ni asociación entre pistas y tiempos. Las fichas y Tracklists comparten la misma información. El slug se conserva al editar.
+Cada ficha muestra nombre, fecha si está cargada, tracklist completo, controles/likes/compartir y waveform interactivo. Freaks Comments forma parte del bloque del waveform: el comentario toma automáticamente el momento que está sonando al enviarlo, y las marcas muestran iniciales, hora y vista previa sobre la onda. El nombre del comentarista es opcional y usa `AnonymousFreak` por defecto. Cada navegador puede sumar o retirar una reacción 🔥 por set. El waveform tiene una parte principal y un reflejo inferior reducido. Sin BPM, estilo ni asociación entre pistas y tiempos. Las fichas y Tracklists comparten la misma información. El slug se conserva al editar.
 
 ## Administración
 
 El panel permite editar los metadatos de los audios presentes en R2, publicar u ocultar un set, preparar waveform FLAC, editar los textos de Sets, About, Tour Dates y Manifesto en ambos idiomas, y exportar el contenido. También permite elegir por set una imagen fija PNG y una animación MP4 para el reproductor ampliado, con controles independientes para restaurar los archivos predeterminados. Los nuevos audios se incorporan desde R2 al actualizar. La subida de audio continúa en R2.
 
-El acceso de edición requiere Cloudflare Access y validación del JWT en el Worker. Sin configuración, las operaciones de administración se rechazan. El administrador puede editar nombre y tags desde la lista, además de subir o bajar cada set; el orden se guarda por colección. Sin un orden manual, los sets se ordenan cronológicamente con el más reciente al final. Los textos se muestran como texto, no como HTML ejecutable. Los guardados detectan conflictos de versión.
+El acceso de edición requiere Cloudflare Access y validación del JWT en el Worker. Sin configuración, las operaciones de administración se rechazan. El administrador dispone de un botón **Editar ficha** destacado en la lista para abrir el editor completo, además de subir o bajar cada set; el orden se guarda por colección. Sin un orden manual, los sets se ordenan cronológicamente con el más reciente al final. Los textos se muestran como texto, no como HTML ejecutable. Los guardados detectan conflictos de versión.
 
 ## Activación en ncc.ar
 
@@ -58,8 +58,8 @@ Para administrar: abrir https://ncc.ar/api/admin/login e ingresar con la cuenta 
 ## mejorasncc1 — 21 de septiembre de 2026
 
 - El miniplayer inferior y la vista ampliada Now Playing controlan la misma instancia de audio. El nombre, la imagen y el control de expansión abren la vista; minimizar o navegar conserva el set y la posición.
-- Now Playing muestra identidad, nombre y fecha, controles, tiempo, waveform, likes, compartir y tracklist completo. Escape minimiza la vista en escritorio.
-- La waveform de la ficha y de Now Playing incluye un botón Play central. El botón desaparece durante la reproducción y nunca se interpreta como un salto al centro del audio.
+- Now Playing muestra identidad, nombre y fecha, controles, tiempo, waveform, likes, compartir y tracklist completo. En escritorio ocupa una superficie más ancha y reserva la mayor parte del espacio para la onda; Escape minimiza la vista.
+- La waveform de la ficha y de Now Playing incluye un botón Play central. El botón desaparece durante la reproducción y nunca se interpreta como un salto al centro del audio. La imagen situada a la derecha del waveform también alterna reproducción y pausa, y reproduce su animación cuando el audio está activo.
 - La sección conserva el nombre **Tracklists** y funciona como archivo compacto con búsqueda por artista, track, remix, set o fecha. La búsqueda ignora mayúsculas y acentos, agrupa por set y conserva todas las apariciones.
 - Los tracklists publicados permanecen en el archivo si el audio se retira de R2, claramente identificados como archivo y sin ofrecer reproducción.
 - Al guardar un set FLAC sin picos, el CMS prepara automáticamente su waveform antes de publicar el cambio.

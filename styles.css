@@ -27,7 +27,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, canvas:focus-visible
 .skip-link { position: fixed; top: -80px; left: 20px; z-index: 100; background: var(--accent); color: #111; padding: 12px; }
 .skip-link:focus { top: 15px; }
 .site-header { max-width: 1120px; padding: 0 40px; height: 100px; margin: 0 auto; display: flex; align-items: center; gap: 40px; border-bottom: 1px solid var(--line); }
-.brand { position: relative; display: inline-block; flex-shrink: 0; padding-bottom: 13px; font-size: 44px; line-height: 1; font-weight: 800; letter-spacing: -3px; }
+.brand { position: relative; display: grid; place-items: center; flex: 0 0 76px; width: 76px; height: 76px; padding: 0; }
+.brand img { display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 7px 14px #0008); }
 .brand-wordmark { display: block; }
 .brand-dot { color: var(--accent); }
 .brand-music { position: absolute; z-index: 1; top: 54%; left: 50%; transform: translateX(-50%) rotate(-8deg) skewX(-10deg); color: var(--accent); font-family: Impact, Haettenschweiler, "Arial Narrow", sans-serif; font-style: normal; font-size: .48em; font-weight: 900; line-height: 1; letter-spacing: .035em; text-transform: uppercase; text-shadow: 0 2px 0 var(--bg), 0 -2px 0 var(--bg), 2px 0 0 var(--bg), -2px 0 0 var(--bg); }
@@ -483,7 +484,7 @@ main:has(.radio-upcoming:not([hidden])) #page-quality { display: none; }
 
 /* Rough lettering keeps the compact, two-line NCC MUSIC signature. */
 .brand {
-    padding-bottom: 17px;
+    padding: 0;
     font-family: "Road Rage", Impact, sans-serif;
     font-size: 64px;
     font-weight: 400;
@@ -500,7 +501,7 @@ main:has(.radio-upcoming:not([hidden])) #page-quality { display: none; }
     transform: translateX(-50%) rotate(-9deg);
 }
 @media (max-width: 540px) {
-    .brand { font-size: 48px; padding-bottom: 14px; }
+    .brand { flex-basis: 60px; width: 60px; height: 60px; padding: 0; }
 }
 
 .favorites-filter { display: inline-flex; align-items: center; gap: 7px; margin-left: auto; }
@@ -706,10 +707,14 @@ body.player-expanded { overflow: hidden; }
 @keyframes now-player-rise { from { transform: translateY(100%); } to { transform: translateY(0); } }
 @keyframes now-player-fade-in { from { opacity: 0; } to { opacity: 1; } }
 .now-player-close { position: sticky; top: 0; z-index: 2; display: grid; place-items: center; width: 48px; height: 48px; margin: 0 0 6px auto; color: var(--text); background: #1b1c1fcc; border: 1px solid #ffffff24; border-radius: 50%; backdrop-filter: blur(10px); }
-.now-player-layout { width: min(1080px,100%); margin: 0 auto; }
+.now-player-layout { width: min(1240px,100%); margin: 0 auto; }
 .waveform-community-card { margin-top: 8px; padding: 14px; background: linear-gradient(180deg,#151719 0,#0d0f10 100%); border: 1px solid #ffffff1f; border-radius: 10px; box-shadow: inset 0 1px #ffffff08, 0 18px 50px #0005; }
-.expanded-player-visual { display: grid; grid-template-columns: minmax(0,1fr) clamp(210px,24vw,290px); gap: 18px; align-items: stretch; }
-.expanded-skull-media { display: grid; place-items: center; min-width: 0; overflow: hidden; background: #050606; border: 1px solid #ffffff14; border-radius: 7px; }
+.expanded-player-visual { display: grid; grid-template-columns: minmax(0,1fr) clamp(170px,18vw,240px); gap: 14px; align-items: stretch; }
+.expanded-skull-media { position: relative; display: grid; place-items: center; min-width: 0; padding: 0; overflow: hidden; color: var(--text); background: #050606; border: 1px solid #ffffff14; border-radius: 7px; cursor: pointer; }
+.expanded-skull-media:hover, .expanded-skull-media:focus-visible { border-color: #c7f37580; }
+.expanded-skull-control { position: absolute; right: 12px; bottom: 12px; z-index: 2; display: grid; place-items: center; width: 44px; height: 44px; color: #111; background: #eef0f2e8; border: 3px solid #090a0bcc; border-radius: 50%; box-shadow: 0 7px 22px #000b; transition: transform .16s ease, background .16s ease; }
+.expanded-skull-media:hover .expanded-skull-control { transform: scale(1.06); background: var(--accent); }
+.expanded-skull-control .icon { width: 22px; height: 22px; }
 .expanded-skull-media img, .expanded-skull-media video { display: block; grid-area: 1 / 1; width: 100%; height: 100%; max-height: 310px; aspect-ratio: 1; object-fit: contain; }
 .expanded-skull-media video[hidden], .expanded-skull-media img[hidden] { display: none; }
 .detail-waveform-card { margin-top: 28px; }
@@ -903,12 +908,15 @@ body.player-expanded { overflow: hidden; }
 .playlist-admin-action { min-width: 32px; min-height: 38px; padding: 5px 8px; color: var(--muted); background: transparent; border: 1px solid #ffffff20; border-radius: 5px; font-size: 13px; }
 .playlist-admin-action:hover:not(:disabled) { color: var(--accent); border-color: #c7f37566; }
 .playlist-admin-action:disabled { opacity: .28; }
-.playlist-admin-edit { min-width: 54px; }
-.admin-mode .track-table-head { padding-right: 294px; }
+.playlist-admin-edit { min-width: 96px; color: #111; background: var(--accent); border-color: var(--accent); font-weight: 800; }
+.playlist-admin-edit:hover:not(:disabled) { color: #111; background: #def8a8; border-color: #def8a8; }
+.admin-ficha-button { color: #111; background: var(--accent); border-color: var(--accent); font-weight: 800; }
+.admin-ficha-button:hover { background: #def8a8; border-color: #def8a8; }
+.admin-mode .track-table-head { padding-right: 336px; }
 @media (max-width: 760px) {
     .playlist-admin-actions { padding-right: 2px; }
     .playlist-admin-action { min-width: 30px; padding-inline: 6px; }
-    .playlist-admin-edit { min-width: 46px; font-size: 11px; }
+    .playlist-admin-edit { min-width: 82px; font-size: 10px; }
 }
 @media (max-width: 540px) {
     .admin-mode .track-actions { display: none; }
