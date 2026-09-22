@@ -97,7 +97,7 @@
             const ratio = position(), count = Math.max(24, Math.floor(width / 5));
             if (peaks.length) for (let i = 0; i < count; i++) {
                 const at = i / (count - 1), h = Math.max(2, samplePeak(peaks, at) * height * .66), x = i * width / count;
-                ctx.fillStyle = at < ratio ? '#c7f375' : 'rgba(190,198,193,.5)';
+                ctx.fillStyle = at < ratio ? '#9fbe7a' : 'rgba(190,198,193,.5)';
                 ctx.fillRect(x, height * .72 - h, 3, h); ctx.globalAlpha = .35; ctx.fillRect(x, height * .75, 3, h * .34); ctx.globalAlpha = 1;
             }
             ctx.fillStyle = 'rgba(240,241,242,.34)'; ctx.fillRect(0, Math.round(height * .735), width, 1);

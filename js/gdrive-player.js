@@ -726,7 +726,7 @@ function drawWaveform(audio) {
         const y = centerY - barHeight;
         const played = ratio <= progress;
 
-        ctx.fillStyle = played ? '#c7f375' : 'rgba(190, 198, 193, 0.35)';
+        ctx.fillStyle = played ? '#9fbe7a' : 'rgba(190, 198, 193, 0.35)';
         ctx.fillRect(x, y, barWidth, barHeight);
         ctx.globalAlpha = .35;
         ctx.fillRect(x, centerY + 3, barWidth, barHeight * .34);
@@ -741,7 +741,7 @@ function drawWaveform(audio) {
 
     if (isSeekable(audio)) {
         const progressX = clamp(progress, 0, 1) * width;
-        ctx.fillStyle = '#c7f375';
+        ctx.fillStyle = '#9fbe7a';
         ctx.fillRect(progressX - 1, 6, 2, height - 12);
         ctx.beginPath();
         ctx.arc(progressX, centerY, 5, 0, Math.PI * 2);

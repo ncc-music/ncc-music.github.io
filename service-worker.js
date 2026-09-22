@@ -1,10 +1,10 @@
 const CACHE_PREFIX = 'ncc-music-';
-const CACHE_NAME = `${CACHE_PREFIX}shell-v5`;
+const CACHE_NAME = `${CACHE_PREFIX}shell-v7`;
 const APP_SHELL = [
     '/',
     '/index.html',
     '/manifest.webmanifest',
-    '/styles.css?v=20260922k',
+    '/styles.css?v=20260922m',
     '/assets/app-icons/icon-192-v2.png',
     '/assets/app-icons/icon-512-v2.png',
     '/assets/app-icons/icon-maskable-512-v2.png',
@@ -15,8 +15,8 @@ const APP_SHELL = [
     '/assets/mixed-by-single-line.png?v=20260922phase2',
     '/assets/fonts/RoadRage-Regular.ttf',
     '/js/waveform-stream.js?v=20260920',
-    '/js/gdrive-player.js?v=20260922e',
-    '/js/detail-waveform.js?v=20260922m',
+    '/js/gdrive-player.js?v=20260922g',
+    '/js/detail-waveform.js?v=20260922o',
     '/js/tracklist-search.js?v=20260921b',
     '/js/sets.js?v=20260922c',
     '/js/content.js?v=20260921e',
