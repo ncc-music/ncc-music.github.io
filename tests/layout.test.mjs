@@ -32,6 +32,11 @@ test('waveform long press uses the familiar half-second scrub delay', async () =
     assert.match(source, /const HOLD_TO_SCRUB_MS = 500;/);
 });
 
+test('waveform focus never draws the green keyboard outline', async () => {
+    const css = await read('styles.css');
+    assert.match(css, /\.detail-waveform canvas:focus, \.detail-waveform canvas:focus-visible \{ outline: none; \}/);
+});
+
 test('tracklist search is appended after the archive results', async () => {
     const source = await read('js/sets.js');
     const render = source.slice(source.indexOf('function renderTracklists()'), source.indexOf('function renderNowPlayer()'));

@@ -709,6 +709,7 @@ main { padding-bottom: calc(var(--dock-height) + 64px); }
 /* Keep the bottom navigation grouped and aligned to the right. */
 .page-footer .admin-entry { font-size: 23px; min-width: 44px; }
 .detail-waveform canvas { display: block; width: 100%; height: 128px; cursor: grab; touch-action: none; }
+.detail-waveform canvas:focus, .detail-waveform canvas:focus-visible { outline: none; }
 .detail-waveform canvas.is-scrubbing { cursor: grabbing; }
 .detail-waveform p { font-size: 12px; color: var(--muted); }
 .share-option { text-align: center; }
