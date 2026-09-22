@@ -23,7 +23,7 @@ const waveformState = {
 let audio, messageTimer, durationRequestId = 0;
 const $ = id => document.getElementById(id);
 const icon = name => `<svg class="icon" aria-hidden="true"><use href="#i-${name}"/></svg>`;
-const vuMeter = () => '<span class="track-vu" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>';
+const vuMeter = () => '<span class="track-vu" aria-hidden="true"><i></i><i></i><i></i><i></i></span>';
 
 function getPlaylistById(id) { return playerState.playlists.find(p => p.id === id); }
 function currentTrack() { return getPlaylistById(playerState.activePlaylistId)?.tracks[playerState.currentTrackIndex]; }
