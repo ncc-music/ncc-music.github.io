@@ -56,6 +56,12 @@ test('expanded player occupies ninety percent of the viewport', async () => {
     assert.match(css, /\.now-player-backdrop \{[^}]*inset: 0 0 90% 0;/);
 });
 
+test('mobile expanded player allows the set title to use two lines', async () => {
+    const css = await read('styles.css');
+    assert.match(css, /@media \(max-width: 760px\) \{[^]*\.now-player \.expanded-waveform-heading h2 \{[^}]*-webkit-line-clamp: 2;[^}]*white-space: normal;/);
+    assert.match(css, /\.expanded-waveform-heading h2 \{[^}]*white-space: nowrap;/);
+});
+
 test('mobile mini player keeps its compact layout and uses a clean expand control', async () => {
     const [html, css] = await Promise.all([read('index.html'), read('styles.css')]);
     assert.doesNotMatch(html, /expand-player-label/);

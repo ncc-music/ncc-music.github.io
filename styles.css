@@ -892,6 +892,7 @@ body.player-expanded { overflow: hidden; }
 
 /* Mobile keeps a compact SoundCloud-style player bar so the page remains visible. */
 @media (max-width: 760px) {
+    .now-player .expanded-waveform-heading h2 { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-height: 1.15; text-overflow: ellipsis; white-space: normal; }
     :root { --dock-height: 96px; }
     main { padding-bottom: calc(var(--dock-height) + 24px); }
     .player-dock {
