@@ -1,22 +1,24 @@
 const CACHE_PREFIX = 'ncc-music-';
-const CACHE_NAME = `${CACHE_PREFIX}shell-v1`;
+const CACHE_NAME = `${CACHE_PREFIX}shell-v2`;
 const APP_SHELL = [
     '/',
     '/index.html',
     '/manifest.webmanifest',
-    '/styles.css?v=20260922g',
-    '/assets/app-icons/icon-192.png',
-    '/assets/app-icons/icon-512.png',
+    '/styles.css?v=20260922h',
+    '/assets/app-icons/icon-192-v2.png',
+    '/assets/app-icons/icon-512-v2.png',
+    '/assets/app-icons/icon-maskable-512-v2.png',
+    '/assets/app-icons/apple-touch-icon-v2.png',
     '/assets/cardu-skull-mustard.png?v=20260922hq',
     '/assets/player-cover.png',
     '/assets/player-cover-clean.jpg',
     '/assets/mixed-by-single-line.png?v=20260922phase2',
     '/assets/fonts/RoadRage-Regular.ttf',
     '/js/waveform-stream.js?v=20260920',
-    '/js/gdrive-player.js?v=20260922c',
+    '/js/gdrive-player.js?v=20260922d',
     '/js/detail-waveform.js?v=20260921l',
     '/js/tracklist-search.js?v=20260921b',
-    '/js/sets.js?v=20260922b',
+    '/js/sets.js?v=20260922c',
     '/js/content.js?v=20260921e',
     '/js/visits.js?v=20260914',
     '/js/pwa.js?v=20260922'

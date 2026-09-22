@@ -81,10 +81,10 @@
                 ]
             }
         </script>
-        <link rel="stylesheet" href="styles.css?v=20260922g">
+        <link rel="stylesheet" href="styles.css?v=20260922h">
         <link rel="manifest" href="manifest.webmanifest">
-        <link rel="icon" type="image/png" sizes="192x192" href="assets/app-icons/icon-192.png">
-        <link rel="apple-touch-icon" sizes="180x180" href="assets/app-icons/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="192x192" href="assets/app-icons/icon-192-v2.png">
+        <link rel="apple-touch-icon" sizes="180x180" href="assets/app-icons/apple-touch-icon-v2.png">
     </head>
     <body>
         <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -131,6 +131,10 @@
             <div class="page-heading">
                 <h1 id="page-title">SETS</h1>
                 <span class="quality-label" id="page-quality">LOSSLESS</span>
+                <div class="manifesto-languages" id="manifesto-languages" role="group" aria-label="Idioma del manifiesto" hidden>
+                    <button type="button" class="filter-button active" data-manifesto-lang="en" aria-pressed="true" aria-controls="manifesto-en" lang="en">English</button>
+                    <button type="button" class="filter-button" data-manifesto-lang="es" aria-pressed="false" aria-controls="manifesto-es" lang="es">Español</button>
+                </div>
             </div>
             <section class="radio-feature radio-upcoming" id="radio-feature" hidden aria-labelledby="radio-title">
                 <div class="radio-player-content">
@@ -164,7 +168,7 @@
                 <div id="loading-initial" class="load-status" role="status">Cargando sets…</div>
                 <div id="playlist" class="playlist-groups"></div>
             </section>
-                <section class="about-section" id="about-section" hidden aria-labelledby="about-title"><div class="about-art"><img src="assets/player-cover.png" alt="Identidad visual de NCC"></div><div class="about-copy"><p class="eyebrow">Behind the music</p><h2 id="about-title">Nicølás Cardú</h2><p>Does it matter?<br>Enjoy the music! x)</p><p>Sets en audio lossless, FLAC y WAV.</p><a class="booking-link" href="mailto:info@ncc.ar"><span>BOOK ME</span><strong>info@ncc.ar</strong></a></div></section>
+                <section class="about-section" id="about-section" hidden aria-labelledby="about-title"><div class="about-art"><img src="assets/cardu-skull-mustard.png?v=20260922about" alt="Calavera mostaza de NCC"></div><div class="about-copy"><p class="eyebrow">Behind the music</p><h2 id="about-title">Nicølás Cardú</h2><p>Does it matter?<br>Enjoy the music! x)</p><p>Sets en audio lossless, FLAC y WAV.</p><a class="booking-link" href="mailto:info@ncc.ar"><span>BOOK ME</span><strong>info@ncc.ar</strong></a></div></section>
             <section id="set-detail-section" class="set-detail-section" hidden aria-label="Ficha del set"></section>
             <section class="tracklists-section" id="tracklists-section" hidden aria-label="Tracklists">
                 <p class="empty-state">Todavía no hay tracklists publicadas.</p>
@@ -175,10 +179,6 @@
                 <a class="booking-link" href="mailto:info@ncc.ar"><span>BOOK ME</span><strong>info@ncc.ar</strong></a>
             </section>
             <section class="manifesto-section" id="manifesto-section" hidden aria-label="Manifesto">
-                <div class="manifesto-languages" role="group" aria-label="Idioma del manifiesto">
-                    <button type="button" class="filter-button active" data-manifesto-lang="en" aria-pressed="true" aria-controls="manifesto-en" lang="en">English</button>
-                    <button type="button" class="filter-button" data-manifesto-lang="es" aria-pressed="false" aria-controls="manifesto-es" lang="es">Español</button>
-                </div>
                 <article id="manifesto-en" lang="en" aria-labelledby="manifesto-title-en">
                     <h2 id="manifesto-title-en">A RAVER'S MANIFESTO</h2>
                     <p class="manifesto-author">(author unknown)</p>
@@ -259,10 +259,10 @@
         </section>
         <audio id="audio-player" preload="metadata"></audio>
         <script src="js/waveform-stream.js?v=20260920"></script>
-        <script src="js/gdrive-player.js?v=20260922c"></script>
+        <script src="js/gdrive-player.js?v=20260922d"></script>
         <script src="js/detail-waveform.js?v=20260921l"></script>
         <script src="js/tracklist-search.js?v=20260921b"></script>
-        <script src="js/sets.js?v=20260922b"></script>
+        <script src="js/sets.js?v=20260922c"></script>
         <script src="js/content.js?v=20260921e"></script>
         <script src="js/visits.js?v=20260914"></script>
         <script src="js/pwa.js?v=20260922"></script>

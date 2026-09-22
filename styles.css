@@ -116,9 +116,9 @@ body[data-radio=on] .radio-icon { color: var(--accent); }
 .page-footer>div { display: flex; gap: 25px; }
 .page-footer a:hover { color: var(--text); }
 .eyebrow { font-size: 12px; letter-spacing: 1.4px; color: var(--muted); }
-.about-section { display: flex; gap: 45px; align-items: flex-start; padding: 20px 0; }
-.about-art { width: 160px; flex-shrink: 0; }
-.about-art img { width: 100%; }
+.about-section { display: flex; gap: 48px; align-items: center; padding: 20px 0; }
+.about-art { width: 220px; flex-shrink: 0; }
+.about-art img { display: block; width: 100%; mix-blend-mode: screen; filter: drop-shadow(0 14px 28px #0008); }
 .about-copy h2 { font-size: 32px; font-weight: 550; letter-spacing: -1px; margin: 12px 0 20px; }
 .about-copy p { color: var(--muted); margin: 16px 0; }
 .booking-link { display: grid; width: fit-content; gap: 3px; margin-top: 38px; color: var(--text); }
@@ -254,9 +254,15 @@ input[type=range]:disabled { opacity: .4; cursor: default; }
     .track-artist { font-size: 12px; }
     .page-footer { padding-top: 25px; flex-wrap: wrap; gap: 15px; }
     .page-footer>div { gap: 20px; }
-    .about-section { display: block; }
-    .about-art { width: 100px; margin-bottom: 25px; }
-    .about-copy h2 { font-size: 28px; }
+    .about-section { display: grid; grid-template-columns: minmax(0,1fr) clamp(125px,40vw,160px); gap: 14px; align-items: start; padding-top: 10px; }
+    .about-art { grid-column: 2; grid-row: 1; width: 100%; margin: 0; }
+    .about-art img { transform: scale(1.06); transform-origin: top right; }
+    .about-copy { grid-column: 1; grid-row: 1; min-width: 0; }
+    .about-copy h2 { margin: 7px 0 14px; font-size: 24px; line-height: 1.05; }
+    .about-copy p { margin: 10px 0; font-size: 13px; }
+    .about-copy .booking-link { margin-top: 22px; }
+    .about-copy .booking-link span { font-size: 24px; }
+    .about-copy .booking-link strong { font-size: 12px; overflow-wrap: anywhere; }
     .player-dock { padding: 16px 20px max(12px,env(safe-area-inset-bottom)); height: auto; min-height: var(--dock-height); display: grid; grid-template-columns: minmax(0,1fr) 128px; gap: 12px; }
     .now-cover { width: 45px; height: 45px; }
     .now-info h2 { font-size: 13px; }
@@ -362,16 +368,17 @@ main:has(#collections-section:not([hidden])) .page-heading h1 {
 }
 
 /* Manifesto: rave-flyer typography with generous, readable body copy. */
-.manifesto-section { max-width: 740px; margin: 0 auto; padding-top: 8px; }
-.manifesto-languages { display: flex; gap: 8px; margin-bottom: 32px; }
+.manifesto-section { max-width: 740px; margin: 0 auto; padding-top: 0; }
+.manifesto-languages { display: flex; gap: 5px; margin-left: auto; }
 .manifesto-languages .filter-button {
     border: 1px solid #ffffff35;
     border-radius: 0;
-    padding: 10px 18px;
+    min-height: 28px;
+    padding: 4px 9px;
     font-family: "Courier New", monospace;
-    font-size: 14px;
+    font-size: 10px;
     font-weight: 700;
-    letter-spacing: .06em;
+    letter-spacing: .045em;
 }
 .manifesto-languages .filter-button.active { color: var(--bg); background: var(--accent); border-color: var(--accent); }
 .manifesto-section article { border-top: 4px solid var(--accent); padding-top: 24px; }
@@ -407,7 +414,8 @@ main:has(#collections-section:not([hidden])) .page-heading h1 {
 @media (max-width: 540px) {
     .main-nav { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); height: auto; gap: 0 8px; }
     .nav-link { justify-content: center; }
-    .manifesto-languages { margin-bottom: 24px; }
+    .manifesto-languages { gap: 3px; }
+    .manifesto-languages .filter-button { min-height: 26px; padding: 3px 7px; font-size: 9px; }
     .manifesto-section article { padding-top: 20px; }
     .manifesto-section article > p:not(.manifesto-author) { font-size: 18px; line-height: 1.8; margin-bottom: 28px; }
     .manifesto-section article > p:last-child { padding-left: 16px; }
@@ -701,7 +709,7 @@ main { padding-bottom: calc(var(--dock-height) + 64px); }
 .share-option { text-align: center; }
 
 /* Tracklists remains the archive name and adds a compact, searchable index. */
-.tracklist-search { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 10px; margin: 4px 0 22px; }
+.tracklist-search { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 10px; margin: 24px 0 4px; padding-top: 4px; }
 .tracklist-search input { width: 100%; min-height: 48px; padding: 12px 15px; color: var(--text); background: var(--surface); border: 1px solid #ffffff2b; border-radius: 8px; }
 .tracklist-search input::placeholder { color: var(--muted); }
 .tracklist-clear { min-height: 48px; padding: 10px 16px; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 8px; }

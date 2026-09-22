@@ -18,6 +18,7 @@ test('the web app manifest contains install icons and standalone display mode', 
     assert.equal(manifest.start_url, '/');
     assert.ok(manifest.icons.some(icon => icon.sizes === '192x192'));
     assert.ok(manifest.icons.some(icon => icon.sizes === '512x512'));
+    assert.ok(manifest.icons.some(icon => icon.purpose === 'maskable' && icon.src.includes('maskable')));
     await Promise.all(manifest.icons.map(icon => stat(new URL('..' + icon.src, import.meta.url))));
 });
 

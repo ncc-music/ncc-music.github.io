@@ -394,7 +394,7 @@
         const input = el('input'); input.type = 'search'; input.id = 'tracklist-search-input'; input.placeholder = 'Buscar artista, track, remix o set…'; input.value = tracklistQuery;
         const clear = el('button', 'tracklist-clear', 'Limpiar'); clear.type = 'button'; clear.hidden = !tracklistQuery;
         const status = el('p', 'tracklist-search-status'); status.setAttribute('role', 'status');
-        search.append(label, input, clear, status); root.append(search);
+        search.append(label, input, clear, status);
         const tracks = allKnownTracks();
         const result = window.NCCTracklistSearch.search(tracks, tracklistQuery);
         const searching = Boolean(result.tokens.length);
@@ -408,6 +408,7 @@
         if (!tracks.length) root.append(el('p', 'empty-state', playerState.loaded ? 'Todavía no hay tracklists publicados.' : 'Cargando tracklists…'));
         else if (!result.sets.length) root.append(el('p', 'empty-state', 'No encontramos tracks o sets con esa búsqueda.'));
         else { const archive = el('div', 'tracklist-archive'); result.sets.forEach(item => archive.append(archiveRecord(item, searching))); root.append(archive); }
+        root.append(search);
         syncSocial();
     }
     function renderNowPlayer() {
@@ -493,7 +494,7 @@
             }
             return;
         }
-        ['radio-feature','collections-section','sets-section','tracklists-section','about-section','tour-section','manifesto-section','mix-signature','page-quality','collection-filters','favorites-filter'].forEach(id => $(id).hidden = true);
+        ['radio-feature','collections-section','sets-section','tracklists-section','about-section','tour-section','manifesto-section','manifesto-languages','mix-signature','page-quality','collection-filters','favorites-filter'].forEach(id => $(id).hidden = true);
         $('page-title').textContent = 'SET'; root.replaceChildren();
         detailTrack = allKnownTracks().find(track => track.slug === match[1]);
         const back = el('a', 'back-to-sets', '← Tracklists'); back.href = '/#tracklists'; back.addEventListener('click', event => { event.preventDefault(); if (history.state?.fromTracklists) history.back(); else navigate('/#tracklists'); }); root.append(back);

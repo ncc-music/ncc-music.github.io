@@ -12,19 +12,19 @@
   "categories": ["music", "entertainment"],
   "icons": [
     {
-      "src": "/assets/app-icons/icon-192.png",
+      "src": "/assets/app-icons/icon-192-v2.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/assets/app-icons/icon-512.png",
+      "src": "/assets/app-icons/icon-512-v2.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/assets/app-icons/icon-512.png",
+      "src": "/assets/app-icons/icon-maskable-512-v2.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -35,13 +35,13 @@
       "name": "Sets",
       "short_name": "Sets",
       "url": "/#sets",
-      "icons": [{ "src": "/assets/app-icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [{ "src": "/assets/app-icons/icon-192-v2.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "NCC Radio",
       "short_name": "Radio",
       "url": "/#radio",
-      "icons": [{ "src": "/assets/app-icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [{ "src": "/assets/app-icons/icon-192-v2.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }
