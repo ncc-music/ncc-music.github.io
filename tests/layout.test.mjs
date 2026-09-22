@@ -56,10 +56,10 @@ test('expanded player occupies ninety percent of the viewport', async () => {
     assert.match(css, /\.now-player-backdrop \{[^}]*inset: 0 0 90% 0;/);
 });
 
-test('mobile mini player centers a two-line title and exposes the expanded player', async () => {
+test('mobile mini player keeps its compact layout and highlights the expanded player control', async () => {
     const [html, css] = await Promise.all([read('index.html'), read('styles.css')]);
-    assert.match(html, /class="expand-player-label">ABRIR PLAYER<\/span>/);
-    assert.match(css, /\.track-name-button \{[^}]*-webkit-line-clamp: 2;[^}]*white-space: normal;/);
-    assert.match(css, /\.player-dock \.now-info \{[^}]*text-align: center;/);
-    assert.match(css, /\.player-dock \.expand-player \{[^}]*position: absolute;[^}]*left: 50%;[^}]*width: auto;[^}]*transform: translateX\(-50%\);/);
+    assert.doesNotMatch(html, /expand-player-label/);
+    assert.match(css, /\.track-name-button \{[^}]*text-overflow: ellipsis;[^}]*white-space: nowrap;/);
+    assert.match(css, /\.expand-player \{[^}]*background: var\(--accent\);[^}]*border-radius: 50%;/);
+    assert.match(css, /\.player-dock \.expand-player \{[^}]*grid-column: 3;[^}]*width: 32px;[^}]*height: 32px;/);
 });
