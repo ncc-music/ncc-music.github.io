@@ -56,10 +56,21 @@ test('expanded player occupies ninety percent of the viewport', async () => {
     assert.match(css, /\.now-player-backdrop \{[^}]*inset: 0 0 90% 0;/);
 });
 
-test('mobile mini player keeps its compact layout and highlights the expanded player control', async () => {
+test('mobile mini player keeps its compact layout and uses a clean expand control', async () => {
     const [html, css] = await Promise.all([read('index.html'), read('styles.css')]);
     assert.doesNotMatch(html, /expand-player-label/);
     assert.match(css, /\.track-name-button \{[^}]*text-overflow: ellipsis;[^}]*white-space: nowrap;/);
-    assert.match(css, /\.expand-player \{[^}]*background: var\(--accent\);[^}]*border-radius: 50%;/);
+    assert.match(css, /\.expand-player \{[^}]*color: var\(--text\);[^}]*background: transparent;[^}]*border: 0;/);
+    assert.match(css, /\.expand-player:hover, \.expand-player:focus-visible \{[^}]*color: var\(--accent\);/);
     assert.match(css, /\.player-dock \.expand-player \{[^}]*grid-column: 3;[^}]*width: 32px;[^}]*height: 32px;/);
+});
+
+test('desktop mini player reveals a vertical volume control without changing the expanded player', async () => {
+    const [html, css] = await Promise.all([read('index.html'), read('styles.css')]);
+    const expandedPlayer = html.slice(html.indexOf('id="now-player"'), html.indexOf('class="player-dock"'));
+    assert.match(html, /class="volume-control"[^>]*>.*id="mute-button".*class="volume-popover".*id="volume-slider"/s);
+    assert.match(css, /\.volume-popover \{[^}]*bottom: calc\(100% \+ 10px\);[^}]*height: 112px;[^}]*opacity: 0;/);
+    assert.match(css, /\.volume-control:hover \.volume-popover, \.volume-control:focus-within \.volume-popover \{[^}]*opacity: 1;/);
+    assert.match(css, /\.volume-control #volume-slider \{[^}]*transform: rotate\(-90deg\);/);
+    assert.doesNotMatch(expandedPlayer, /volume-slider/);
 });
