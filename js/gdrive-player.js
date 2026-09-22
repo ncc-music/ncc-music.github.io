@@ -364,7 +364,6 @@ function initPlayer() {
     setupWaveform(audio, $('waveform-canvas'), $('waveform-status'));
     $('play-button').addEventListener('click', togglePlay);
     $('player-like').addEventListener('click', () => window.NCCSets ? window.NCCSets.toggleLike(currentTrack()) : toggleCurrentTrackPreference('likes'));
-    $('player-favorite').addEventListener('click', () => toggleCurrentTrackPreference('favorites'));
     $('favorites-filter').addEventListener('click', () => {
         playerState.favoritesOnly = !playerState.favoritesOnly;
         renderCatalogue();
@@ -828,7 +827,7 @@ let setPreferences = readSetPreferences();
 function setPreferenceId(track) { return track.key || track.url; }
 function syncPlayerPreferences() {
     const track = currentTrack();
-    for (const [id, kind, label] of [['player-like', 'likes', 'Me gusta'], ['player-favorite', 'favorites', 'Favorito']]) {
+    for (const [id, kind, label] of [['player-like', 'likes', 'Me gusta']]) {
         const button = $(id);
         const selected = Boolean(track && setPreferences[kind].has(setPreferenceId(track)));
         button.disabled = !track;
