@@ -37,6 +37,13 @@ test('waveform focus never draws the green keyboard outline', async () => {
     assert.match(css, /\.detail-waveform canvas:focus, \.detail-waveform canvas:focus-visible \{ outline: none; \}/);
 });
 
+test('expanded skull never draws a rectangular focus or hover accent', async () => {
+    const css = await read('styles.css');
+    assert.match(css, /\.expanded-skull-media:focus, \.expanded-skull-media:focus-visible \{ outline: none; \}/);
+    assert.doesNotMatch(css, /\.expanded-skull-media:hover, \.expanded-skull-media:focus-visible \{/);
+    assert.match(css, /\.expanded-skull-media:focus-visible \.expanded-skull-control \{ box-shadow:/);
+});
+
 test('tracklist search is appended after the archive results', async () => {
     const source = await read('js/sets.js');
     const render = source.slice(source.indexOf('function renderTracklists()'), source.indexOf('function renderNowPlayer()'));
