@@ -60,6 +60,8 @@ test('mobile mini player keeps its compact layout and uses a clean expand contro
     const [html, css] = await Promise.all([read('index.html'), read('styles.css')]);
     assert.doesNotMatch(html, /expand-player-label/);
     assert.match(css, /\.track-name-button \{[^}]*text-overflow: ellipsis;[^}]*white-space: nowrap;/);
+    assert.match(css, /\.now-info h2 \{[^}]*font-size: 13px;/);
+    assert.match(css, /\.player-dock \.now-info h2 \{[^}]*font-size: 12px;/);
     assert.match(css, /\.expand-player \{[^}]*color: var\(--text\);[^}]*background: transparent;[^}]*border: 0;/);
     assert.match(css, /\.expand-player:hover, \.expand-player:focus-visible \{[^}]*color: var\(--accent\);/);
     assert.match(css, /\.player-dock \.expand-player \{[^}]*grid-column: 3;[^}]*width: 32px;[^}]*height: 32px;/);
