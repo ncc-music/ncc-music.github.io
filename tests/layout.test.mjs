@@ -55,3 +55,11 @@ test('expanded player occupies ninety percent of the viewport', async () => {
     assert.match(css, /\.now-player \{[^}]*height: 90dvh;/);
     assert.match(css, /\.now-player-backdrop \{[^}]*inset: 0 0 90% 0;/);
 });
+
+test('mobile mini player centers a two-line title and exposes the expanded player', async () => {
+    const [html, css] = await Promise.all([read('index.html'), read('styles.css')]);
+    assert.match(html, /class="expand-player-label">ABRIR PLAYER<\/span>/);
+    assert.match(css, /\.track-name-button \{[^}]*-webkit-line-clamp: 2;[^}]*white-space: normal;/);
+    assert.match(css, /\.player-dock \.now-info \{[^}]*text-align: center;/);
+    assert.match(css, /\.player-dock \.expand-player \{[^}]*position: absolute;[^}]*left: 50%;[^}]*width: auto;[^}]*transform: translateX\(-50%\);/);
+});
