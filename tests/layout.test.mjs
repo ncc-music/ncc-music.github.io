@@ -79,9 +79,11 @@ test('desktop mini player reveals a vertical volume control without changing the
     const [html, css] = await Promise.all([read('index.html'), read('styles.css')]);
     const expandedPlayer = html.slice(html.indexOf('id="now-player"'), html.indexOf('class="player-dock"'));
     assert.match(html, /class="volume-control"[^>]*>.*id="mute-button".*class="volume-popover".*id="volume-slider"/s);
-    assert.match(css, /\.volume-popover \{[^}]*top: 50%;[^}]*height: 86px;[^}]*overflow: hidden;[^}]*opacity: 0;/);
+    assert.match(html, /id="volume-slider"[^>]*orient="vertical"[^>]*aria-orientation="vertical"/);
+    assert.match(css, /\.volume-popover \{[^}]*bottom: calc\(100% \+ 4px\);[^}]*left: 50%;[^}]*height: 92px;[^}]*opacity: 0;/);
     assert.match(css, /\.volume-control:hover \.volume-popover, \.volume-control:focus-within \.volume-popover \{[^}]*opacity: 1;/);
-    assert.match(css, /\.volume-control #volume-slider \{[^}]*width: 64px;[^}]*transform: rotate\(-90deg\);/);
+    assert.match(css, /\.volume-control #volume-slider \{[^}]*width: 18px;[^}]*height: 66px;[^}]*writing-mode: vertical-lr;[^}]*\/ 5px 100% no-repeat;/);
+    assert.doesNotMatch(css, /\.volume-control #volume-slider \{[^}]*rotate\(/);
     assert.doesNotMatch(expandedPlayer, /volume-slider/);
 });
 
