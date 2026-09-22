@@ -11,6 +11,11 @@
         <meta name="googlebot" content="index, follow">
         <meta name="application-name" content="NCC Music">
         <meta name="theme-color" content="#030303">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="apple-mobile-web-app-title" content="NCC Music">
+        <meta name="msapplication-TileColor" content="#030303">
         <link rel="canonical" href="https://ncc.ar/">
         <link rel="alternate" hreflang="es-AR" href="https://ncc.ar/">
         <link rel="alternate" hreflang="x-default" href="https://ncc.ar/">
@@ -76,8 +81,10 @@
                 ]
             }
         </script>
-        <link rel="stylesheet" href="styles.css?v=20260922f">
-        <link rel="icon" type="image/png" href="assets/player-cover.png">
+        <link rel="stylesheet" href="styles.css?v=20260922g">
+        <link rel="manifest" href="manifest.webmanifest">
+        <link rel="icon" type="image/png" sizes="192x192" href="assets/app-icons/icon-192.png">
+        <link rel="apple-touch-icon" sizes="180x180" href="assets/app-icons/apple-touch-icon.png">
     </head>
     <body>
         <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -196,9 +203,14 @@
             <footer class="page-footer">
                 <span>© 2026 NCC Music</span>
                 <div class="visit-counter" id="visit-counter" aria-label="Contador de visitas"><span class="visit-label">FREAK ID</span><span id="visit-count">—</span></div>
-                <div class="footer-links"><a class="footer-about" href="#acerca">[ ABOUT ]</a><button id="admin-entry" class="admin-entry" type="button" aria-label="Administrar" title="Administrar">π</button></div>
+                <div class="footer-links"><button id="install-app" class="install-app" type="button" hidden>[ INSTALAR APP ]</button><a class="footer-about" href="#acerca">[ ABOUT ]</a><button id="admin-entry" class="admin-entry" type="button" aria-label="Administrar" title="Administrar">π</button></div>
             </footer>
         </main>
+        <dialog class="set-dialog install-dialog" id="install-dialog" aria-labelledby="install-dialog-title">
+            <div class="dialog-heading"><h2 id="install-dialog-title">Instalar NCC Music</h2><button class="dialog-close" id="install-dialog-close" type="button" aria-label="Cerrar">Cerrar</button></div>
+            <p id="install-dialog-message">Abrí el menú de tu navegador y elegí “Instalar app” o “Añadir a pantalla de inicio”.</p>
+            <p class="install-dialog-note">La app ocupa muy poco espacio. Los sets se reproducen por internet y no se descargan automáticamente.</p>
+        </dialog>
         <button type="button" class="now-player-backdrop" id="now-player-backdrop" aria-label="Minimizar reproductor" hidden></button>
         <section class="now-player" id="now-player" role="dialog" aria-modal="true" aria-label="Reproductor ampliado" hidden tabindex="-1">
             <button type="button" class="now-player-close" id="now-player-close" aria-label="Minimizar reproductor" title="Minimizar"><svg class="icon" aria-hidden="true"><use href="#i-collapse"/></svg></button>
@@ -253,5 +265,6 @@
         <script src="js/sets.js?v=20260922b"></script>
         <script src="js/content.js?v=20260921e"></script>
         <script src="js/visits.js?v=20260914"></script>
+        <script src="js/pwa.js?v=20260922"></script>
     </body>
 </html>

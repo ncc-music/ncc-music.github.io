@@ -1,0 +1,47 @@
+{
+  "id": "/",
+  "name": "NCC Music",
+  "short_name": "NCC Music",
+  "description": "Sets lossless, CARDÚ y NCC Radio por Nicolás Cardú.",
+  "lang": "es-AR",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#101112",
+  "theme_color": "#030303",
+  "categories": ["music", "entertainment"],
+  "icons": [
+    {
+      "src": "/assets/app-icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/app-icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/app-icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Sets",
+      "short_name": "Sets",
+      "url": "/#sets",
+      "icons": [{ "src": "/assets/app-icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "NCC Radio",
+      "short_name": "Radio",
+      "url": "/#radio",
+      "icons": [{ "src": "/assets/app-icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

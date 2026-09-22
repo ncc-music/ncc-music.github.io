@@ -16,6 +16,12 @@ El sitio presenta una interfaz oscura y minimalista: live sets, filtros de colec
 
 El botón de reproducción del encabezado **CARDÚ** inicia siempre el primer set de esa colección y permanece deshabilitado mientras no haya sets disponibles.
 
+### App instalable
+
+NCC Music funciona como una Progressive Web App (PWA). En Android, Chrome, Edge y otros navegadores compatibles aparece **[ INSTALAR APP ]** en el pie de página. En iPhone o iPad, usar **Compartir → Añadir a pantalla de inicio** desde Safari; en Safari para macOS, usar **Archivo → Añadir al Dock**.
+
+La interfaz principal queda disponible sin conexión, pero el catálogo actualizado, la comunidad y los sets requieren internet. Los audios y videos no se guardan automáticamente en la caché del dispositivo.
+
 ### Colecciones activas
 
 Por el momento, SETS muestra únicamente **CARDÚ**. **NC MUSIC** queda oculta y su catálogo no se carga; sus archivos, portada y configuración se conservan. Los enlaces anteriores a `#chill-out` muestran TECHNO. NCC Radio sigue disponible en su sección.

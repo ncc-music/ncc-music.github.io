@@ -36,7 +36,7 @@ globalThis.fetch = async (url, options) => {
     if (previewJWK && String(url) === 'https://ncc-preview.cloudflareaccess.com/cdn-cgi/access/certs') return Response.json({ keys: [previewJWK] });
     return originalFetch(url, options);
 };
-const types = {'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css','.png':'image/png','.jpg':'image/jpeg','.svg':'image/svg+xml','.woff2':'font/woff2'};
+const types = {'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css','.webmanifest':'application/manifest+json','.png':'image/png','.jpg':'image/jpeg','.svg':'image/svg+xml','.woff2':'font/woff2','.ttf':'font/ttf'};
 http.createServer(async (request,response) => {
     try {
         const url = new URL(request.url,'http://127.0.0.1:8765');
