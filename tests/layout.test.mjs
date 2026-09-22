@@ -75,6 +75,12 @@ test('mobile mini player keeps its compact layout and uses a clean expand contro
     assert.match(css, /\.player-dock \.expand-player \{[^}]*grid-column: 3;[^}]*width: 32px;[^}]*height: 32px;/);
 });
 
+test('desktop mini player gives the set title more room without changing mobile', async () => {
+    const css = await read('styles.css');
+    assert.match(css, /@media \(min-width: 761px\) \{[^]*?\.player-dock \{[^}]*padding-left: 12px;[^}]*padding-right: 20px;[^}]*\}[^]*?\.player-dock \.now-playing \{[^}]*gap: 11px;/);
+    assert.match(css, /@media \(max-width: 760px\) \{[^]*?\.player-dock \{[^}]*padding: 8px 10px max\(8px, env\(safe-area-inset-bottom\)\);/);
+});
+
 test('desktop mini player reveals a vertical volume control without changing the expanded player', async () => {
     const [html, css] = await Promise.all([read('index.html'), read('styles.css')]);
     const expandedPlayer = html.slice(html.indexOf('id="now-player"'), html.indexOf('class="player-dock"'));
