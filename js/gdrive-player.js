@@ -23,6 +23,7 @@ const waveformState = {
 let audio, messageTimer, durationRequestId = 0;
 const $ = id => document.getElementById(id);
 const icon = name => `<svg class="icon" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+const vuMeter = () => '<span class="track-vu" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>';
 
 function getPlaylistById(id) { return playerState.playlists.find(p => p.id === id); }
 function currentTrack() { return getPlaylistById(playerState.activePlaylistId)?.tracks[playerState.currentTrackIndex]; }
@@ -195,7 +196,8 @@ function syncActiveRows() {
         const number = row.querySelector('.track-number');
         number.textContent = String(number.dataset.order).padStart(2, '0');
         const rowPlay = row.querySelector('.track-play'), playing = active && playerState.isPlaying;
-        rowPlay.innerHTML = icon(playing ? 'wave' : 'play');
+        rowPlay.classList.toggle('is-playing', playing);
+        rowPlay.innerHTML = playing ? vuMeter() : icon('play');
         rowPlay.setAttribute('aria-label', `${playing ? 'Pausar' : 'Reproducir'} ${track?.name || 'set'}`);
         rowPlay.title = playing ? 'Pausar' : 'Reproducir';
     });
