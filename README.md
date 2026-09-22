@@ -5,7 +5,7 @@ Un reproductor de audio moderno y elegante para archivos de alta calidad, incluy
 
 ## Reproductor NCC Music
 
-El sitio presenta una interfaz oscura y minimalista: live sets, filtros de colección, acceso directo a la radio y un reproductor fijo. La calavera mostaza HQ identifica el encabezado y el miniplayer, se integra con sus fondos oscuros y usa un tamaño adaptable ampliado; la animación por piezas del reproductor ampliado se activa durante la reproducción y respeta la preferencia de movimiento reducido del dispositivo.
+El sitio presenta una interfaz oscura y minimalista: live sets, filtros de colección, acceso directo a la radio y un reproductor fijo. La firma visual muestra “MIXED BY NICØLÁS CARDÚ”. La calavera mostaza HQ identifica el encabezado y el miniplayer, se integra con sus fondos oscuros y usa un tamaño adaptable ampliado; la animación por piezas del reproductor ampliado se activa durante la reproducción y respeta la preferencia de movimiento reducido del dispositivo.
 
 - **NCC Radio** reproduce únicamente su catálogo independiente de `radio/`. No incluye las colecciones MUSIC ni TECHNO.
 - **Mis sets** permite filtrar por colección y reproducir un set puntual. Elegir un set sale del modo radio.
