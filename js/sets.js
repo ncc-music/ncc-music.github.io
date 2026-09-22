@@ -544,7 +544,7 @@
         const data = { title: track.name, text: track.name, url: setURL(track) };
         shareTrack = track;
         renderSharePreview(track);
-        const dialog = $('share-dialog'); dialog.querySelector('.share-links').replaceChildren();
+        const dialog = $('share-dialog'); dialog.querySelector('.destination-grid').replaceChildren();
         for (const platform of [
             { id: 'twitter', name: 'X', url: 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(data.title) + '&url=' + encodeURIComponent(data.url) },
             { id: 'facebook', name: 'Facebook', url: 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(data.url) },
@@ -553,11 +553,13 @@
             { id: 'telegram', name: 'Telegram', url: 'https://t.me/share/url?url=' + encodeURIComponent(data.url) + '&text=' + encodeURIComponent(data.title) },
             { id: 'reddit', name: 'Reddit', url: 'https://www.reddit.com/submit?url=' + encodeURIComponent(data.url) + '&title=' + encodeURIComponent(data.title) }
         ]) {
-            const link = el('a', `share-option share-${platform.id}`); link.href = platform.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.setAttribute('aria-label', `Compartir en ${platform.name}`);
-            const icon = el('span', 'share-platform-icon');
+            const link = el('button', 'destination-choice'); link.type = 'button'; link.setAttribute('aria-label', `Compartir en ${platform.name}`);
+            const icon = el('span', 'destination-mark');
             icon.innerHTML = sharePlatformSVG[platform.id];
-            link.append(icon, el('span', 'share-platform-name', platform.name));
-            if (platform.id === 'instagram') link.addEventListener('click', () => {
+            link.append(icon, el('span', 'destination-label', platform.name));
+            link.addEventListener('click', () => {
+                window.open(platform.url, '_blank', 'noopener,noreferrer');
+                if (platform.id !== 'instagram') return;
                 $('share-status').textContent = 'Copiá este enlace y pegalo en un mensaje o en el sticker Enlace de Instagram.';
                 navigator.clipboard?.writeText(data.url).then(() => {
                     $('share-status').textContent = 'Enlace copiado. Pegalo en un mensaje o en el sticker Enlace de tu historia de Instagram.';
@@ -565,7 +567,7 @@
                     $('share-url').focus(); $('share-url').select(); $('share-status').textContent = 'Copiá este enlace y pegalo en Instagram.';
                 });
             });
-            dialog.querySelector('.share-links').append(link);
+            dialog.querySelector('.destination-grid').append(link);
         }
         $('share-url').value = data.url; $('share-status').textContent = ''; dialog.showModal();
     }
@@ -757,7 +759,7 @@
         previewCopy.append(previewTitle, previewMeta); previewTop.append(previewPlay, previewCopy);
         const previewWaveform = el('div', 'share-preview-waveform'); previewWaveform.id = 'share-preview-waveform'; previewWaveform.setAttribute('aria-hidden', 'true');
         previewBody.append(previewTop, previewWaveform); preview.append(cover, previewBody); sharing.append(preview);
-        const shareHeading = el('p', 'share-section-label', 'Compartir en'); sharing.append(shareHeading, el('div', 'share-links'));
+        const shareHeading = el('p', 'share-section-label', 'Compartir en'); sharing.append(shareHeading, el('div', 'destination-grid'));
         const label = el('label', 'share-section-label', 'Enlace del set'); label.htmlFor = 'share-url'; sharing.append(label);
         const linkRow = el('div', 'share-link-row'); const input = el('input'); input.id = 'share-url'; input.readOnly = true; linkRow.append(input);
         const copy = el('button', 'primary-button share-copy', 'Copiar'); copy.type = 'button'; copy.addEventListener('click', async () => {

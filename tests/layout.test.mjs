@@ -95,9 +95,15 @@ test('mini player omits favorites while catalogue favorites remain available', a
 });
 
 test('share icons remove SVG filters before rendering under privacy shields', async () => {
-    const sets = await read('js/sets.js');
+    const [sets, css] = await Promise.all([read('js/sets.js'), read('styles.css')]);
     assert.match(sets, /function shieldSafeShareSVG\(markup\)/);
     assert.match(sets, /\.replace\(\/<filter\\b\[\^>\]\*>\[\\s\\S\]\*\?<\\\/filter>\/gi, ''\)/);
     assert.match(sets, /Object\.entries\(rawSharePlatformSVG\).*shieldSafeShareSVG\(markup\)/);
     assert.match(sets, /icon\.innerHTML = sharePlatformSVG\[platform\.id\]/);
+    assert.match(sets, /el\('button', 'destination-choice'\)/);
+    assert.match(sets, /window\.open\(platform\.url, '_blank', 'noopener,noreferrer'\)/);
+    assert.doesNotMatch(sets, /share-\$\{platform\.id\}/);
+    assert.doesNotMatch(sets, /link\.href = platform\.url/);
+    assert.match(css, /\.destination-grid \{/);
+    assert.doesNotMatch(css, /\.share-platform-icon|\.share-option|\.share-links/);
 });
