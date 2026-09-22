@@ -280,7 +280,7 @@
         if (playlist) playTrack(playlist.id, playlist.tracks.findIndex(item => item.key === track.key));
     }
     function appendHighlighted(parent, text, tokens) {
-        if (!tokens?.length) { parent.textContent = text; return; }
+        if (!tokens?.length) { parent.append(document.createTextNode(text)); return; }
         let normalized = '', map = [];
         for (let i = 0; i < text.length; i++) {
             const part = window.NCCTracklistSearch.normalize(text[i]);
@@ -306,6 +306,15 @@
         }
         if (cursor < text.length) parent.append(document.createTextNode(text.slice(cursor)));
     }
+    function appendTracklistLine(parent, line, tokens = []) {
+        const text = String(line || '').replace(/^\s*\d+[.)\-]?\s+/, '');
+        const parts = text.match(/^(.+?)(\s+[-–—]\s+)(.+)$/);
+        if (!parts) { appendHighlighted(parent, text, tokens); return; }
+        const artist = el('strong', 'tracklist-artist');
+        appendHighlighted(artist, parts[1], tokens);
+        parent.append(artist, document.createTextNode(parts[2]));
+        appendHighlighted(parent, parts[3], tokens);
+    }
     function buildCard(track, detailed = false) {
         const card = el('article', 'set-card');
         const heading = el('h2');
@@ -327,7 +336,7 @@
             const tokens = focus?.query ? window.NCCTracklistSearch.search([track], focus.query).tokens : [];
             const list = el('ol', 'set-tracklist'); track.tracklist.forEach((line, index) => {
                 const item = el('li'); item.dataset.tracklistIndex = index;
-                appendHighlighted(item, line.replace(/^\s*\d+[.)\-]?\s+/, ''), tokens);
+                appendTracklistLine(item, line, tokens);
                 if (focus?.index === index) item.classList.add('tracklist-focus');
                 list.append(item);
             }); card.append(list);
@@ -355,7 +364,7 @@
             const list = el('ol', 'set-tracklist');
             for (const row of rows) {
                 const item = el('li'); item.dataset.tracklistIndex = row.index;
-                appendHighlighted(item, row.text.replace(/^\s*\d+[.)\-]?\s+/, ''), searching ? window.NCCTracklistSearch.search([track], tracklistQuery).tokens : []);
+                appendTracklistLine(item, row.text, searching ? window.NCCTracklistSearch.search([track], tracklistQuery).tokens : []);
                 list.append(item);
             }
             body.append(list);
@@ -415,7 +424,7 @@
         $('now-player').setAttribute('aria-label', 'Reproductor ampliado: ' + track.name);
         const list = $('expanded-tracklist'); list.replaceChildren();
         $('expanded-tracklist-empty').hidden = Boolean(track.tracklist?.length);
-        for (const line of track.tracklist || []) list.append(el('li', '', line.replace(/^\s*\d+[.)\-]?\s+/, '')));
+        for (const line of track.tracklist || []) { const item = el('li'); appendTracklistLine(item, line); list.append(item); }
         $('expanded-like').dataset.likeId = track.id || '';
         $('expanded-waveform').replaceChildren(); window.NCCDetailWaveform.mount(track, $('expanded-waveform'));
         syncCommentPosition();
