@@ -24,3 +24,9 @@ test('tracklist search is appended after the archive results', async () => {
     const render = source.slice(source.indexOf('function renderTracklists()'), source.indexOf('function renderNowPlayer()'));
     assert.ok(render.lastIndexOf('root.append(search)') > render.indexOf("const archive = el('div', 'tracklist-archive')"));
 });
+
+test('expanded player occupies ninety percent of the viewport', async () => {
+    const css = await read('styles.css');
+    assert.match(css, /\.now-player \{[^}]*height: 90dvh;/);
+    assert.match(css, /\.now-player-backdrop \{[^}]*inset: 0 0 90% 0;/);
+});

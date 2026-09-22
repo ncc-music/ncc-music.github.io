@@ -156,10 +156,7 @@ function renderCatalogue() {
         title.addEventListener('click', event => { event.stopPropagation(); playAndExpandSelectedTrack(event.currentTarget); });
         rowPlay.addEventListener('click', event => {
             event.stopPropagation();
-            const active = currentTrack()?.key === track.key;
-            if (active && playerState.isPlaying) audio.pause();
-            else if (active) startPlayback();
-            else playTrack(playlist.id, index, false);
+            playTrackAndExpand(playlist.id, index, track, event.currentTarget);
         });
         button.addEventListener('click', event => playAndExpandSelectedTrack(event.currentTarget));
         li.append(button, createTrackActions(track));
@@ -257,6 +254,17 @@ async function startPlayback() {
 }
 function playTrack(playlistId, index, radio = false) {
     if (selectTrack(playlistId, index, radio)) return startPlayback();
+}
+function playTrackAndExpand(playlistId, index, track, trigger) {
+    const selected = currentTrack();
+    const active = selected === track || Boolean(selected?.key && track?.key && selected.key === track.key);
+    if (active && playerState.isPlaying) {
+        audio.pause();
+        return;
+    }
+    const playback = active ? startPlayback() : playTrack(playlistId, index, false);
+    window.NCCSets?.expand(trigger, track);
+    return playback;
 }
 function togglePlay() {
     if (!currentTrack()) return;

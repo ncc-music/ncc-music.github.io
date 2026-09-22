@@ -8,7 +8,7 @@ function setup() {
     const document = { addEventListener() {}, body: { dataset: {} }, getElementById(id) { if (!elements.has(id)) elements.set(id, element()); return elements.get(id); }, querySelectorAll() { return []; }, querySelector() { return null; } };
     const audio = { src: '', paused: true, currentTime: 0, duration: 100, pause() { this.paused = true; }, async play() { this.paused = false; }, getAttribute() { return this.src; }, removeAttribute() { this.src = ''; }, load() {} };
     const context = vm.createContext({ document, navigator: {}, location: { hostname: 'ncc.ar', origin: 'https://ncc.ar', href: 'https://ncc.ar/', hash: '' }, window: {}, URL, AbortController, console, setTimeout: () => 1, clearTimeout() {}, fetch: async () => { throw new Error('offline'); } });
-    vm.runInContext(fs.readFileSync('js/gdrive-player.js', 'utf8') + '\nglobalThis.app = { playerState, normalizeR2Playlist, radioQueue, playTrack, nextTrack, startRadio, startPlayback, selectTrack, loadCatalogue, route, safeMediaUrl, syncPlaybackUI }; resetWaveform = () => {}; loadWaveform = () => {}; renderCatalogue = () => {}; loadPlaylistDurations = () => {};', context);
+    vm.runInContext(fs.readFileSync('js/gdrive-player.js', 'utf8') + '\nglobalThis.app = { playerState, normalizeR2Playlist, radioQueue, playTrack, playTrackAndExpand, nextTrack, startRadio, startPlayback, selectTrack, loadCatalogue, route, safeMediaUrl, syncPlaybackUI }; resetWaveform = () => {}; loadWaveform = () => {}; renderCatalogue = () => {}; loadPlaylistDurations = () => {};', context);
     context.fakeAudio = audio; vm.runInContext('audio = fakeAudio;', context);
     const state = context.app.playerState;
     state.playlists.forEach(p => { p.tracks = [0, 1].map(i => ({ name: `${p.title} ${i}`, artist: 'NCC', url: `https://audio.example/${p.id}/${i}.flac`, duration: 100, playlistId: p.id, playlistTitle: p.title, cover: 'cover.jpg', format: 'FLAC' })); });
@@ -82,6 +82,19 @@ test('navigation and collection filters do not replace the playing set', async (
     context.location.hash = '#chill-out'; app.route();
     assert.equal(state.filter, 'techno-freaks'); assert.equal(state.activePlaylistId, 'techno-freaks');
     assert.equal(state.radio, false); assert.equal(audio.currentTime, 52);
+});
+
+test('playlist play starts the selected set and opens the expanded player', async () => {
+    const { app, state, context, audio } = setup();
+    const track = state.playlists.find(p => p.id === 'techno-freaks').tracks[1];
+    let expanded;
+    context.window.NCCSets = { expand: (trigger, selected) => { expanded = { trigger, selected }; } };
+    const trigger = { id: 'row-play' };
+    await app.playTrackAndExpand('techno-freaks', 1, track, trigger);
+    assert.equal(state.currentTrackIndex, 1);
+    assert.equal(audio.paused, false);
+    assert.equal(expanded.trigger, trigger);
+    assert.equal(expanded.selected.url, track.url);
 });
 
 test('NCC logo motion follows playback, buffering and pause without changing its image', () => {
