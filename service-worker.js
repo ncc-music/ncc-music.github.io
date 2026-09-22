@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'ncc-music-';
-const CACHE_NAME = `${CACHE_PREFIX}shell-v16`;
+const CACHE_NAME = `${CACHE_PREFIX}shell-v17`;
 const APP_SHELL = [
     '/',
     '/index.html',
@@ -18,7 +18,7 @@ const APP_SHELL = [
     '/js/gdrive-player.js?v=20260922h',
     '/js/detail-waveform.js?v=20260922o',
     '/js/tracklist-search.js?v=20260921b',
-    '/js/sets.js?v=20260922c',
+    '/js/sets.js?v=20260922d',
     '/js/content.js?v=20260921e',
     '/js/visits.js?v=20260914',
     '/js/pwa.js?v=20260922'

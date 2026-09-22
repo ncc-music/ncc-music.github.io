@@ -91,3 +91,11 @@ test('mini player omits favorites while catalogue favorites remain available', a
     assert.match(player, /\['favorites', 'star', 'Favorito'\]/);
     assert.doesNotMatch(player, /\$\('player-favorite'\)/);
 });
+
+test('share icons remove SVG filters before rendering under privacy shields', async () => {
+    const sets = await read('js/sets.js');
+    assert.match(sets, /function shieldSafeShareSVG\(markup\)/);
+    assert.match(sets, /\.replace\(\/<filter\\b\[\^>\]\*>\[\\s\\S\]\*\?<\\\/filter>\/gi, ''\)/);
+    assert.match(sets, /Object\.entries\(rawSharePlatformSVG\).*shieldSafeShareSVG\(markup\)/);
+    assert.match(sets, /icon\.innerHTML = sharePlatformSVG\[platform\.id\]/);
+});
