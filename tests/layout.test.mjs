@@ -16,7 +16,20 @@ test('mobile About uses the mustard skull identity', async () => {
     const [html, css] = await Promise.all([read('index.html'), read('styles.css')]);
     assert.match(html, /about-art"><img src="assets\/cardu-skull-mustard\.png/);
     assert.match(css, /\.about-section \{ display: grid; grid-template-columns:/);
-    assert.match(css, /\.about-art \{ grid-column: 2; grid-row: 1;/);
+    assert.match(css, /grid-template-areas: "copy art"/);
+    assert.match(css, /\.about-art \{ grid-area: art;/);
+});
+
+test('About is centered and enlarged on desktop', async () => {
+    const css = await read('styles.css');
+    assert.match(css, /\.about-section \{[^}]*justify-content: center;[^}]*width: min\(100%,960px\);[^}]*margin: 0 auto;/);
+    assert.match(css, /\.about-art \{ width: clamp\(280px,32vw,380px\);/);
+    assert.match(css, /\.about-copy h2 \{ font-size: clamp\(42px,5vw,58px\);/);
+});
+
+test('waveform long press uses the familiar half-second scrub delay', async () => {
+    const source = await read('js/detail-waveform.js');
+    assert.match(source, /const HOLD_TO_SCRUB_MS = 500;/);
 });
 
 test('tracklist search is appended after the archive results', async () => {

@@ -1,6 +1,6 @@
 // A set's waveform is independent of the global player until the listener seeks.
 (() => {
-    const HOLD_TO_SCRUB_MS = 650;
+    const HOLD_TO_SCRUB_MS = 500;
     const DRAG_TOLERANCE_PX = 6;
     let dispose = () => {};
     let activeView = null;

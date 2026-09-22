@@ -116,11 +116,15 @@ body[data-radio=on] .radio-icon { color: var(--accent); }
 .page-footer>div { display: flex; gap: 25px; }
 .page-footer a:hover { color: var(--text); }
 .eyebrow { font-size: 12px; letter-spacing: 1.4px; color: var(--muted); }
-.about-section { display: flex; gap: 48px; align-items: center; padding: 20px 0; }
-.about-art { width: 220px; flex-shrink: 0; }
+.about-section { display: flex; justify-content: center; align-items: center; gap: clamp(64px,8vw,120px); width: min(100%,960px); min-height: clamp(380px,55vh,620px); margin: 0 auto; padding: 40px 0 70px; }
+.about-art { width: clamp(280px,32vw,380px); flex-shrink: 0; }
 .about-art img { display: block; width: 100%; mix-blend-mode: screen; filter: drop-shadow(0 14px 28px #0008); }
-.about-copy h2 { font-size: 32px; font-weight: 550; letter-spacing: -1px; margin: 12px 0 20px; }
-.about-copy p { color: var(--muted); margin: 16px 0; }
+.about-copy { flex: 0 1 410px; }
+.about-copy .eyebrow { font-size: 14px; }
+.about-copy h2 { font-size: clamp(42px,5vw,58px); font-weight: 550; letter-spacing: -1.5px; line-height: 1; margin: 16px 0 28px; }
+.about-copy p { color: var(--muted); margin: 20px 0; font-size: 18px; line-height: 1.55; }
+.about-copy .booking-link span { font-size: 34px; }
+.about-copy .booking-link strong { font-size: 16px; }
 .booking-link { display: grid; width: fit-content; gap: 3px; margin-top: 38px; color: var(--text); }
 .booking-link span { color: var(--accent); font-family: "Road Rage", Impact, sans-serif; font-size: 27px; font-weight: 400; letter-spacing: .04em; line-height: 1; }
 .booking-link strong { color: var(--muted); font-size: 14px; font-weight: 500; }
@@ -254,10 +258,11 @@ input[type=range]:disabled { opacity: .4; cursor: default; }
     .track-artist { font-size: 12px; }
     .page-footer { padding-top: 25px; flex-wrap: wrap; gap: 15px; }
     .page-footer>div { gap: 20px; }
-    .about-section { display: grid; grid-template-columns: minmax(0,1fr) clamp(125px,40vw,160px); gap: 14px; align-items: start; padding-top: 10px; }
-    .about-art { grid-column: 2; grid-row: 1; width: 100%; margin: 0; }
-    .about-art img { transform: scale(1.06); transform-origin: top right; }
-    .about-copy { grid-column: 1; grid-row: 1; min-width: 0; }
+    .about-section { display: grid; grid-template-columns: minmax(0,1fr) clamp(125px,40vw,160px); grid-template-areas: "copy art"; gap: 14px; align-items: start; width: 100%; min-height: 0; margin: 0; padding: 10px 0 30px; }
+    .about-art { grid-area: art; width: 100%; margin: 0; }
+    .about-art img { transform: scale(1.08); transform-origin: top right; }
+    .about-copy { grid-area: copy; min-width: 0; }
+    .about-copy .eyebrow { font-size: 11px; }
     .about-copy h2 { margin: 7px 0 14px; font-size: 24px; line-height: 1.05; }
     .about-copy p { margin: 10px 0; font-size: 13px; }
     .about-copy .booking-link { margin-top: 22px; }
