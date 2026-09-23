@@ -10,12 +10,12 @@ const entries = [
     { key: 'radio/Radio 01.mp3', size: 123 },
     { key: 'chill-out/Music 01.flac', size: 123 }
 ];
-function env() {
+function env(sourceEntries = entries) {
     const uploads = new Map();
     return {
         SITE_DB: database(), uploads,
         MY_BUCKET: {
-            list: async ({ prefix }) => ({ objects: entries.filter(e => e.key.startsWith(prefix)), truncated: false }),
+            list: async ({ prefix }) => ({ objects: sourceEntries.filter(e => e.key.startsWith(prefix)), truncated: false }),
             put: async (key, body, options) => { uploads.set(key, { body: new Uint8Array(body), options }); }
         }
     };
@@ -27,9 +27,19 @@ test('catalogue isolates collections and assigns repeatable, unique slugs', asyn
     const environment = env(), first = await tracks(environment), second = await tracks(environment);
     assert.equal(first.length, 4); assert.deepEqual(first.map(t => t.slug), second.map(t => t.slug));
     assert.equal(new Set(first.map(t => t.slug)).size, 4);
+    assert.deepEqual(first.filter(t => t.key.startsWith('techno-freaks/')).map(t => t.slug), ['session-01', 'session-02']);
     assert.deepEqual(first.filter(t => t.key.startsWith('techno-freaks/')).map(t => t.name), ['Session 01', 'Session 02']);
     const radio = await worker.fetch(new Request('https://worker.example/playlist?prefix=radio/'), environment);
     assert.deepEqual((await radio.json()).tracks.map(t => t.key), ['radio/Radio 01.mp3']);
+});
+test('public set links remove the redundant label and number only repeated slugs', async () => {
+    const repeated = [
+        { key: 'techno-freaks/NCC RECORDS Preview 002.flac', size: 123, uploaded: new Date('2026-01-01T00:00:00Z') },
+        { key: 'techno-freaks/NCC RECORDS Preview 002!.flac', size: 123, uploaded: new Date('2026-02-01T00:00:00Z') }
+    ];
+    const result = await tracks(env(repeated));
+    assert.deepEqual(result.map(track => track.slug), ['preview-002', 'preview-002-2']);
+    assert.ok(result.every(track => /-[a-f0-9]{8}$/.test(track.legacySlug)));
 });
 test('public likes are idempotent, reversible and shared across visitors', async () => {
     const environment = env(), [track] = await tracks(environment);
@@ -168,7 +178,7 @@ test('signed admin saves validate JWT, preserve slug and reject stale updates', 
 
 test('shared pages include the original skull and escaped set metadata without JavaScript', async () => {
     const environment = env(), [track] = await tracks(environment);
-    await environment.SITE_DB.prepare('INSERT INTO sets (id,audio_key,slug,title) VALUES (?,?,?,?)').bind(track.id, track.key, track.slug, 'Set <special> "NCC"').run();
+    await environment.SITE_DB.prepare('INSERT INTO sets (id,audio_key,slug,title) VALUES (?,?,?,?)').bind(track.id, track.key, track.legacySlug, 'Set <special> "NCC"').run();
     const originalFetch = globalThis.fetch;
     globalThis.fetch = async () => new Response(readFileSync('index.html', 'utf8'));
     try {
@@ -179,6 +189,9 @@ test('shared pages include the original skull and escaped set metadata without J
         assert.match(html, /name="twitter:image" content="https:\/\/ncc.ar\/assets\/player-cover-clean.jpg"/);
         assert.match(html, /Set &lt;special&gt; &quot;NCC&quot;/);
         assert.ok(html.includes('rel="canonical" href="https://ncc.ar/set/' + track.slug + '"'));
+        const legacy = await worker.fetch(new Request('https://ncc.ar/set/' + track.legacySlug), environment);
+        assert.equal(legacy.status, 301);
+        assert.equal(legacy.headers.get('Location'), 'https://ncc.ar/set/' + track.slug);
         const missing = await worker.fetch(new Request('https://ncc.ar/set/missing'), environment);
         assert.equal(missing.status, 404);
         const missingHTML = await missing.text(); assert.match(missingHTML, /name="robots" content="noindex"/); assert.doesNotMatch(missingHTML, /content="index, follow/);

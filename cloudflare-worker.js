@@ -240,6 +240,28 @@ async function stableId(key) {
 function slugify(title) {
     return title.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 90) || 'set';
 }
+function compactSlugBase(legacySlug, id) {
+    const idSuffix = `-${id.slice(0, 8)}`;
+    const withoutId = legacySlug.endsWith(idSuffix) ? legacySlug.slice(0, -idSuffix.length) : legacySlug;
+    return withoutId.replace(/^ncc-records-/, '') || `set-${id.slice(0, 8)}`;
+}
+function assignPublicSlugs(tracks) {
+    const used = new Set();
+    const ordered = [...tracks].sort((a, b) => {
+        const aTime = Date.parse(a.slugPriority || '') || Number.MAX_SAFE_INTEGER;
+        const bTime = Date.parse(b.slugPriority || '') || Number.MAX_SAFE_INTEGER;
+        return aTime - bTime || a.legacySlug.localeCompare(b.legacySlug, 'en', { numeric: true });
+    });
+    for (const track of ordered) {
+        const base = compactSlugBase(track.legacySlug, track.id);
+        let candidate = base;
+        for (let suffix = 2; used.has(candidate); suffix++) candidate = `${base}-${suffix}`;
+        used.add(candidate);
+        track.slug = candidate;
+        delete track.slugPriority;
+    }
+    return tracks;
+}
 function parseList(value) {
     try { const parsed = JSON.parse(value || '[]'); return Array.isArray(parsed) ? parsed : []; }
     catch { return []; }
@@ -280,9 +302,10 @@ async function catalogue(env, origin, includeDrafts = false) {
         const saved = metadata.get(object.key);
         const id = saved?.id || await stableId(object.key);
         const name = saved?.title || object.customMetadata?.title || titleFromKey(object.key);
+        const legacySlug = saved?.slug || `${slugify(titleFromKey(object.key))}-${id.slice(0, 8)}`;
         return {
             id, key: object.key, name, artist: object.customMetadata?.artist || 'Nicolás Cardú',
-            slug: saved?.slug || `${slugify(titleFromKey(object.key))}-${id.slice(0, 8)}`,
+            slug: '', legacySlug, slugPriority: object.uploaded?.toISOString?.() || saved?.updated_at || '',
             date: saved?.date || '', tracklist: saved ? parseList(saved.tracklist) : [], tags: saved ? parseList(saved.tags) : [],
             sortOrder: Number.isSafeInteger(saved?.sort_order) ? saved.sort_order : null, uploaded: object.uploaded?.toISOString?.() || '',
             published: saved ? Boolean(saved.published) : true, version: saved?.version || 0,
@@ -297,7 +320,7 @@ async function catalogue(env, origin, includeDrafts = false) {
     }));
     // Keep published tracklists searchable after an audio object is retired from R2.
     const archivedTracks = rows.filter(row => !activeKeys.has(row.audio_key)).map(row => ({
-        id: row.id, key: row.audio_key, name: row.title, artist: 'Nicolás Cardú', slug: row.slug,
+        id: row.id, key: row.audio_key, name: row.title, artist: 'Nicolás Cardú', slug: '', legacySlug: row.slug, slugPriority: row.updated_at || '',
         date: row.date || '', tracklist: parseList(row.tracklist), tags: parseList(row.tags),
         sortOrder: Number.isSafeInteger(row.sort_order) ? row.sort_order : null, uploaded: '', published: Boolean(row.published),
         version: row.version || 0, peaks: row.peaks ? JSON.parse(row.peaks) : null,
@@ -307,7 +330,7 @@ async function catalogue(env, origin, includeDrafts = false) {
         likes: env.SITE_DB ? likes.get(row.id) || 0 : null, url: '', waveformUrl: '', size: 0,
         contentType: contentTypeFromKey(row.audio_key), available: false
     }));
-    const tracks = [...activeTracks, ...archivedTracks].sort(compareCatalogueTracks);
+    const tracks = assignPublicSlugs([...activeTracks, ...archivedTracks]).sort(compareCatalogueTracks);
     return tracks.filter(track => includeDrafts || track.published);
 }
 function writeOriginAllowed(request, env) {
@@ -577,9 +600,11 @@ function escapeHTML(text) {
 async function handleSetPage(request, env) {
     const url = new URL(request.url);
     if (!['GET', 'HEAD'].includes(request.method)) return new Response('Method not allowed', { status: 405 });
+    const requestedSlug = url.pathname.replace(/\/$/, '').slice('/set/'.length);
     let track;
-    try { track = (await catalogue(env, url.origin)).find(item => `/set/${item.slug}` === url.pathname.replace(/\/$/, '')); }
+    try { track = (await catalogue(env, url.origin)).find(item => item.slug === requestedSlug || item.legacySlug === requestedSlug); }
     catch { return new Response('No pudimos cargar el set. Volvé a intentar.', { status: 503 }); }
+    if (track && requestedSlug !== track.slug) return Response.redirect(`${ORIGIN}/set/${track.slug}`, 301);
     // GitHub Pages remains the origin. Only /set/* and /api/* route through this Worker.
     let response;
     try { response = await fetch('https://ncc-music.github.io/index.html', { signal: AbortSignal.timeout(10000) }); }
