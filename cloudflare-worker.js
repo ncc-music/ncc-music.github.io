@@ -476,7 +476,7 @@ async function handleSetService(request, env) {
                 const statements = input.ids.map((id, order) => {
                     const track = byId.get(id);
                     return env.SITE_DB.prepare("INSERT INTO sets (id,audio_key,slug,title,date,tracklist,tags,sort_order,animation_poster_key,animation_video_key,published,peaks) VALUES (?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET sort_order=excluded.sort_order, version=sets.version+1, updated_at=datetime('now')")
-                        .bind(track.id, track.key, track.slug, track.name, track.date, JSON.stringify(track.tracklist), JSON.stringify(track.tags || []), order, track.animationPosterKey || '', track.animationVideoKey || '', Number(track.published), track.peaks ? JSON.stringify(track.peaks) : null);
+                        .bind(track.id, track.key, track.legacySlug, track.name, track.date, JSON.stringify(track.tracklist), JSON.stringify(track.tags || []), order, track.animationPosterKey || '', track.animationVideoKey || '', Number(track.published), track.peaks ? JSON.stringify(track.peaks) : null);
                 });
                 await env.SITE_DB.batch(statements);
                 return reply({ saved: true });
@@ -518,7 +518,7 @@ async function handleSetService(request, env) {
             let result;
             if (input.version === 0) {
                 result = await env.SITE_DB.prepare('INSERT OR IGNORE INTO sets (id, audio_key, slug, title, date, tracklist, tags, sort_order, animation_poster_key, animation_video_key, published, peaks) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-                    .bind(id, track.key, track.slug, input.title.trim(), input.date, JSON.stringify(input.tracklist), JSON.stringify(tags), sortOrder, animationPosterKey, animationVideoKey, Number(input.published), peaks ? JSON.stringify(peaks) : null).run();
+                    .bind(id, track.key, track.legacySlug, input.title.trim(), input.date, JSON.stringify(input.tracklist), JSON.stringify(tags), sortOrder, animationPosterKey, animationVideoKey, Number(input.published), peaks ? JSON.stringify(peaks) : null).run();
             } else {
                 result = await env.SITE_DB.prepare("UPDATE sets SET title = ?, date = ?, tracklist = ?, tags = ?, sort_order = ?, animation_poster_key = ?, animation_video_key = ?, published = ?, peaks = ?, version = version + 1, updated_at = datetime('now') WHERE id = ? AND version = ?")
                     .bind(input.title.trim(), input.date, JSON.stringify(input.tracklist), JSON.stringify(tags), sortOrder, animationPosterKey, animationVideoKey, Number(input.published), peaks ? JSON.stringify(peaks) : null, id, input.version).run();

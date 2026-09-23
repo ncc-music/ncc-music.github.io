@@ -144,6 +144,7 @@ test('signed admin saves validate JWT, preserve slug and reject stale updates', 
         const input = { title: 'Renamed', date: '2026-09-19', tags: ['techno', 'live'], sortOrder: null, tracklist: ['Artist — Track'], animationPosterKey:posterData.key, animationVideoKey:videoData.key, published: true, version: 0 };
         assert.equal((await worker.fetch(req('/admin/sets/'+track.id, 'PUT', input, headers), environment)).status, 200);
         const saved = (await tracks(environment)).find(item => item.id === track.id); assert.equal(saved.name, 'Renamed'); assert.equal(saved.slug, track.slug); assert.equal(saved.version, 1); assert.deepEqual(saved.tags, ['techno', 'live']);
+        const stored = (await environment.SITE_DB.prepare('SELECT slug FROM sets WHERE id = ?').bind(track.id).all()).results[0]; assert.equal(stored.slug, track.legacySlug);
         assert.equal(saved.animationPosterKey, posterData.key); assert.equal(new URL(saved.animationPosterUrl).pathname.endsWith('/poster.png'), true); assert.match(saved.animationPosterUrl, /\?v=1$/);
         assert.equal(saved.animationVideoKey, videoData.key); assert.equal(new URL(saved.animationVideoUrl).pathname.endsWith('/animation.mp4'), true); assert.match(saved.animationVideoUrl, /\?v=1$/);
         assert.equal((await worker.fetch(req('/admin/sets/'+track.id, 'PUT', input, headers), environment)).status, 409);
