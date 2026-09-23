@@ -8,6 +8,7 @@
     --accent: #9fbe7a;
     --line: #ffffff12;
     --dock-height: 110px;
+    --expanded-player-header-offset: 100px;
     font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     font-synthesis: none;
 }
@@ -748,8 +749,8 @@ main { padding-bottom: calc(var(--dock-height) + 64px); }
 .expand-player { display: grid; place-items: center; width: 40px; height: 40px; margin-left: auto; color: var(--text); background: transparent; border: 0; border-radius: 4px; box-shadow: none; transition: color .18s ease, transform .18s ease; }
 .expand-player:hover, .expand-player:focus-visible { color: var(--accent); background: transparent; transform: translateY(-1px); }
 .expand-player .icon { width: 20px; height: 20px; stroke-width: 2.8; }
-.now-player-backdrop { position: fixed; inset: 0 0 95% 0; z-index: 59; background: #0008; cursor: default; animation: now-player-fade-in .24s ease-out; }
-.now-player { position: fixed; inset: auto 0 0; z-index: 60; width: 100%; height: 95dvh; overflow-y: auto; padding: max(18px, env(safe-area-inset-top)) 34px max(24px, env(safe-area-inset-bottom)); background: radial-gradient(circle at 50% 0, #24272a 0, #111214 44%, #090a0b 100%); box-shadow: 0 -24px 70px #0009; animation: now-player-rise .3s cubic-bezier(.2,.75,.25,1); }
+.now-player-backdrop { position: fixed; inset: 0 0 calc(100dvh - var(--expanded-player-header-offset)) 0; z-index: 59; background: #0008; cursor: default; animation: now-player-fade-in .24s ease-out; }
+.now-player { position: fixed; inset: auto 0 0; z-index: 60; width: 100%; height: calc(100dvh - var(--expanded-player-header-offset)); overflow-y: auto; padding: max(18px, env(safe-area-inset-top)) 34px max(24px, env(safe-area-inset-bottom)); background: radial-gradient(circle at 50% 0, #24272a 0, #111214 44%, #090a0b 100%); box-shadow: 0 -24px 70px #0009; animation: now-player-rise .3s cubic-bezier(.2,.75,.25,1); }
 .now-player.is-dragging { animation: none; user-select: none; }
 body.player-expanded { overflow: hidden; }
 @keyframes now-player-rise { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -871,6 +872,10 @@ body.player-expanded { overflow: hidden; }
 .waveform-frame.is-comment-picking canvas { cursor: copy; }
 .expanded-waveform .waveform-play { width: 62px; height: 62px; color: #111; background: var(--text); }
 .expanded-waveform .waveform-play:hover { background: var(--accent); }
+
+@media (min-width: 761px) and (max-width: 1200px) {
+    :root { --expanded-player-header-offset: 182px; }
+}
 
 @media (max-width: 760px) {
     .now-player { height: 100dvh; padding-inline: 18px; box-shadow: none; }

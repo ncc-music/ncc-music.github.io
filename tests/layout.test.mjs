@@ -77,10 +77,12 @@ test('tracklist search is appended after the archive results', async () => {
     assert.ok(render.lastIndexOf('root.append(search)') > render.indexOf("const archive = el('div', 'tracklist-archive')"));
 });
 
-test('expanded player uses ninety-five percent of desktop and the full mobile viewport', async () => {
+test('expanded player leaves the complete desktop header visible and fills the mobile viewport', async () => {
     const css = await read('styles.css');
-    assert.match(css, /\.now-player \{[^}]*height: 95dvh;/);
-    assert.match(css, /\.now-player-backdrop \{[^}]*inset: 0 0 95% 0;/);
+    assert.match(css, /:root \{[^}]*--expanded-player-header-offset: 100px;/);
+    assert.match(css, /\.now-player \{[^}]*height: calc\(100dvh - var\(--expanded-player-header-offset\)\);/);
+    assert.match(css, /\.now-player-backdrop \{[^}]*inset: 0 0 calc\(100dvh - var\(--expanded-player-header-offset\)\) 0;/);
+    assert.match(css, /@media \(min-width: 761px\) and \(max-width: 1200px\) \{[^]*:root \{ --expanded-player-header-offset: 182px; \}/);
     assert.match(css, /@media \(max-width: 760px\) \{[^]*\.now-player \{[^}]*height: 100dvh;/);
 });
 
