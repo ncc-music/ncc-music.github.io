@@ -116,7 +116,7 @@ test('foreign origins, malformed bodies and unknown sets cannot change likes', a
     assert.equal((await worker.fetch(req(`/sets/${track.id}/likes`, 'PUT', { visitor: '<script>', liked: true }), environment)).status, 400);
     assert.equal((await tracks(environment))[0].likes, 0);
 });
-test('signed admin saves validate JWT, preserve slug and reject stale updates', async () => {
+test('signed admin saves validate JWT, preserve every old slug and reject stale updates', async () => {
     const environment = { ...env(), ACCESS_TEAM_DOMAIN: 'ncc-test.cloudflareaccess.com', ACCESS_AUD: 'test-aud', ADMIN_EMAIL: 'admin@example.com' };
     const pair = await crypto.subtle.generateKey({ name: 'RSASSA-PKCS1-v1_5', modulusLength: 2048, publicExponent: new Uint8Array([1,0,1]), hash: 'SHA-256' }, true, ['sign','verify']);
     const jwk = await crypto.subtle.exportKey('jwk', pair.publicKey); jwk.kid = 'test-key';
@@ -141,21 +141,39 @@ test('signed admin saves validate JWT, preserve slug and reject stale updates', 
         assert.equal(environment.uploads.size, 2);
         assert.equal((await upload('poster', 'image/jpeg', [137,80,78,71,13,10,26,10])).status, 400);
         assert.equal((await upload('video', 'video/mp4', [0,1,2,3])).status, 400);
-        const input = { title: 'Renamed', date: '2026-09-19', tags: ['techno', 'live'], sortOrder: null, tracklist: ['Artist — Track'], animationPosterKey:posterData.key, animationVideoKey:videoData.key, published: true, version: 0 };
+        const input = { title: 'Renamed', slug: track.slug, date: '2026-09-19', tags: ['techno', 'live'], sortOrder: null, tracklist: ['Artist — Track'], animationPosterKey:posterData.key, animationVideoKey:videoData.key, published: true, version: 0 };
         assert.equal((await worker.fetch(req('/admin/sets/'+track.id, 'PUT', input, headers), environment)).status, 200);
         const saved = (await tracks(environment)).find(item => item.id === track.id); assert.equal(saved.name, 'Renamed'); assert.equal(saved.slug, track.slug); assert.equal(saved.version, 1); assert.deepEqual(saved.tags, ['techno', 'live']);
-        const stored = (await environment.SITE_DB.prepare('SELECT slug FROM sets WHERE id = ?').bind(track.id).all()).results[0]; assert.equal(stored.slug, track.legacySlug);
+        const stored = (await environment.SITE_DB.prepare('SELECT slug FROM sets WHERE id = ?').bind(track.id).all()).results[0]; assert.equal(stored.slug, track.slug);
+        assert.deepEqual((await environment.SITE_DB.prepare('SELECT slug FROM set_slug_aliases WHERE set_id = ? ORDER BY slug').bind(track.id).all()).results.map(row => row.slug), [track.legacySlug]);
         assert.equal(saved.animationPosterKey, posterData.key); assert.equal(new URL(saved.animationPosterUrl).pathname.endsWith('/poster.png'), true); assert.match(saved.animationPosterUrl, /\?v=1$/);
         assert.equal(saved.animationVideoKey, videoData.key); assert.equal(new URL(saved.animationVideoUrl).pathname.endsWith('/animation.mp4'), true); assert.match(saved.animationVideoUrl, /\?v=1$/);
         assert.equal((await worker.fetch(req('/admin/sets/'+track.id, 'PUT', input, headers), environment)).status, 409);
-        assert.equal((await worker.fetch(req('/admin/sets/'+track.id, 'PUT', { ...input, version:1, date:'2026-02-31' }, headers), environment)).status, 400);
-        assert.equal((await worker.fetch(req('/admin/sets/'+track.id, 'PUT', { ...input, version:1, tags:['x'.repeat(33)] }, headers), environment)).status, 400);
-        assert.equal((await worker.fetch(req('/admin/sets/'+track.id, 'PUT', { ...input, version:1, animationPosterKey:'', animationVideoKey:'' }, headers), environment)).status, 200);
+        const renamed = { ...input, slug: 'warehouse-night', version: 1 };
+        assert.equal((await worker.fetch(req('/admin/sets/'+track.id, 'PUT', renamed, headers), environment)).status, 200);
+        assert.equal((await tracks(environment)).find(item => item.id === track.id).slug, 'warehouse-night');
+        for (const oldSlug of [track.slug, track.legacySlug]) {
+            const redirected = await worker.fetch(new Request('https://ncc.ar/set/' + oldSlug), environment);
+            assert.equal(redirected.status, 301); assert.equal(redirected.headers.get('Location'), 'https://ncc.ar/set/warehouse-night');
+        }
+        assert.equal((await worker.fetch(req('/admin/sets/'+track.id, 'PUT', { ...renamed, version:2, slug:'warehouse-night-2' }, headers), environment)).status, 200);
+        const previousCustom = await worker.fetch(new Request('https://ncc.ar/set/warehouse-night'), environment);
+        assert.equal(previousCustom.status, 301); assert.equal(previousCustom.headers.get('Location'), 'https://ncc.ar/set/warehouse-night-2');
+        assert.equal((await worker.fetch(req('/admin/sets/'+track.id, 'PUT', { ...renamed, version:3, slug:'Bad slug' }, headers), environment)).status, 400);
+        assert.equal((await worker.fetch(req('/admin/sets/'+track.id, 'PUT', { ...renamed, version:3, date:'2026-02-31' }, headers), environment)).status, 400);
+        assert.equal((await worker.fetch(req('/admin/sets/'+track.id, 'PUT', { ...renamed, version:3, tags:['x'.repeat(33)] }, headers), environment)).status, 400);
+        const otherTrack = (await tracks(environment)).find(item => item.id !== track.id);
+        const conflicting = { title: otherTrack.name, slug:'warehouse-night-2', date:otherTrack.date, tags:otherTrack.tags, sortOrder:otherTrack.sortOrder, tracklist:otherTrack.tracklist, animationPosterKey:'', animationVideoKey:'', published:true, version:otherTrack.version };
+        assert.equal((await worker.fetch(req('/admin/sets/'+otherTrack.id, 'PUT', conflicting, headers), environment)).status, 409);
+        assert.equal((await worker.fetch(req('/admin/sets/'+track.id, 'PUT', { ...renamed, slug:'warehouse-night-2', version:3, animationPosterKey:'', animationVideoKey:'' }, headers), environment)).status, 200);
         const defaults = (await tracks(environment)).find(item => item.id === track.id);
         assert.equal(defaults.animationPosterKey, ''); assert.equal(defaults.animationPosterUrl, ''); assert.equal(defaults.animationVideoKey, ''); assert.equal(defaults.animationVideoUrl, '');
         const techno = (await tracks(environment)).filter(item => item.key.startsWith('techno-freaks/'));
         assert.equal((await worker.fetch(req('/admin/order', 'PUT', { ids: techno.map(item => item.id).reverse() }, headers), environment)).status, 200);
         assert.deepEqual((await tracks(environment)).filter(item => item.key.startsWith('techno-freaks/')).map(item => item.id), techno.map(item => item.id).reverse());
+        const orderedUnsaved = techno.find(item => item.id !== track.id);
+        const orderedAliases = (await environment.SITE_DB.prepare('SELECT slug FROM set_slug_aliases WHERE set_id = ?').bind(orderedUnsaved.id).all()).results.map(row => row.slug);
+        assert.ok(orderedAliases.includes(orderedUnsaved.legacySlug));
         const originalContent = await (await worker.fetch(req('/content'), environment)).json();
         assert.equal(originalContent.version, 0);
         const content = structuredClone(originalContent.content); content.about.body = 'Una biografía editada'; content.tour.body = '20.10.2026 · Buenos Aires';

@@ -110,6 +110,15 @@ test('share icons remove SVG filters before rendering under privacy shields', as
     assert.match(sets, /window\.open\(platform\.url, '_blank', 'noopener,noreferrer'\)/);
     assert.doesNotMatch(sets, /share-\$\{platform\.id\}/);
     assert.doesNotMatch(sets, /link\.href = platform\.url/);
+    assert.doesNotMatch(sets, /reddit/i);
     assert.match(css, /\.destination-grid \{/);
     assert.doesNotMatch(css, /\.share-platform-icon|\.share-option|\.share-links/);
+});
+
+test('set editor exposes the short slug and submits it with the record', async () => {
+    const sets = await read('js/sets.js');
+    assert.match(sets, /id="edit-slug"/);
+    assert.match(sets, /\$\('edit-slug'\)\.value = editorTrack\.slug/);
+    assert.match(sets, /JSON\.stringify\(\{ title: \$\('edit-title'\)\.value, slug,/);
+    assert.match(sets, /los enlaces anteriores redirigen al nuevo/);
 });

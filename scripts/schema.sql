@@ -15,6 +15,11 @@ CREATE TABLE IF NOT EXISTS sets (
   version INTEGER NOT NULL DEFAULT 1,
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+CREATE TABLE IF NOT EXISTS set_slug_aliases (
+  slug TEXT PRIMARY KEY,
+  set_id TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS set_slug_aliases_set_id ON set_slug_aliases (set_id);
 CREATE TABLE IF NOT EXISTS likes (
   set_id TEXT NOT NULL,
   visitor_id TEXT NOT NULL,

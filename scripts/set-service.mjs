@@ -12,6 +12,8 @@ async function stableId(key) {
 function slugify(title) {
     return title.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 90) || 'set';
 }
+const validPublicSlug = value => typeof value === 'string' && value.length >= 3 && value.length <= 80
+    && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value) && !value.startsWith('ncc-records-');
 function compactSlugBase(legacySlug, id) {
     const idSuffix = `-${id.slice(0, 8)}`;
     const withoutId = legacySlug.endsWith(idSuffix) ? legacySlug.slice(0, -idSuffix.length) : legacySlug;
@@ -47,6 +49,8 @@ async function ensureSetOrganisation(env) {
             catch (error) { if (!/duplicate column/i.test(String(error?.message || error))) throw error; }
         }
     }
+    await env.SITE_DB.prepare('CREATE TABLE IF NOT EXISTS set_slug_aliases (slug TEXT PRIMARY KEY, set_id TEXT NOT NULL)').run();
+    await env.SITE_DB.prepare('CREATE INDEX IF NOT EXISTS set_slug_aliases_set_id ON set_slug_aliases (set_id)').run();
     setOrganisationReady.add(env.SITE_DB);
 }
 function compareCatalogueTracks(a, b) {
@@ -161,6 +165,7 @@ async function readSmallJSON(request) {
 }
 function validSetInput(value) {
     return typeof value.title === 'string' && value.title.trim().length > 0 && value.title.length <= 240
+        && validPublicSlug(value.slug)
         && typeof value.date === 'string' && (value.date === '' || /^\d{4}-\d{2}-\d{2}$/.test(value.date) && new Date(value.date).toISOString().slice(0, 10) === value.date)
         && Array.isArray(value.tracklist) && value.tracklist.length <= 500 && value.tracklist.every(line => typeof line === 'string' && line.length <= 1000)
         && (value.tags === undefined || Array.isArray(value.tags) && value.tags.length <= 12 && value.tags.every(tag => typeof tag === 'string' && tag.trim().length > 0 && tag.trim().length <= 32))
@@ -248,9 +253,15 @@ async function handleSetService(request, env) {
                 const statements = input.ids.map((id, order) => {
                     const track = byId.get(id);
                     return env.SITE_DB.prepare("INSERT INTO sets (id,audio_key,slug,title,date,tracklist,tags,sort_order,animation_poster_key,animation_video_key,published,peaks) VALUES (?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET sort_order=excluded.sort_order, version=sets.version+1, updated_at=datetime('now')")
-                        .bind(track.id, track.key, track.legacySlug, track.name, track.date, JSON.stringify(track.tracklist), JSON.stringify(track.tags || []), order, track.animationPosterKey || '', track.animationVideoKey || '', Number(track.published), track.peaks ? JSON.stringify(track.peaks) : null);
+                        .bind(track.id, track.key, track.slug, track.name, track.date, JSON.stringify(track.tracklist), JSON.stringify(track.tags || []), order, track.animationPosterKey || '', track.animationVideoKey || '', Number(track.published), track.peaks ? JSON.stringify(track.peaks) : null);
                 });
-                await env.SITE_DB.batch(statements);
+                const aliasStatements = input.ids.flatMap(id => {
+                    const track = byId.get(id);
+                    return track.legacySlug && track.legacySlug !== track.slug
+                        ? [env.SITE_DB.prepare('INSERT OR IGNORE INTO set_slug_aliases (slug, set_id) VALUES (?, ?)').bind(track.legacySlug, id)]
+                        : [];
+                });
+                await env.SITE_DB.batch([...statements, ...aliasStatements]);
                 return reply({ saved: true });
             }
             const mediaMatch = path.match(/^\/admin\/sets\/([a-f0-9]{20})\/media\/(poster|video)$/);
@@ -281,6 +292,9 @@ async function handleSetService(request, env) {
             const id = path.split('/').pop();
             const track = (await catalogue(env, url.origin, true)).find(item => item.id === id);
             if (!track) return reply({ error: 'Set no encontrado.' }, 404);
+            const slugOwner = (await catalogue(env, url.origin, true)).find(item => item.id !== id && (item.slug === input.slug || item.legacySlug === input.slug));
+            const aliasOwner = (await env.SITE_DB.prepare('SELECT set_id FROM set_slug_aliases WHERE slug = ?').bind(input.slug).all()).results[0];
+            if (slugOwner || aliasOwner && aliasOwner.set_id !== id) return reply({ error: 'Ese enlace ya está usado por otro set.' }, 409);
             const peaks = input.peaks === undefined ? track.peaks : input.peaks;
             const tags = input.tags === undefined ? track.tags : [...new Set(input.tags.map(tag => tag.trim()))];
             const sortOrder = input.sortOrder === undefined ? track.sortOrder : input.sortOrder;
@@ -290,13 +304,17 @@ async function handleSetService(request, env) {
             let result;
             if (input.version === 0) {
                 result = await env.SITE_DB.prepare('INSERT OR IGNORE INTO sets (id, audio_key, slug, title, date, tracklist, tags, sort_order, animation_poster_key, animation_video_key, published, peaks) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-                    .bind(id, track.key, track.legacySlug, input.title.trim(), input.date, JSON.stringify(input.tracklist), JSON.stringify(tags), sortOrder, animationPosterKey, animationVideoKey, Number(input.published), peaks ? JSON.stringify(peaks) : null).run();
+                    .bind(id, track.key, input.slug, input.title.trim(), input.date, JSON.stringify(input.tracklist), JSON.stringify(tags), sortOrder, animationPosterKey, animationVideoKey, Number(input.published), peaks ? JSON.stringify(peaks) : null).run();
             } else {
-                result = await env.SITE_DB.prepare("UPDATE sets SET title = ?, date = ?, tracklist = ?, tags = ?, sort_order = ?, animation_poster_key = ?, animation_video_key = ?, published = ?, peaks = ?, version = version + 1, updated_at = datetime('now') WHERE id = ? AND version = ?")
-                    .bind(input.title.trim(), input.date, JSON.stringify(input.tracklist), JSON.stringify(tags), sortOrder, animationPosterKey, animationVideoKey, Number(input.published), peaks ? JSON.stringify(peaks) : null, id, input.version).run();
+                result = await env.SITE_DB.prepare("UPDATE sets SET slug = ?, title = ?, date = ?, tracklist = ?, tags = ?, sort_order = ?, animation_poster_key = ?, animation_video_key = ?, published = ?, peaks = ?, version = version + 1, updated_at = datetime('now') WHERE id = ? AND version = ?")
+                    .bind(input.slug, input.title.trim(), input.date, JSON.stringify(input.tracklist), JSON.stringify(tags), sortOrder, animationPosterKey, animationVideoKey, Number(input.published), peaks ? JSON.stringify(peaks) : null, id, input.version).run();
             }
             if (result.meta.changes !== 1) return reply({ error: 'El set cambió en otra ventana. Volvé a abrirlo antes de guardar.' }, 409);
-            return reply({ saved: true, version: input.version + 1, slug: track.slug });
+            const aliases = [...new Set([track.slug, track.legacySlug])].filter(slug => slug && slug !== input.slug);
+            const aliasStatements = [env.SITE_DB.prepare('DELETE FROM set_slug_aliases WHERE slug = ? AND set_id = ?').bind(input.slug, id),
+                ...aliases.map(slug => env.SITE_DB.prepare('INSERT OR IGNORE INTO set_slug_aliases (slug, set_id) VALUES (?, ?)').bind(slug, id))];
+            await env.SITE_DB.batch(aliasStatements);
+            return reply({ saved: true, version: input.version + 1, slug: input.slug });
         }
         if (path === '/content' && request.method === 'GET') return reply(await siteContent(env));
         if (path === '/sets' && request.method === 'GET') return reply({ tracks: await catalogue(env, url.origin) });
@@ -374,7 +392,14 @@ async function handleSetPage(request, env) {
     if (!['GET', 'HEAD'].includes(request.method)) return new Response('Method not allowed', { status: 405 });
     const requestedSlug = url.pathname.replace(/\/$/, '').slice('/set/'.length);
     let track;
-    try { track = (await catalogue(env, url.origin)).find(item => item.slug === requestedSlug || item.legacySlug === requestedSlug); }
+    try {
+        const tracks = await catalogue(env, url.origin);
+        track = tracks.find(item => item.slug === requestedSlug || item.legacySlug === requestedSlug);
+        if (!track && env.SITE_DB) {
+            const alias = (await env.SITE_DB.prepare('SELECT set_id FROM set_slug_aliases WHERE slug = ?').bind(requestedSlug).all()).results[0];
+            if (alias) track = tracks.find(item => item.id === alias.set_id);
+        }
+    }
     catch { return new Response('No pudimos cargar el set. Volvé a intentar.', { status: 503 }); }
     if (track && requestedSlug !== track.slug) return Response.redirect(`${ORIGIN}/set/${track.slug}`, 301);
     // GitHub Pages remains the origin. Only /set/* and /api/* route through this Worker.
