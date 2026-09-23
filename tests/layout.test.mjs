@@ -87,15 +87,24 @@ test('expanded player uses ninety-five percent of desktop and the full mobile vi
 test('expanded artwork sits in a compact horizontal stage above the waveform', async () => {
     const css = await read('styles.css');
     assert.match(css, /\.expanded-player-visual \{[^}]*flex-direction: column;/);
-    assert.match(css, /\.expanded-skull-media \{[^}]*order: -1;[^}]*width: 100%;[^}]*height: clamp\(150px,22vw,230px\);/);
+    assert.match(css, /\.expanded-skull-media \{[^}]*order: -1;[^}]*width: 100%;[^}]*height: clamp\(145px,20vw,210px\);/);
     assert.match(css, /\.expanded-skull-media img, \.expanded-skull-media video \{[^}]*position: absolute;[^}]*top: 50%;[^}]*left: 50%;[^}]*width: calc\(100% - clamp\(12px,2vw,22px\)\);[^}]*height: calc\(100% - clamp\(12px,2vw,22px\)\);[^}]*transform: translate\(-50%,-50%\);[^}]*object-fit: contain;[^}]*object-position: center;/);
     assert.doesNotMatch(css, /\.expanded-player-visual \{[^}]*grid-template-columns:/);
 });
 
 test('expanded player close control stays compact', async () => {
     const css = await read('styles.css');
-    assert.match(css, /\.now-player-close \{[^}]*width: 44px;[^}]*height: 44px;[^}]*margin: 0 0 2px auto;/);
-    assert.match(css, /\.now-player-close \.icon \{ width: 18px; height: 18px; \}/);
+    assert.match(css, /\.now-player-close \{[^}]*width: 36px;[^}]*height: 36px;[^}]*margin: 0 4px -36px auto;/);
+    assert.match(css, /\.now-player-close \.icon \{ width: 15px; height: 15px; \}/);
+    assert.match(css, /\.waveform-community-card \{ margin-top: 0;/);
+});
+
+test('expanded player reveals the beginning of the tracklist sooner', async () => {
+    const css = await read('styles.css');
+    assert.match(css, /\.waveform-community-card \.detail-waveform canvas \{ height: 168px; \}/);
+    assert.match(css, /\.now-player-tracklist \{ margin-top: 14px; padding-top: 12px;/);
+    assert.match(css, /\.now-player-tracklist h3 \{ margin-bottom: 10px;/);
+    assert.match(css, /\.now-player-tracklist li \{ padding: 4px 0 4px 8px; \}/);
 });
 
 test('mobile expanded player allows the set title to use two lines', async () => {
