@@ -14,6 +14,7 @@ export default {
             return new Response(null, { headers: corsHeaders(request, env) });
         }
 
+        if (url.pathname === '/sitemap.xml' || url.pathname === '/api/sitemap.xml') return handleSitemap(request, env);
         if (url.pathname.startsWith('/set/')) return handleSetPage(request, env);
         if (url.pathname.startsWith('/api/') || url.pathname === '/sets' || url.pathname.startsWith('/admin/') || /^\/sets\/[^/]+\/(?:likes|community|comments|fire)$/.test(url.pathname)) return handleSetService(request, env);
         if (url.pathname === "/visits") return handleVisits(request, env);
@@ -181,7 +182,7 @@ function corsHeaders(request, env) {
 
     return new Headers({
         "Access-Control-Allow-Origin": allowedOrigin,
-        "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type, Range",
         "Access-Control-Expose-Headers": "Content-Length, Content-Type, ETag",
         "Vary": "Origin",
@@ -231,7 +232,8 @@ const COLLECTIONS = ['techno-freaks/', 'chill-out/', 'radio/'];
 const ORIGIN = 'https://ncc.ar';
 const jwksCache = new Map();
 const encoder = new TextEncoder();
-let communityPositionReady = false;
+const communitySchemaReady = new WeakSet();
+const analyticsSchemaReady = new WeakSet();
 const setOrganisationReady = new WeakSet();
 async function stableId(key) {
     const bytes = await crypto.subtle.digest('SHA-256', encoder.encode(key));
@@ -409,14 +411,22 @@ function validSetMedia(bytes, kind) {
 }
 const validVisitor = value => /^[a-f0-9-]{36}$/.test(value || '');
 const cleanCommunityText = (value, max) => typeof value === 'string' && value.trim().length > 0 && value.trim().length <= max && !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value) ? value.trim() : '';
-async function ensureCommunityPosition(env) {
-    if (communityPositionReady) return;
-    try { await env.SITE_DB.prepare('SELECT position_seconds FROM comments LIMIT 0').all(); }
-    catch {
-        try { await env.SITE_DB.prepare('ALTER TABLE comments ADD COLUMN position_seconds REAL').run(); }
-        catch (error) { if (!/duplicate column/i.test(String(error?.message || error))) throw error; }
+async function ensureCommunitySchema(env) {
+    if (communitySchemaReady.has(env.SITE_DB)) return;
+    for (const [column, definition] of [['position_seconds', 'REAL'], ['hidden', 'INTEGER NOT NULL DEFAULT 0'], ['moderated_at', 'TEXT']]) {
+        try { await env.SITE_DB.prepare(`SELECT ${column} FROM comments LIMIT 0`).all(); }
+        catch {
+            try { await env.SITE_DB.prepare(`ALTER TABLE comments ADD COLUMN ${column} ${definition}`).run(); }
+            catch (error) { if (!/duplicate column/i.test(String(error?.message || error))) throw error; }
+        }
     }
-    communityPositionReady = true;
+    communitySchemaReady.add(env.SITE_DB);
+}
+async function ensureAnalyticsSchema(env) {
+    if (analyticsSchemaReady.has(env.SITE_DB)) return;
+    await env.SITE_DB.prepare("CREATE TABLE IF NOT EXISTS analytics_daily (day TEXT NOT NULL, event TEXT NOT NULL, set_id TEXT NOT NULL, detail TEXT NOT NULL DEFAULT '', count INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (day,event,set_id,detail))").run();
+    await env.SITE_DB.prepare('CREATE INDEX IF NOT EXISTS analytics_daily_day ON analytics_daily (day DESC)').run();
+    analyticsSchemaReady.add(env.SITE_DB);
 }
 const DEFAULT_CONTENT = {
     sets: { title: 'CARDÚ', genres: '[Experimental / Industrial]', description: 'MUSIC 4 FREAKS.' },
@@ -454,6 +464,37 @@ async function handleSetService(request, env) {
             if (request.method === 'GET' && path === '/admin/session') return reply({ admin: true });
             if (request.method === 'GET' && path === '/admin/sets') return reply({ tracks: await catalogue(env, url.origin, true) });
             if (request.method === 'GET' && path === '/admin/export') return reply({ sets: (await env.SITE_DB.prepare('SELECT * FROM sets').all()).results, site: await siteContent(env) });
+            if (path === '/admin/comments' && request.method === 'GET') {
+                await ensureCommunitySchema(env);
+                const comments = (await env.SITE_DB.prepare('SELECT id, set_id AS setId, author, body, position_seconds AS positionSeconds, hidden, moderated_at AS moderatedAt, created_at AS createdAt FROM comments ORDER BY created_at DESC, id DESC LIMIT 500').all()).results;
+                return reply({ comments: comments.map(comment => ({ ...comment, hidden: Boolean(comment.hidden) })) });
+            }
+            const moderationMatch = path.match(/^\/admin\/comments\/([a-f0-9-]{36})$/);
+            if (moderationMatch && ['PUT', 'DELETE'].includes(request.method)) {
+                if (!writeOriginAllowed(request, env)) return reply({ error: 'Origin not allowed' }, 403);
+                await ensureCommunitySchema(env);
+                if (request.method === 'DELETE') {
+                    const result = await env.SITE_DB.prepare('DELETE FROM comments WHERE id = ?').bind(moderationMatch[1]).run();
+                    return result.meta.changes === 1 ? reply({ deleted: true }) : reply({ error: 'Comentario no encontrado.' }, 404);
+                }
+                let input;
+                try { input = await readSmallJSON(request); if (typeof input.hidden !== 'boolean') throw new Error(); }
+                catch { return reply({ error: 'Estado de moderación inválido.' }, 400); }
+                const result = await env.SITE_DB.prepare("UPDATE comments SET hidden = ?, moderated_at = datetime('now') WHERE id = ?")
+                    .bind(Number(input.hidden), moderationMatch[1]).run();
+                return result.meta.changes === 1 ? reply({ saved: true, hidden: input.hidden }) : reply({ error: 'Comentario no encontrado.' }, 404);
+            }
+            if (path === '/admin/analytics' && request.method === 'GET') {
+                await ensureAnalyticsSchema(env);
+                const days = Math.min(365, Math.max(1, Number.parseInt(url.searchParams.get('days') || '30', 10) || 30));
+                const since = `-${days - 1} days`;
+                const [totals, sets, shares] = await env.SITE_DB.batch([
+                    env.SITE_DB.prepare("SELECT event, SUM(count) AS count FROM analytics_daily WHERE day >= date('now', ?) GROUP BY event ORDER BY event").bind(since),
+                    env.SITE_DB.prepare("SELECT set_id AS setId, event, SUM(count) AS count FROM analytics_daily WHERE day >= date('now', ?) GROUP BY set_id,event ORDER BY count DESC").bind(since),
+                    env.SITE_DB.prepare("SELECT detail, SUM(count) AS count FROM analytics_daily WHERE day >= date('now', ?) AND event = 'share' GROUP BY detail ORDER BY count DESC").bind(since)
+                ]);
+                return reply({ days, totals: totals.results, sets: sets.results, shares: shares.results });
+            }
             if (path === '/admin/content') {
                 if (request.method === 'GET') return reply(await siteContent(env));
                 if (request.method !== 'PUT') return reply({ error: 'Método no permitido.' }, 405);
@@ -546,6 +587,24 @@ async function handleSetService(request, env) {
         }
         if (path === '/content' && request.method === 'GET') return reply(await siteContent(env));
         if (path === '/sets' && request.method === 'GET') return reply({ tracks: await catalogue(env, url.origin) });
+        if (path === '/analytics' && request.method === 'POST') {
+            if (!env.SITE_DB) return reply({ error: 'Analytics unavailable' }, 503);
+            if (!writeOriginAllowed(request, env)) return reply({ error: 'Origin not allowed' }, 403);
+            let input;
+            try { input = await readSmallJSON(request); } catch { return reply({ error: 'Datos inválidos.' }, 400); }
+            const events = new Set(['play_start', 'play_complete', 'expand', 'share']);
+            const shareDetails = new Set(['', 'copy', 'native', 'twitter', 'facebook', 'instagram', 'whatsapp', 'telegram']);
+            if (!events.has(input.event) || !/^[a-f0-9]{20}$/.test(input.setId || '') || typeof input.detail !== 'string' || input.detail.length > 24
+                || input.event === 'share' && !shareDetails.has(input.detail) || input.event !== 'share' && input.detail !== '') return reply({ error: 'Datos inválidos.' }, 400);
+            const track = (await catalogue(env, url.origin)).find(item => item.id === input.setId);
+            if (!track) return reply({ error: 'Set no encontrado.' }, 404);
+            await ensureAnalyticsSchema(env);
+            await env.SITE_DB.batch([
+                env.SITE_DB.prepare("INSERT INTO analytics_daily (day,event,set_id,detail,count) VALUES (date('now'),?,?,?,1) ON CONFLICT(day,event,set_id,detail) DO UPDATE SET count=count+1").bind(input.event, input.setId, input.detail),
+                env.SITE_DB.prepare("DELETE FROM analytics_daily WHERE day < date('now', '-400 days')")
+            ]);
+            return reply({ counted: true });
+        }
         const match = path.match(/^\/sets\/([a-f0-9]{20})\/likes$/);
         if (match && ['GET', 'PUT'].includes(request.method)) {
             if (!env.SITE_DB) return reply({ error: 'Likes unavailable' }, 503);
@@ -567,14 +626,14 @@ async function handleSetService(request, env) {
         const communityMatch = path.match(/^\/sets\/([a-f0-9]{20})\/(community|comments|fire)$/);
         if (communityMatch) {
             if (!env.SITE_DB) return reply({ error: 'Comentarios no disponibles.' }, 503);
-            await ensureCommunityPosition(env);
+            await ensureCommunitySchema(env);
             const track = (await catalogue(env, url.origin)).find(item => item.id === communityMatch[1]);
             if (!track) return reply({ error: 'Set no encontrado.' }, 404);
             const section = communityMatch[2];
             if (section === 'community' && request.method === 'GET') {
                 const [fireResult, commentResult] = await env.SITE_DB.batch([
                     env.SITE_DB.prepare('SELECT COUNT(*) AS count FROM fire_reactions WHERE set_id = ?').bind(track.id),
-                    env.SITE_DB.prepare('SELECT id, author, body, position_seconds AS positionSeconds, created_at AS createdAt FROM comments WHERE set_id = ? ORDER BY created_at DESC, id DESC LIMIT 100').bind(track.id)
+                    env.SITE_DB.prepare('SELECT id, author, body, position_seconds AS positionSeconds, created_at AS createdAt FROM comments WHERE set_id = ? AND hidden = 0 ORDER BY created_at DESC, id DESC LIMIT 100').bind(track.id)
                 ]);
                 return reply({ fireCount: fireResult.results[0].count, comments: commentResult.results });
             }
@@ -615,6 +674,21 @@ async function handleSetService(request, env) {
 function escapeHTML(text) {
     return String(text).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 }
+function escapeXML(text) {
+    return String(text).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]);
+}
+async function handleSitemap(request, env) {
+    if (!['GET', 'HEAD'].includes(request.method)) return new Response('Method not allowed', { status: 405 });
+    let tracks;
+    try { tracks = await catalogue(env, ORIGIN); }
+    catch { return new Response('Sitemap unavailable', { status: 503 }); }
+    const urls = [{ loc: `${ORIGIN}/`, lastmod: new Date().toISOString().slice(0, 10) }, ...tracks.map(track => ({
+        loc: `${ORIGIN}/set/${track.slug}`,
+        lastmod: track.date || String(track.uploaded || '').slice(0, 10) || new Date().toISOString().slice(0, 10)
+    }))];
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(item => `  <url><loc>${escapeXML(item.loc)}</loc><lastmod>${escapeXML(item.lastmod)}</lastmod></url>`).join('\n')}\n</urlset>\n`;
+    return new Response(request.method === 'HEAD' ? null : xml, { headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
+}
 async function handleSetPage(request, env) {
     const url = new URL(request.url);
     if (!['GET', 'HEAD'].includes(request.method)) return new Response('Method not allowed', { status: 405 });
@@ -637,11 +711,19 @@ async function handleSetPage(request, env) {
     if (!response.ok) return new Response('Página no disponible', { status: 502 });
     let html = await response.text();
     const title = track ? `${track.name} | NCC Music` : 'Set no encontrado | NCC Music';
-    const description = track ? `${track.name}${track.date ? ' · ' + track.date : ''}. Escuchá el set y consultá su tracklist en NCC Music.` : 'Este set no existe o no está publicado.';
+    const description = track ? `${track.name}${track.date ? ' · ' + track.date : ''}.${track.tags?.length ? ' ' + track.tags.join(', ') + '.' : ''} Escuchá el set y consultá su tracklist en NCC Music.` : 'Este set no existe o no está publicado.';
+    const socialImage = track?.animationPosterUrl || `${ORIGIN}/assets/player-cover-clean.jpg`;
+    const structuredData = track ? JSON.stringify({
+        '@context': 'https://schema.org', '@type': 'MusicPlaylist', name: track.name, url: `${ORIGIN}/set/${track.slug}`,
+        image: socialImage, datePublished: track.date || undefined, numTracks: track.tracklist.length,
+        keywords: track.tags?.join(', ') || undefined,
+        byArtist: { '@type': 'Person', name: 'Nicolás Cardú', url: ORIGIN },
+        track: track.tracklist.map(name => ({ '@type': 'MusicRecording', name }))
+    }).replace(/</g, '\\u003c') : '';
     html = html.replace(/<title>[^<]*<\/title>/, `<title>${escapeHTML(title)}</title>`);
-    html = html.replace(/<meta (?:name="(?:description|twitter:title|twitter:description)"|property="(?:og:title|og:description|og:url)")[^>]*>/g, '');
+    html = html.replace(/<meta (?:name="(?:description|twitter:title|twitter:description|twitter:image|twitter:image:alt)"|property="(?:og:title|og:description|og:url|og:type|og:image(?::[^\"]+)?)")[^>]*>\s*/g, '');
     html = html.replace(/<link rel="(?:canonical|alternate)"[^>]*>/g, '');
     if (!track) html = html.replace(/<meta name="(?:robots|googlebot)"[^>]*>/g, '');
-    html = html.replace('</head>', `<link rel="canonical" href="${ORIGIN}${escapeHTML(url.pathname)}"><meta name="description" content="${escapeHTML(description)}"><meta property="og:title" content="${escapeHTML(title)}"><meta property="og:description" content="${escapeHTML(description)}"><meta property="og:url" content="${ORIGIN}${escapeHTML(url.pathname)}"><meta name="twitter:title" content="${escapeHTML(title)}"><meta name="twitter:description" content="${escapeHTML(description)}">${track ? '' : '<meta name="robots" content="noindex">'}</head>`);
+    html = html.replace('</head>', `<link rel="canonical" href="${ORIGIN}${escapeHTML(url.pathname)}"><meta name="description" content="${escapeHTML(description)}"><meta property="og:type" content="${track ? 'music.playlist' : 'website'}"><meta property="og:title" content="${escapeHTML(title)}"><meta property="og:description" content="${escapeHTML(description)}"><meta property="og:url" content="${ORIGIN}${escapeHTML(url.pathname)}"><meta property="og:image" content="${escapeHTML(socialImage)}"><meta property="og:image:alt" content="Portada de ${escapeHTML(track?.name || 'NCC Music')}"><meta name="twitter:title" content="${escapeHTML(title)}"><meta name="twitter:description" content="${escapeHTML(description)}"><meta name="twitter:image" content="${escapeHTML(socialImage)}"><meta name="twitter:image:alt" content="Portada de ${escapeHTML(track?.name || 'NCC Music')}">${track ? `<script type="application/ld+json">${structuredData}</script>` : '<meta name="robots" content="noindex">'}</head>`);
     return new Response(request.method === 'HEAD' ? null : html, { status: track ? 200 : 404, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
 }

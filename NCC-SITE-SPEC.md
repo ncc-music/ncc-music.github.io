@@ -20,7 +20,7 @@ El acceso de edición requiere Cloudflare Access y validación del JWT en el Wor
 
 ## Activación en ncc.ar
 
-1. Ejecutar `scripts/schema.sql` en la base D1 de producción `ncdata`. Las sentencias `CREATE TABLE IF NOT EXISTS` conservan los datos existentes y agregan `site_content`, `comments` y `fire_reactions` si faltan. El servicio agrega automáticamente `comments.position_seconds` a instalaciones anteriores para ubicar comentarios en el waveform.
+1. Ejecutar `scripts/schema.sql` en la base D1 de producción `ncdata`. Las sentencias `CREATE TABLE IF NOT EXISTS` conservan los datos existentes y agregan `site_content`, `comments`, `fire_reactions`, aliases de slugs y `analytics_daily` si faltan. El servicio migra automáticamente las columnas de posición y moderación de comentarios en instalaciones anteriores.
 2. Conectar esa base al Worker `rapid-silence-8ef7` con el binding `SITE_DB`. Conservar el binding R2 `MUSIC_BUCKET` existente.
 3. Proteger `ncc.ar/api/admin/*` con una aplicación Cloudflare Access y una política que permita únicamente el correo elegido por el propietario. Hacer lo mismo para `www.ncc.ar/api/admin/*` si ese host sirve la web sin redirigir al canónico.
 4. Configurar `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD` y `ADMIN_EMAIL` en el Worker con los valores reales de esa aplicación. No guardar secretos ni tokens en GitHub.

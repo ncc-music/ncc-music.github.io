@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ncc.ar/sitemap.xml
+Sitemap: https://ncc.ar/api/sitemap.xml

@@ -497,7 +497,7 @@ main:has(.radio-upcoming:not([hidden])) #page-quality { display: none; }
 
 @font-face {
     font-family: "Road Rage";
-    src: url("assets/fonts/RoadRage-Regular.ttf") format("truetype");
+    src: url("assets/fonts/RoadRage-Regular.woff2") format("woff2");
     font-style: normal;
     font-weight: 400;
     font-display: swap;
@@ -963,6 +963,34 @@ body.player-expanded { overflow: hidden; }
 .playlist-admin-edit:hover:not(:disabled) { color: #111; background: #c9ddb2; border-color: #c9ddb2; }
 .admin-ficha-button { color: #111; background: var(--accent); border-color: var(--accent); font-weight: 800; }
 .admin-ficha-button:hover { background: #c9ddb2; border-color: #c9ddb2; }
+
+/* Private administration: comment moderation and aggregate listening signals. */
+.moderation-list, .analytics-content { display: grid; gap: 14px; }
+.moderation-card { padding: 16px; border: 1px solid #ffffff22; border-radius: 8px; background: #090a0b; }
+.moderation-card.is-hidden { opacity: .58; border-style: dashed; }
+.moderation-card-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 18px; }
+.moderation-card-heading span, .moderation-meta, .analytics-period, .analytics-shares { color: var(--muted); font-size: 12px; }
+.moderation-meta { margin: 5px 0 12px; }
+.moderation-body { margin: 0; line-height: 1.55; overflow-wrap: anywhere; }
+.moderation-actions { display: flex; gap: 8px; margin-top: 14px; }
+.moderation-delete { color: #ff9b8a; border-color: #ff725955; }
+.analytics-summary { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; }
+.analytics-card { display: grid; gap: 4px; padding: 15px 12px; border: 1px solid #ffffff24; border-radius: 8px; background: #090a0b; }
+.analytics-card strong { color: var(--accent); font-size: 27px; line-height: 1; }
+.analytics-card span { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+.analytics-content h3 { margin-top: 10px; font-size: 12px; letter-spacing: .09em; }
+.analytics-set-list { display: grid; gap: 8px; }
+.analytics-set-row { display: flex; justify-content: space-between; gap: 20px; padding: 11px 0; border-bottom: 1px solid #ffffff18; }
+.analytics-set-row span { color: var(--muted); font-size: 12px; text-align: right; }
+.pwa-update { position: fixed; z-index: 90; right: 18px; bottom: calc(var(--dock-height) + 24px); display: flex; align-items: center; gap: 14px; padding: 12px 14px; color: var(--text); background: #17191a; border: 1px solid #ffffff2f; border-radius: 8px; box-shadow: 0 16px 45px #000c; font-size: 13px; }
+.pwa-update button { min-height: 34px; padding: 6px 11px; color: #101112; background: var(--accent); border-radius: 4px; font-weight: 800; }
+
+@media (max-width: 760px) {
+    .analytics-summary { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .analytics-set-row, .moderation-card-heading { align-items: flex-start; flex-direction: column; gap: 5px; }
+    .analytics-set-row span { text-align: left; }
+    .pwa-update { left: 12px; right: 12px; bottom: calc(var(--dock-height) + 12px); justify-content: space-between; }
+}
 .admin-mode .track-table-head { padding-right: 336px; }
 @media (max-width: 760px) {
     .playlist-admin-actions { padding-right: 2px; }

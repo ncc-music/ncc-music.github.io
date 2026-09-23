@@ -174,6 +174,26 @@ test('signed admin saves validate JWT, preserve every old slug and reject stale 
         const orderedUnsaved = techno.find(item => item.id !== track.id);
         const orderedAliases = (await environment.SITE_DB.prepare('SELECT slug FROM set_slug_aliases WHERE set_id = ?').bind(orderedUnsaved.id).all()).results.map(row => row.slug);
         assert.ok(orderedAliases.includes(orderedUnsaved.legacySlug));
+        const commentResponse = await worker.fetch(req(`/sets/${track.id}/comments`, 'POST', { visitor, author:'Night Rider', body:'Moderate this', positionSeconds:12 }), environment);
+        assert.equal(commentResponse.status, 201);
+        const comment = (await commentResponse.json()).comment;
+        const adminComments = await (await worker.fetch(req('/admin/comments', 'GET', null, headers), environment)).json();
+        assert.equal(adminComments.comments[0].id, comment.id); assert.equal(adminComments.comments[0].hidden, false);
+        assert.equal((await worker.fetch(req('/admin/comments/'+comment.id, 'PUT', { hidden:true }, headers), environment)).status, 200);
+        assert.equal((await (await worker.fetch(req(`/sets/${track.id}/community`), environment)).json()).comments.length, 0);
+        assert.equal((await worker.fetch(req('/admin/comments/'+comment.id, 'PUT', { hidden:false }, headers), environment)).status, 200);
+        assert.equal((await (await worker.fetch(req(`/sets/${track.id}/community`), environment)).json()).comments.length, 1);
+        assert.equal((await worker.fetch(req('/admin/comments/'+comment.id, 'DELETE', null, headers), environment)).status, 200);
+        assert.equal((await (await worker.fetch(req(`/sets/${track.id}/community`), environment)).json()).comments.length, 0);
+        for (const metric of [
+            { event:'play_start', setId:track.id, detail:'' }, { event:'play_start', setId:track.id, detail:'' },
+            { event:'play_complete', setId:track.id, detail:'' }, { event:'share', setId:track.id, detail:'instagram' }
+        ]) assert.equal((await worker.fetch(req('/analytics', 'POST', metric), environment)).status, 200);
+        assert.equal((await worker.fetch(req('/analytics', 'POST', { event:'unknown', setId:track.id, detail:'' }), environment)).status, 400);
+        const analytics = await (await worker.fetch(req('/admin/analytics?days=30', 'GET', null, headers), environment)).json();
+        assert.equal(analytics.totals.find(item => item.event === 'play_start').count, 2);
+        assert.equal(analytics.totals.find(item => item.event === 'play_complete').count, 1);
+        assert.deepEqual(analytics.shares, [{ detail:'instagram', count:1 }]);
         const originalContent = await (await worker.fetch(req('/content'), environment)).json();
         assert.equal(originalContent.version, 0);
         const content = structuredClone(originalContent.content); content.about.body = 'Una biografía editada'; content.tour.body = '20.10.2026 · Buenos Aires';
@@ -207,6 +227,8 @@ test('shared pages include the original skull and escaped set metadata without J
         assert.match(html, /property="og:image" content="https:\/\/ncc.ar\/assets\/player-cover-clean.jpg"/);
         assert.match(html, /name="twitter:image" content="https:\/\/ncc.ar\/assets\/player-cover-clean.jpg"/);
         assert.match(html, /Set &lt;special&gt; &quot;NCC&quot;/);
+        assert.match(html, /"@type":"MusicPlaylist"/);
+        assert.match(html, /"byArtist":\{"@type":"Person","name":"Nicolás Cardú"/);
         assert.ok(html.includes('rel="canonical" href="https://ncc.ar/set/' + track.slug + '"'));
         const legacy = await worker.fetch(new Request('https://ncc.ar/set/' + track.legacySlug), environment);
         assert.equal(legacy.status, 301);
@@ -217,4 +239,15 @@ test('shared pages include the original skull and escaped set metadata without J
         const head = await worker.fetch(new Request('https://ncc.ar/set/' + track.slug, { method: 'HEAD' }), environment);
         assert.equal(head.status, 200); assert.equal(await head.text(), '');
     } finally { globalThis.fetch = originalFetch; }
+});
+
+test('dynamic sitemap lists every published short set URL', async () => {
+    const environment = env();
+    const current = await tracks(environment);
+    const response = await worker.fetch(new Request('https://ncc.ar/api/sitemap.xml'), environment);
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get('Content-Type'), /application\/xml/);
+    const xml = await response.text();
+    for (const track of current) assert.ok(xml.includes(`<loc>https://ncc.ar/set/${track.slug}</loc>`));
+    assert.doesNotMatch(xml, /ncc-records-/);
 });

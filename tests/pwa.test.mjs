@@ -23,8 +23,25 @@ test('the web app manifest contains install icons and standalone display mode', 
 });
 
 test('the service worker keeps media and private APIs out of runtime storage', async () => {
-    const worker = await read('service-worker.js');
+    const [worker, client] = await Promise.all([read('service-worker.js'), read('js/pwa.js')]);
     assert.match(worker, /request\.destination === 'audio'/);
     assert.match(worker, /url\.pathname\.startsWith\('\/api\/'\)/);
     assert.match(worker, /request\.mode === 'navigate'/);
+    assert.match(worker, /SKIP_WAITING/);
+    assert.doesNotMatch(worker, /install[\s\S]{0,180}skipWaiting/);
+    assert.match(client, /Nueva versión disponible/);
+    assert.match(client, /controllerchange/);
+});
+
+test('heavy visual assets use compact modern formats', async () => {
+    const [html, css, hero, skull, logo, font] = await Promise.all([
+        read('index.html'), read('styles.css'), stat(new URL('../assets/mixed-by-single-line.webp', import.meta.url)),
+        stat(new URL('../assets/skull-pieces.webp', import.meta.url)), stat(new URL('../assets/cardu-skull-mustard.webp', import.meta.url)),
+        stat(new URL('../assets/fonts/RoadRage-Regular.woff2', import.meta.url))
+    ]);
+    assert.match(html, /mixed-by-single-line\.webp/);
+    assert.match(html, /skull-pieces\.webp/);
+    assert.match(html, /cardu-skull-mustard\.webp/);
+    assert.match(css, /RoadRage-Regular\.woff2/);
+    assert.ok(hero.size < 200000 && skull.size < 200000 && logo.size < 100000 && font.size < 120000);
 });

@@ -14,7 +14,7 @@ test('manifesto language controls live beside the page title', async () => {
 
 test('mobile About uses the mustard skull identity', async () => {
     const [html, css] = await Promise.all([read('index.html'), read('styles.css')]);
-    assert.match(html, /about-art"><img src="assets\/cardu-skull-mustard\.png/);
+    assert.match(html, /about-art"><img src="assets\/cardu-skull-mustard\.webp/);
     assert.match(css, /\.about-section \{ display: grid; grid-template-columns:/);
     assert.match(css, /grid-template-areas: "copy art"/);
     assert.match(css, /\.about-art \{ grid-area: art;/);
@@ -121,4 +121,15 @@ test('set editor exposes the short slug and submits it with the record', async (
     assert.match(sets, /\$\('edit-slug'\)\.value = editorTrack\.slug/);
     assert.match(sets, /JSON\.stringify\(\{ title: \$\('edit-title'\)\.value, slug,/);
     assert.match(sets, /los enlaces anteriores redirigen al nuevo/);
+});
+
+test('administration exposes moderation and aggregate analytics', async () => {
+    const [sets, css] = await Promise.all([read('js/sets.js'), read('styles.css')]);
+    assert.match(sets, /Moderar comentarios/);
+    assert.match(sets, /Ver estadísticas/);
+    assert.match(sets, /datos agregados, sin perfiles personales/);
+    assert.match(sets, /recordAnalytics\('play_start'/);
+    assert.match(sets, /recordAnalytics\('play_complete'/);
+    assert.match(css, /\.analytics-summary/);
+    assert.match(css, /\.moderation-card/);
 });

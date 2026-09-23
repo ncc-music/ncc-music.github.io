@@ -5,6 +5,8 @@
     let tracklistQuery = '', nowPlayerOpen = false, nowPlayerTrackKey = '', nowPlayerTrack = null, playerReturnFocus = null;
     let socialLikes = new Set(), pendingLikes = new Set(), fireReactions = new Set(), pendingFire = new Set(), commentLikes = new Set(), communityRequest = 0;
     const communityCache = new Map();
+    const analyticsOnce = new Set();
+    let analyticsPlayingTrack = null;
     try { socialLikes = new Set(JSON.parse(localStorage.getItem('ncc-public-likes-v1') || '[]')); } catch {}
     try { fireReactions = new Set(JSON.parse(localStorage.getItem('ncc-fire-reactions-v1') || '[]')); } catch {}
     try { commentLikes = new Set(JSON.parse(localStorage.getItem('ncc-comment-likes-v1') || '[]')); } catch {}
@@ -20,6 +22,17 @@
         let data; try { data = await response.json(); } catch { throw new Error('El servicio todavía no está disponible.'); }
         if (!response.ok) throw new Error(data.error || 'No pudimos completar la operación.');
         return data;
+    }
+    function recordAnalytics(event, track, detail = '', once = true) {
+        if (!track?.id) return;
+        const key = `${event}:${track.id}:${detail}`;
+        if (once && analyticsOnce.has(key)) return;
+        if (once) analyticsOnce.add(key);
+        fetch(api + '/analytics', {
+            method: 'POST', credentials: 'same-origin', keepalive: true,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ event, setId: track.id, detail })
+        }).catch(() => { if (once) analyticsOnce.delete(key); });
     }
     function action(label, symbol, handler) {
         const button = el('button', 'track-action'); button.type = 'button'; button.setAttribute('aria-label', label); button.title = label;
@@ -211,6 +224,7 @@
         const originalLabel = 'Copiar enlace';
         try {
             await navigator.clipboard.writeText(setURL(track));
+            recordAnalytics('share', track, 'copy', false);
             button.classList.add('is-copied'); button.setAttribute('aria-label', 'Enlace copiado'); button.title = 'Enlace copiado';
             setTimeout(() => { button.classList.remove('is-copied'); button.setAttribute('aria-label', originalLabel); button.title = originalLabel; }, 1600);
         } catch {
@@ -383,7 +397,9 @@
             const tools = el('div', 'admin-toolbar'); tools.append(el('span', '', 'Administración'));
             const refresh = el('button', 'edit-set', 'Actualizar audios'); refresh.type = 'button'; refresh.addEventListener('click', loadAdmin);
             const backup = el('button', 'edit-set', 'Exportar contenido'); backup.type = 'button'; backup.addEventListener('click', exportSets);
-            tools.append(refresh, backup);
+            const moderation = el('button', 'edit-set', 'Moderar comentarios'); moderation.type = 'button'; moderation.addEventListener('click', showModeration);
+            const analytics = el('button', 'edit-set', 'Ver estadísticas'); analytics.type = 'button'; analytics.addEventListener('click', showAnalytics);
+            tools.append(refresh, backup, moderation, analytics);
             for (const [key, name] of [['sets', 'Sets'], ['about', 'About'], ['tour', 'Tour Dates'], ['manifesto', 'Manifesto']]) {
                 const edit = el('button', 'edit-set', 'Editar ' + name); edit.type = 'button'; edit.addEventListener('click', () => window.NCCContent?.edit(key)); tools.append(edit);
             }
@@ -415,7 +431,7 @@
         const track = nowPlayerTrack || currentTrack(); if (!track || !nowPlayerOpen) return;
         nowPlayerTrackKey = track.key;
         const poster = $('expanded-skull-poster'), animation = $('expanded-skull-video');
-        const posterSource = track.animationPosterUrl || 'assets/skull-pieces.png';
+        const posterSource = track.animationPosterUrl || 'assets/skull-pieces.webp?v=20260923';
         const animationSource = track.animationVideoUrl || 'assets/skull-pieces.mp4';
         if (poster.getAttribute('src') !== posterSource) poster.src = posterSource;
         animation.poster = posterSource;
@@ -461,7 +477,7 @@
         nowPlayerTrack = track;
         playerReturnFocus = trigger || document.activeElement; nowPlayerOpen = true;
         $('now-player-backdrop').hidden = false; $('now-player').hidden = false; document.body.classList.add('player-expanded');
-        $('expand-player').setAttribute('aria-expanded', 'true'); renderNowPlayer(); $('now-player-close').focus();
+        $('expand-player').setAttribute('aria-expanded', 'true'); renderNowPlayer(); recordAnalytics('expand', track); $('now-player-close').focus();
     }
     function closeNowPlayer() {
         if (!nowPlayerOpen) return;
@@ -556,6 +572,7 @@
             icon.innerHTML = sharePlatformSVG[platform.id];
             link.append(icon, el('span', 'destination-label', platform.name));
             link.addEventListener('click', () => {
+                recordAnalytics('share', track, platform.id, false);
                 window.open(platform.url, '_blank', 'noopener,noreferrer');
                 if (platform.id !== 'instagram') return;
                 $('share-status').textContent = 'Copiá este enlace y pegalo en un mensaje o en el sticker Enlace de Instagram.';
@@ -646,6 +663,64 @@
             const data = await request('/admin/export'); const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
             const link = el('a'); link.href = url; link.download = 'ncc-contenido-' + new Date().toISOString().slice(0, 10) + '.json'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
         } catch (error) { showMessage(error.message); }
+    }
+    async function showModeration() {
+        const dialog = $('moderation-dialog'), root = $('moderation-list');
+        root.replaceChildren(el('p', 'empty-state', 'Cargando comentarios…'));
+        if (!dialog.open) dialog.showModal();
+        try {
+            const { comments } = await request('/admin/comments');
+            root.replaceChildren();
+            if (!comments.length) { root.append(el('p', 'empty-state', 'Todavía no hay comentarios para moderar.')); return; }
+            for (const comment of comments) {
+                const card = el('article', 'moderation-card' + (comment.hidden ? ' is-hidden' : ''));
+                const setName = adminTracks.find(track => track.id === comment.setId)?.name || comment.setId;
+                const heading = el('div', 'moderation-card-heading'); heading.append(el('strong', '', comment.author || 'AnonymousFreak'), el('span', '', setName));
+                const meta = el('p', 'moderation-meta', [commentDate(comment.createdAt), Number.isFinite(Number(comment.positionSeconds)) ? formatTime(Number(comment.positionSeconds)) : ''].filter(Boolean).join(' · '));
+                const controls = el('div', 'moderation-actions');
+                const visibility = el('button', 'edit-set', comment.hidden ? 'Volver a mostrar' : 'Ocultar'); visibility.type = 'button';
+                visibility.addEventListener('click', async () => {
+                    visibility.disabled = true;
+                    try { await request('/admin/comments/' + comment.id, { method: 'PUT', body: JSON.stringify({ hidden: !comment.hidden }) }); await showModeration(); }
+                    catch (error) { showMessage(error.message); visibility.disabled = false; }
+                });
+                const remove = el('button', 'edit-set moderation-delete', 'Eliminar'); remove.type = 'button';
+                remove.addEventListener('click', async () => {
+                    if (!confirm('¿Eliminar este comentario de forma permanente?')) return;
+                    remove.disabled = true;
+                    try { await request('/admin/comments/' + comment.id, { method: 'DELETE' }); await showModeration(); }
+                    catch (error) { showMessage(error.message); remove.disabled = false; }
+                });
+                controls.append(visibility, remove); card.append(heading, meta, el('p', 'moderation-body', comment.body), controls); root.append(card);
+            }
+        } catch (error) { root.replaceChildren(el('p', 'empty-state', error.message)); }
+    }
+    async function showAnalytics() {
+        const dialog = $('analytics-dialog'), root = $('analytics-content');
+        root.replaceChildren(el('p', 'empty-state', 'Cargando estadísticas…'));
+        if (!dialog.open) dialog.showModal();
+        try {
+            const data = await request('/admin/analytics?days=30');
+            const labels = { play_start: 'Reproducciones', play_complete: 'Sets completados', expand: 'Reproductor ampliado', share: 'Compartidos' };
+            const totals = new Map(data.totals.map(item => [item.event, Number(item.count)]));
+            const summary = el('div', 'analytics-summary');
+            for (const event of ['play_start', 'play_complete', 'expand', 'share']) {
+                const card = el('article', 'analytics-card'); card.append(el('strong', '', String(totals.get(event) || 0)), el('span', '', labels[event])); summary.append(card);
+            }
+            const bySet = new Map();
+            for (const item of data.sets) {
+                if (!bySet.has(item.setId)) bySet.set(item.setId, {});
+                bySet.get(item.setId)[item.event] = Number(item.count);
+            }
+            const setList = el('div', 'analytics-set-list');
+            for (const [setId, counts] of bySet) {
+                const track = adminTracks.find(item => item.id === setId);
+                const row = el('article', 'analytics-set-row');
+                row.append(el('strong', '', track?.name || setId), el('span', '', `${counts.play_start || 0} plays · ${counts.play_complete || 0} completos · ${counts.share || 0} compartidos`)); setList.append(row);
+            }
+            const shares = data.shares?.length ? el('p', 'analytics-shares', 'Compartidos por destino: ' + data.shares.map(item => `${item.detail || 'otro'} ${item.count}`).join(' · ')) : el('p', 'analytics-shares', 'Todavía no hay enlaces compartidos registrados.');
+            root.replaceChildren(el('p', 'analytics-period', `Últimos ${data.days} días · datos agregados, sin perfiles personales`), summary, el('h3', '', 'POR SET'), setList, shares);
+        } catch (error) { root.replaceChildren(el('p', 'empty-state', error.message)); }
     }
     document.addEventListener('DOMContentLoaded', () => {
         const share = action('Compartir set actual', 'share', () => shareSet(currentTrack())); share.id = 'player-share'; document.querySelector('.player-preferences').append(share);
@@ -744,6 +819,8 @@
         $('comment-body').addEventListener('input', event => { $('comment-count').textContent = `${event.target.value.length}/600`; });
         try { $('comment-name').value = localStorage.getItem('ncc-comment-name-v1') || 'AnonymousFreak'; } catch { $('comment-name').value = 'AnonymousFreak'; }
         for (const eventName of ['play', 'pause', 'playing', 'waiting', 'timeupdate', 'loadedmetadata', 'durationchange']) audio.addEventListener(eventName, syncNowPlayer);
+        audio.addEventListener('playing', () => { analyticsPlayingTrack = currentTrack(); recordAnalytics('play_start', analyticsPlayingTrack); });
+        audio.addEventListener('ended', () => { recordAnalytics('play_complete', analyticsPlayingTrack); analyticsPlayingTrack = null; });
         document.addEventListener('keydown', event => { if (event.key === 'Escape' && nowPlayerOpen) { event.preventDefault(); closeNowPlayer(); } });
         document.querySelectorAll('a[href^="#"]').forEach(link => link.addEventListener('click', event => {
             if (link.classList.contains('skip-link')) return;
@@ -763,9 +840,11 @@
         const label = el('label', 'share-section-label', 'Enlace del set'); label.htmlFor = 'share-url'; sharing.append(label);
         const linkRow = el('div', 'share-link-row'); const input = el('input'); input.id = 'share-url'; input.readOnly = true; linkRow.append(input);
         const copy = el('button', 'primary-button share-copy', 'Copiar'); copy.type = 'button'; copy.addEventListener('click', async () => {
-            try { await navigator.clipboard.writeText(setURL(shareTrack)); $('share-status').textContent = 'Enlace copiado.'; }
+            try { await navigator.clipboard.writeText(setURL(shareTrack)); recordAnalytics('share', shareTrack, 'copy', false); $('share-status').textContent = 'Enlace copiado.'; }
             catch { input.focus(); input.select(); $('share-status').textContent = 'Seleccioná y copiá el enlace.'; }
         }); linkRow.append(copy); sharing.append(linkRow); const status = el('p'); status.id = 'share-status'; status.setAttribute('role', 'status'); sharing.append(status);
+        const moderationDialog = makeDialog('moderation-dialog', 'Moderar comentarios'); const moderationList = el('div', 'moderation-list'); moderationList.id = 'moderation-list'; moderationDialog.append(moderationList);
+        const analyticsDialog = makeDialog('analytics-dialog', 'Estadísticas'); const analyticsContent = el('div', 'analytics-content'); analyticsContent.id = 'analytics-content'; analyticsDialog.append(analyticsContent);
         const editor = makeDialog('edit-dialog', 'Editar set'); const form = el('form', 'set-form');
         form.innerHTML = '<label for="edit-title">Nombre del set</label><input id="edit-title" required maxlength="240"><label for="edit-slug">Enlace corto · ncc.ar/set/</label><input id="edit-slug" required minlength="3" maxlength="80" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" spellcheck="false" autocomplete="off" placeholder="preview-002"><p class="slug-help">Usá letras minúsculas, números y guiones. Si lo cambiás, los enlaces anteriores redirigen al nuevo.</p><label for="edit-date">Fecha</label><input id="edit-date" type="date"><label for="edit-tags">Tags · separados por comas</label><input id="edit-tags" maxlength="400" placeholder="techno, live, warehouse"><label for="edit-tracklist">Tracklist · una pista por línea</label><textarea id="edit-tracklist" rows="12"></textarea><fieldset class="set-media-editor"><legend>Imagen del reproductor ampliado</legend><div class="set-media-field"><label for="edit-animation-poster">Imagen fija · PNG</label><span id="edit-animation-poster-state"></span><input id="edit-animation-poster" type="file" accept="image/png"><label class="set-media-default"><input type="checkbox" id="edit-animation-poster-default"> Usar imagen predeterminada</label></div><div class="set-media-field"><label for="edit-animation-video">Animación al reproducir · MP4</label><span id="edit-animation-video-state"></span><input id="edit-animation-video" type="file" accept="video/mp4"><label class="set-media-default"><input type="checkbox" id="edit-animation-video-default"> Usar video predeterminado</label></div><p>Cada set puede usar sus propios archivos. Si no elegís otros, se mantiene la calavera predeterminada.</p></fieldset><p class="audio-reference" id="edit-audio"></p><label class="published-label"><input type="checkbox" id="edit-published"> Publicado</label><p id="edit-status" role="status"></p><button id="save-set" class="primary-button" type="submit">Guardar</button>';
         for (const kind of ['poster', 'video']) {

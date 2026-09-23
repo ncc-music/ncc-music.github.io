@@ -40,11 +40,24 @@ CREATE TABLE IF NOT EXISTS comments (
   author TEXT NOT NULL DEFAULT 'AnonymousFreak',
   body TEXT NOT NULL,
   position_seconds REAL CHECK (position_seconds IS NULL OR (position_seconds >= 0 AND position_seconds <= 86400)),
+  hidden INTEGER NOT NULL DEFAULT 0 CHECK (hidden IN (0, 1)),
+  moderated_at TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE INDEX IF NOT EXISTS comments_set_created ON comments (set_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS comments_visitor_created ON comments (visitor_id, created_at DESC);
+
+-- Privacy-friendly counters: no cookies, IP addresses or visitor identifiers.
+CREATE TABLE IF NOT EXISTS analytics_daily (
+  day TEXT NOT NULL,
+  event TEXT NOT NULL,
+  set_id TEXT NOT NULL,
+  detail TEXT NOT NULL DEFAULT '',
+  count INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (day, event, set_id, detail)
+);
+CREATE INDEX IF NOT EXISTS analytics_daily_day ON analytics_daily (day DESC);
 
 CREATE TABLE IF NOT EXISTS site_content (
   id TEXT PRIMARY KEY CHECK (id = 'main'),

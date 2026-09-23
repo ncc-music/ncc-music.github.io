@@ -1,32 +1,34 @@
 const CACHE_PREFIX = 'ncc-music-';
-const CACHE_NAME = `${CACHE_PREFIX}shell-v22`;
+const CACHE_NAME = `${CACHE_PREFIX}shell-v23`;
 const APP_SHELL = [
     '/',
     '/index.html',
     '/manifest.webmanifest',
-    '/styles.css?v=20260923slug',
+    '/styles.css?v=20260923ops',
     '/assets/app-icons/icon-192-v2.png',
     '/assets/app-icons/icon-512-v2.png',
     '/assets/app-icons/icon-maskable-512-v2.png',
     '/assets/app-icons/apple-touch-icon-v2.png',
-    '/assets/cardu-skull-mustard.png?v=20260922hq',
-    '/assets/player-cover.png',
+    '/assets/cardu-skull-mustard.webp?v=20260923',
     '/assets/player-cover-clean.jpg',
-    '/assets/mixed-by-single-line.png?v=20260922phase2',
-    '/assets/fonts/RoadRage-Regular.ttf',
+    '/assets/mixed-by-single-line.webp?v=20260923',
+    '/assets/fonts/RoadRage-Regular.woff2',
     '/js/waveform-stream.js?v=20260920',
     '/js/gdrive-player.js?v=20260922h',
     '/js/detail-waveform.js?v=20260922o',
     '/js/tracklist-search.js?v=20260921b',
-    '/js/sets.js?v=20260923slug',
+    '/js/sets.js?v=20260923ops',
     '/js/content.js?v=20260921e',
     '/js/visits.js?v=20260914',
-    '/js/pwa.js?v=20260922'
+    '/js/pwa.js?v=20260923ops'
 ];
 
 self.addEventListener('install', event => {
     event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));
-    self.skipWaiting();
+});
+
+self.addEventListener('message', event => {
+    if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {
