@@ -881,9 +881,15 @@ body.player-expanded { overflow: hidden; }
     .expanded-player-visual { gap: 10px; }
     .expanded-skull-media { height: clamp(118px,32vw,160px); }
     .expanded-skull-control { display: none; }
-    .waveform-community-card .detail-waveform canvas { height: 150px; }
+    .waveform-community-card .detail-waveform canvas { height: clamp(118px,19dvh,140px); }
     .expanded-waveform-heading img { width: 50px; height: 50px; }
     .expanded-waveform-heading h2 { font-size: 19px; }
+    .waveform-action-row { gap: 3px; margin-top: 5px; }
+    .waveform-action-row > .track-action { width: 30px; min-width: 30px; min-height: 30px; padding: 4px; }
+    .waveform-inline-form .comment-composer { min-height: 32px; padding: 2px 3px 2px 9px; }
+    .waveform-action-row .waveform-inline-form textarea { min-height: 26px; max-height: 26px; padding: 5px 1px; overflow: hidden; font-size: 11px; line-height: 16px; white-space: nowrap; }
+    .waveform-action-row .waveform-inline-form .comment-send { width: 26px; min-width: 26px; min-height: 26px; padding: 4px; }
+    .community-toggle { min-height: 34px; margin-top: 5px; padding-block: 6px; }
     .tracklist-record summary { display: block; }
     .tracklist-record-meta { display: block; margin-top: 5px; text-align: left; }
 }

@@ -113,6 +113,14 @@ test('mobile expanded player relies on the swipe handle instead of a close butto
     assert.match(css, /@media \(max-width: 760px\) \{[^]*\.now-player::before \{[^}]*width: 42px;[^}]*height: 4px;/);
 });
 
+test('mobile comment row stays on one compact line and leaves the tracklist heading visible', async () => {
+    const css = await read('styles.css');
+    assert.match(css, /@media \(max-width: 760px\) \{[^]*\.waveform-community-card \.detail-waveform canvas \{ height: clamp\(118px,19dvh,140px\); \}/);
+    assert.match(css, /@media \(max-width: 760px\) \{[^]*\.waveform-action-row \.waveform-inline-form textarea \{[^}]*min-height: 26px;[^}]*max-height: 26px;[^}]*white-space: nowrap;/);
+    assert.match(css, /@media \(max-width: 760px\) \{[^]*\.waveform-action-row \.waveform-inline-form \.comment-send \{[^}]*width: 26px;[^}]*min-height: 26px;/);
+    assert.match(css, /@media \(max-width: 760px\) \{[^]*\.community-toggle \{[^}]*min-height: 34px;/);
+});
+
 test('mobile expanded player allows the set title to use two lines', async () => {
     const css = await read('styles.css');
     assert.match(css, /@media \(max-width: 760px\) \{[^]*\.now-player \.expanded-waveform-heading h2 \{[^}]*-webkit-line-clamp: 2;[^}]*white-space: normal;/);
