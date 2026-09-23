@@ -1054,3 +1054,55 @@ body.player-expanded { overflow: hidden; }
         padding: 0;
     }
 }
+
+/* Keep the complete navigation while giving mobile screens more room for music. */
+@media (max-width: 540px) {
+    .site-header {
+        grid-template-columns: 54px minmax(0,1fr);
+        grid-template-rows: 54px 40px;
+        height: 106px;
+        padding: 10px 14px 0;
+        gap: 2px 12px;
+    }
+    .brand {
+        grid-column: 1;
+        grid-row: 1;
+        width: 54px;
+        height: 54px;
+        flex-basis: 54px;
+    }
+    .brand img { scale: 1.08; }
+    .social-links {
+        grid-column: 2;
+        grid-row: 1;
+        gap: 6px;
+    }
+    .social-btn {
+        width: 34px;
+        height: 34px;
+    }
+    .main-nav {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        display: flex;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+        height: 40px;
+        min-height: 40px;
+        gap: 4px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+    .main-nav::-webkit-scrollbar { display: none; }
+    .nav-link {
+        flex: 0 0 auto;
+        height: 40px;
+        min-height: 40px;
+        font-size: 10px;
+        letter-spacing: -.01em;
+    }
+    .rabbit-link { min-width: 16px; }
+    .rabbit-glyph { font-size: 5px; }
+}
