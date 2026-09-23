@@ -332,7 +332,7 @@ function route() {
     playerState.filter = view === 'radio' ? 'radio' : collection ? collection.id : defaultCollectionId;
     $('collection-filters').hidden = view !== 'sets';
     $('favorites-filter').hidden = view !== 'sets';
-    $('page-title').textContent = collection?.title || ({ sets: 'SETS', radio: 'RADIO', tracklists: 'TRACKLISTS', manifesto: 'MANIFESTO', acerca: 'ABOUT', 'tour-dates': 'TOUR DATES' })[view];
+    $('page-title').textContent = ({ sets: 'SETS', radio: 'RADIO', tracklists: 'TRACKLISTS', manifesto: 'MANIFESTO', acerca: 'ABOUT', 'tour-dates': 'TOUR DATES' })[view];
     $('radio-feature').hidden = view !== 'radio';
     $('collections-section').hidden = view !== 'sets';
     $('sets-section').hidden = !['sets', 'radio'].includes(view);

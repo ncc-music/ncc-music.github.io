@@ -48,6 +48,14 @@ test('radio route isolates catalogue and hides DJ filters, sets defaults to TECH
     context.location.hash = '#sets'; app.route();
     assert.equal(state.filter, 'techno-freaks'); assert.equal(elements.get('collection-filters').hidden, false);
 });
+test('opening the CARDÚ collection keeps SETS above the banner and CARDÚ in the player', async () => {
+    const { app, context, state, elements } = setup();
+    context.location.hash = '#techno-freaks'; app.route();
+    assert.equal(elements.get('page-title').textContent, 'SETS');
+    assert.equal(state.filter, 'techno-freaks');
+    await app.playTrack('techno-freaks', 0);
+    assert.equal(elements.get('track-artist').textContent, 'CARDÚ');
+});
 test('a rejected play request leaves a stopped player with a retry message', async () => {
     const { app, audio, state, elements } = setup();
     audio.play = async () => { throw Object.assign(new Error('blocked'), { name: 'NotAllowedError' }); };
