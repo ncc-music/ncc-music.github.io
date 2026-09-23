@@ -77,10 +77,18 @@ test('tracklist search is appended after the archive results', async () => {
     assert.ok(render.lastIndexOf('root.append(search)') > render.indexOf("const archive = el('div', 'tracklist-archive')"));
 });
 
-test('expanded player occupies ninety percent of the viewport', async () => {
+test('expanded player uses ninety-five percent of desktop and the full mobile viewport', async () => {
     const css = await read('styles.css');
-    assert.match(css, /\.now-player \{[^}]*height: 90dvh;/);
-    assert.match(css, /\.now-player-backdrop \{[^}]*inset: 0 0 90% 0;/);
+    assert.match(css, /\.now-player \{[^}]*height: 95dvh;/);
+    assert.match(css, /\.now-player-backdrop \{[^}]*inset: 0 0 95% 0;/);
+    assert.match(css, /@media \(max-width: 760px\) \{[^]*\.now-player \{[^}]*height: 100dvh;/);
+});
+
+test('expanded artwork sits in a compact horizontal stage above the waveform', async () => {
+    const css = await read('styles.css');
+    assert.match(css, /\.expanded-player-visual \{[^}]*flex-direction: column;/);
+    assert.match(css, /\.expanded-skull-media \{[^}]*order: -1;[^}]*width: 100%;[^}]*height: clamp\(150px,22vw,230px\);/);
+    assert.doesNotMatch(css, /\.expanded-player-visual \{[^}]*grid-template-columns:/);
 });
 
 test('mobile expanded player allows the set title to use two lines', async () => {
