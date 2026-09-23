@@ -29,8 +29,8 @@ test('the service worker keeps media and private APIs out of runtime storage', a
     assert.match(worker, /request\.mode === 'navigate'/);
     assert.match(worker, /SKIP_WAITING/);
     assert.doesNotMatch(worker, /install[\s\S]{0,180}skipWaiting/);
-    assert.match(client, /Nueva versión disponible/);
-    assert.match(client, /controllerchange/);
+    assert.match(client, /postMessage\(\{ type: 'SKIP_WAITING' \}\)/);
+    assert.doesNotMatch(client, /Nueva versión disponible|pwa-update|controllerchange|location\.reload/);
 });
 
 test('heavy visual assets use compact modern formats', async () => {

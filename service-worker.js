@@ -1,10 +1,10 @@
 const CACHE_PREFIX = 'ncc-music-';
-const CACHE_NAME = `${CACHE_PREFIX}shell-v24`;
+const CACHE_NAME = `${CACHE_PREFIX}shell-v25`;
 const APP_SHELL = [
     '/',
     '/index.html',
     '/manifest.webmanifest',
-    '/styles.css?v=20260923mobile',
+    '/styles.css?v=20260923footer',
     '/assets/app-icons/icon-192-v2.png',
     '/assets/app-icons/icon-512-v2.png',
     '/assets/app-icons/icon-maskable-512-v2.png',
@@ -20,7 +20,7 @@ const APP_SHELL = [
     '/js/sets.js?v=20260923ops',
     '/js/content.js?v=20260921e',
     '/js/visits.js?v=20260914',
-    '/js/pwa.js?v=20260923ops'
+    '/js/pwa.js?v=20260923silent'
 ];
 
 self.addEventListener('install', event => {

@@ -504,7 +504,7 @@ main:has(.radio-upcoming:not([hidden])) #page-quality { display: none; }
 }
 .page-footer { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 20px; }
 .page-footer .footer-links { display: flex; align-items: center; justify-self: end; gap: 14px; }
-.page-footer .footer-about { color: var(--text); font-weight: 550; letter-spacing: .06em; white-space: nowrap; }
+.page-footer .footer-rabbit { display: none; }
 .page-footer .install-app { padding: 0; color: var(--accent); background: transparent; font-size: 12px; font-weight: 700; letter-spacing: .06em; white-space: nowrap; }
 .page-footer .install-app:hover { color: var(--text); }
 .page-footer .visit-counter { display: flex; align-items: baseline; justify-content: center; gap: 12px; color: #fff; transform: rotate(-3deg); }
@@ -982,14 +982,10 @@ body.player-expanded { overflow: hidden; }
 .analytics-set-list { display: grid; gap: 8px; }
 .analytics-set-row { display: flex; justify-content: space-between; gap: 20px; padding: 11px 0; border-bottom: 1px solid #ffffff18; }
 .analytics-set-row span { color: var(--muted); font-size: 12px; text-align: right; }
-.pwa-update { position: fixed; z-index: 90; right: 18px; bottom: calc(var(--dock-height) + 24px); display: flex; align-items: center; gap: 14px; padding: 12px 14px; color: var(--text); background: #17191a; border: 1px solid #ffffff2f; border-radius: 8px; box-shadow: 0 16px 45px #000c; font-size: 13px; }
-.pwa-update button { min-height: 34px; padding: 6px 11px; color: #101112; background: var(--accent); border-radius: 4px; font-weight: 800; }
-
 @media (max-width: 760px) {
     .analytics-summary { grid-template-columns: repeat(2,minmax(0,1fr)); }
     .analytics-set-row, .moderation-card-heading { align-items: flex-start; flex-direction: column; gap: 5px; }
     .analytics-set-row span { text-align: left; }
-    .pwa-update { left: 12px; right: 12px; bottom: calc(var(--dock-height) + 12px); justify-content: space-between; }
 }
 .admin-mode .track-table-head { padding-right: 336px; }
 @media (max-width: 760px) {
@@ -1105,4 +1101,13 @@ body.player-expanded { overflow: hidden; }
     }
     .rabbit-link { min-width: 16px; }
     .rabbit-glyph { font-size: 5px; }
+    .main-nav .rabbit-link { display: none; }
+    .page-footer .footer-rabbit {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+    }
+    .page-footer .footer-rabbit .rabbit-glyph { font-size: 7px; }
 }

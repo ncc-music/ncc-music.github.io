@@ -31,6 +31,16 @@ test('mobile header keeps every link on one compact row without changing desktop
     assert.doesNotMatch(css.slice(0, css.indexOf('@media(max-width:760px)')), /\.site-header \{[^}]*height: 106px;/);
 });
 
+test('footer removes About and moves the manifesto rabbit there only on mobile', async () => {
+    const [html, css] = await Promise.all([read('index.html'), read('styles.css')]);
+    assert.doesNotMatch(html, /footer-about/);
+    assert.match(html, /class="footer-rabbit rabbit-link" href="#manifesto" data-view="manifesto"/);
+    assert.match(css, /\.page-footer \.footer-rabbit \{ display: none; \}/);
+    const mobile = css.slice(css.indexOf('/* Keep the complete navigation while giving mobile screens more room for music. */'));
+    assert.match(mobile, /\.main-nav \.rabbit-link \{ display: none; \}/);
+    assert.match(mobile, /\.page-footer \.footer-rabbit \{[^}]*display: inline-flex;/);
+});
+
 test('About is centered and enlarged on desktop', async () => {
     const css = await read('styles.css');
     assert.match(css, /\.about-section \{[^}]*justify-content: center;[^}]*width: min\(100%,960px\);[^}]*margin: 0 auto;/);
