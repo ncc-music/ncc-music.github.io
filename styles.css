@@ -754,7 +754,8 @@ main { padding-bottom: calc(var(--dock-height) + 64px); }
 body.player-expanded { overflow: hidden; }
 @keyframes now-player-rise { from { transform: translateY(100%); } to { transform: translateY(0); } }
 @keyframes now-player-fade-in { from { opacity: 0; } to { opacity: 1; } }
-.now-player-close { position: sticky; top: 0; z-index: 2; display: grid; place-items: center; width: 48px; height: 48px; margin: 0 0 6px auto; color: var(--text); background: #1b1c1fcc; border: 1px solid #ffffff24; border-radius: 50%; backdrop-filter: blur(10px); }
+.now-player-close { position: sticky; top: 0; z-index: 2; display: grid; place-items: center; width: 44px; height: 44px; margin: 0 0 2px auto; color: var(--text); background: #1b1c1fcc; border: 1px solid #ffffff24; border-radius: 50%; backdrop-filter: blur(10px); }
+.now-player-close .icon { width: 18px; height: 18px; }
 .now-player-layout { width: min(1240px,100%); margin: 0 auto; }
 .waveform-community-card { margin-top: 8px; padding: 14px; background: linear-gradient(180deg,#151719 0,#0d0f10 100%); border: 1px solid #ffffff1f; border-radius: 10px; box-shadow: inset 0 1px #ffffff08, 0 18px 50px #0005; }
 .expanded-player-visual { display: flex; min-width: 0; flex-direction: column; gap: 14px; }
@@ -764,7 +765,7 @@ body.player-expanded { overflow: hidden; }
 .expanded-skull-media:hover .expanded-skull-control { transform: scale(1.06); background: var(--accent); }
 .expanded-skull-media:focus-visible .expanded-skull-control { box-shadow: 0 0 0 2px var(--text), 0 7px 22px #000b; }
 .expanded-skull-control .icon { width: 22px; height: 22px; }
-.expanded-skull-media img, .expanded-skull-media video { display: block; grid-area: 1 / 1; width: 100%; height: 100%; object-fit: contain; }
+.expanded-skull-media img, .expanded-skull-media video { position: absolute; top: 50%; left: 50%; display: block; width: calc(100% - clamp(12px,2vw,22px)); height: calc(100% - clamp(12px,2vw,22px)); transform: translate(-50%,-50%); object-fit: contain; object-position: center; }
 .expanded-skull-media video[hidden], .expanded-skull-media img[hidden] { display: none; }
 .detail-waveform-card { margin-top: 28px; }
 .detail-waveform-card .detail-waveform { margin-top: 0; }
