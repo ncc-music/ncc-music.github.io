@@ -348,8 +348,8 @@ main:has(#collections-section:not([hidden])) .page-heading h1 {
 .techno-cover img { width: 54px; height: 54px; }
 .collection-copy { padding: 10px 16px; }
 .collection-copy h2 { margin: 0 0 3px; font-size: 18px; }
-.collection-copy p { display: inline; font-size: 12px; }
-.collection-copy .collection-genres { margin: 0 12px 0 0; font-size: 12px; }
+.collection-copy p { display: block; font-size: 12px; }
+.collection-copy .collection-genres { margin: 0 0 2px; font-size: 12px; }
 .art-label { font-size: 17px; left: 7px; bottom: 12px; }
 .collections-section:not([hidden]) ~ .sets-section { margin-top: 12px; }
 .collections-section:not([hidden]) ~ .sets-section .sets-toolbar { margin-bottom: 4px; }

@@ -41,6 +41,12 @@ test('footer removes About and moves the manifesto rabbit there only on mobile',
     assert.match(mobile, /\.page-footer \.footer-rabbit \{[^}]*display: inline-flex;/);
 });
 
+test('CARDÚ banner stacks its genre and slogan on desktop too', async () => {
+    const css = await read('styles.css');
+    assert.match(css, /\.collection-copy p \{ display: block; font-size: 12px; \}/);
+    assert.match(css, /\.collection-copy \.collection-genres \{ margin: 0 0 2px; font-size: 12px; \}/);
+});
+
 test('About is centered and enlarged on desktop', async () => {
     const css = await read('styles.css');
     assert.match(css, /\.about-section \{[^}]*justify-content: center;[^}]*width: min\(100%,960px\);[^}]*margin: 0 auto;/);
