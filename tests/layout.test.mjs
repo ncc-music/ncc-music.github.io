@@ -20,6 +20,17 @@ test('mobile About uses the mustard skull identity', async () => {
     assert.match(css, /\.about-art \{ grid-area: art;/);
 });
 
+test('mobile header keeps every link on one compact row without changing desktop', async () => {
+    const css = await read('styles.css');
+    const compact = css.slice(css.indexOf('/* Keep the complete navigation while giving mobile screens more room for music. */'));
+    assert.match(compact, /@media \(max-width: 540px\)/);
+    assert.match(compact, /\.site-header \{[^}]*grid-template-rows: 54px 40px;[^}]*height: 106px;/);
+    assert.match(compact, /\.main-nav \{[^}]*display: flex;[^}]*flex-wrap: nowrap;[^}]*height: 40px;[^}]*overflow-x: auto;/);
+    assert.match(compact, /\.nav-link \{[^}]*font-size: 10px;/);
+    assert.match(compact, /\.social-btn \{[^}]*width: 34px;[^}]*height: 34px;/);
+    assert.doesNotMatch(css.slice(0, css.indexOf('@media(max-width:760px)')), /\.site-header \{[^}]*height: 106px;/);
+});
+
 test('About is centered and enlarged on desktop', async () => {
     const css = await read('styles.css');
     assert.match(css, /\.about-section \{[^}]*justify-content: center;[^}]*width: min\(100%,960px\);[^}]*margin: 0 auto;/);
