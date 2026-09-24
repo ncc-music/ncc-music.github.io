@@ -1,10 +1,10 @@
 const CACHE_PREFIX = 'ncc-music-';
-const CACHE_NAME = `${CACHE_PREFIX}shell-v48`;
+const CACHE_NAME = `${CACHE_PREFIX}shell-v49`;
 const APP_SHELL = [
     '/',
     '/index.html',
     '/manifest.webmanifest',
-    '/styles.css?v=20260924userwidth3',
+    '/styles.css?v=20260924userwidth4',
     '/assets/app-icons/icon-192-v2.png',
     '/assets/app-icons/icon-512-v2.png',
     '/assets/app-icons/icon-maskable-512-v2.png',
