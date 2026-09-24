@@ -150,7 +150,8 @@ body[data-radio=on] .player-mode { color: var(--accent); }
 .transport-buttons .icon-button:hover:not(:disabled) { color: var(--text); background: #ffffff0d; transform: scale(1.04); }
 .play-button { position: relative; isolation: isolate; display: grid; place-items: center; width: 46px; height: 46px; padding: 0; color: #0b0c0d; background: transparent; border-radius: 50%; transition: color .16s ease, transform .16s ease; }
 .play-button::before { position: absolute; inset: -1px; z-index: -1; content: ""; background: var(--text); -webkit-mask: url("assets/player-control-brush.png?v=20260923") center / contain no-repeat; mask: url("assets/player-control-brush.png?v=20260923") center / contain no-repeat; transition: background .16s ease, transform .16s ease; }
-.play-button .icon { width: 21px; height: 21px; transform: translateX(1px); }
+.play-button::after { position: absolute; inset: 5px; z-index: 0; content: ""; border: 3px solid #090a0b; border-radius: 48% 52% 47% 53%; transform: rotate(-2deg); pointer-events: none; }
+.play-button .icon { position: relative; z-index: 1; width: 27px; height: 27px; transform: translateX(1.5px); }
 body[data-playing=true] .play-button .icon { transform: none; }
 .play-button:hover:not(:disabled) { color: #080909; background: transparent; transform: scale(1.05); }
 .play-button:hover:not(:disabled)::before, body[data-playing=true] .play-button::before { background: var(--accent); }
@@ -960,7 +961,7 @@ body.player-expanded { overflow: hidden; }
     .player-dock .transport-buttons { display: flex; flex: 0 0 auto; order: 2; justify-content: flex-end; gap: 0; }
     .player-dock #prev-button, .player-dock #next-button, .player-dock .player-options { display: none; }
     .player-dock .play-button { width: 48px; height: 48px; }
-    .player-dock .play-button .icon { width: 22px; height: 22px; }
+    .player-dock .play-button .icon { width: 27px; height: 27px; }
     .player-dock .progress-control { display: flex; flex: 1 1 auto; order: 1; min-width: 0; gap: 6px; }
     .player-dock .progress-control > span { min-width: 29px; font-size: 10px; }
     .player-dock .progress-control input { min-width: 54px; }
