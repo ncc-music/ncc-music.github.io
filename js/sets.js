@@ -799,10 +799,19 @@
         $('expanded-share').addEventListener('click', () => shareSet(activeCommunityTrack() || currentTrack()));
         $('expanded-skull-toggle').addEventListener('click', () => playSet(nowPlayerTrack || currentTrack()));
         $('tracklist-scroll').addEventListener('click', () => {
-            $('expanded-tracklist-title').scrollIntoView({
-                behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
-                block: 'start'
-            });
+            const player = $('now-player');
+            const target = $('expanded-tracklist-title');
+            const destination = player.scrollTop + target.getBoundingClientRect().top - player.getBoundingClientRect().top - 18;
+            const start = player.scrollTop;
+            const distance = Math.max(0, destination) - start;
+            const startedAt = performance.now();
+            const animate = now => {
+                const progress = Math.min((now - startedAt) / 420, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                player.scrollTop = start + distance * eased;
+                if (progress < 1) requestAnimationFrame(animate);
+            };
+            requestAnimationFrame(animate);
         });
         $('community-toggle').addEventListener('click', () => setCommunityExpanded($('community-toggle').getAttribute('aria-expanded') !== 'true'));
         $('expanded-waveform').addEventListener('ncc:comment-position', event => selectCommentPosition(event.detail?.seconds));

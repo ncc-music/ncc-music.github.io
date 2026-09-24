@@ -136,7 +136,7 @@ test('expanded player reveals the beginning of the tracklist sooner', async () =
     assert.match(css, /\.now-player-tracklist li \{ padding: 3px 0 3px 8px; \}/);
     assert.match(html, /id="tracklist-scroll"[^>]*aria-label="Mostrar los temas del tracklist"[^>]*>TRACKLIST<\/button>/);
     assert.match(css, /\.tracklist-scroll \{[^}]*padding: 0;[^}]*background: transparent;[^}]*cursor: pointer;/);
-    assert.match(sets, /\$\('tracklist-scroll'\)\.addEventListener\('click',[^]*?\$\('expanded-tracklist-title'\)\.scrollIntoView\(\{[^]*?behavior: matchMedia\('\(prefers-reduced-motion: reduce\)'\)\.matches \? 'auto' : 'smooth',[^]*?block: 'start'/);
+    assert.match(sets, /\$\('tracklist-scroll'\)\.addEventListener\('click',[^]*?const player = \$\('now-player'\);[^]*?const distance = Math\.max\(0, destination\) - start;[^]*?\(now - startedAt\) \/ 420[^]*?requestAnimationFrame\(animate\)/);
 });
 
 test('mobile expanded player relies on the swipe handle instead of a close button', async () => {
