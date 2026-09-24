@@ -89,7 +89,7 @@ test('expanded player leaves the complete desktop header visible and fills the m
 test('expanded artwork sits in a compact horizontal stage above the waveform', async () => {
     const css = await read('styles.css');
     assert.match(css, /\.expanded-player-visual \{[^}]*flex-direction: column;/);
-    assert.match(css, /\.expanded-skull-media \{[^}]*order: -1;[^}]*width: 100%;[^}]*height: clamp\(132px,19dvh,192px\);/);
+    assert.match(css, /\.expanded-skull-media \{[^}]*order: -1;[^}]*width: 100%;[^}]*height: clamp\(190px,27dvh,240px\);/);
     assert.match(css, /\.expanded-skull-media img, \.expanded-skull-media video \{[^}]*position: absolute;[^}]*top: 50%;[^}]*left: 50%;[^}]*width: calc\(100% - clamp\(12px,2vw,22px\)\);[^}]*height: calc\(100% - clamp\(12px,2vw,22px\)\);[^}]*transform: translate\(-50%,-50%\);[^}]*object-fit: contain;[^}]*object-position: center;/);
     assert.doesNotMatch(css, /\.expanded-player-visual \{[^}]*grid-template-columns:/);
 });
@@ -105,7 +105,7 @@ test('expanded player reveals the beginning of the tracklist sooner', async () =
     const css = await read('styles.css');
     assert.match(css, /\.waveform-community-card \.detail-waveform canvas \{ height: clamp\(122px,17dvh,144px\); \}/);
     assert.match(css, /\.now-player-tracklist \{ margin-top: 10px; padding-top: 10px;/);
-    assert.match(css, /\.now-player-tracklist h3 \{ margin-bottom: 8px;/);
+    assert.match(css, /\.now-player-tracklist h3 \{ margin: 0 0 8px;/);
     assert.match(css, /\.now-player-tracklist li \{ padding: 3px 0 3px 8px; \}/);
 });
 
@@ -130,16 +130,33 @@ test('mobile expanded player covers the complete viewport', async () => {
     assert.match(css, /@media \(max-width: 760px\) \{[^]*\.now-player \{[^}]*inset: 0;[^}]*width: 100vw;[^}]*height: 100dvh;/);
 });
 
-test('expanded actions place likes after comments and keep link copying inside the share dialog', async () => {
+test('expanded actions place likes after comments and align link copying with social destinations', async () => {
     const [html, sets, css] = await Promise.all([read('index.html'), read('js/sets.js'), read('styles.css')]);
     const actions = html.slice(html.indexOf('<div class="waveform-action-row">'), html.indexOf('<button type="button" class="community-toggle"'));
     assert.ok(actions.indexOf('id="comment-form"') < actions.indexOf('id="expanded-like"'));
     assert.ok(actions.indexOf('id="expanded-like"') < actions.indexOf('id="expanded-share"'));
     assert.doesNotMatch(actions, /expanded-copy-link/);
     assert.doesNotMatch(sets, /share-url|copySetLink|expanded-copy-link/);
-    assert.match(sets, /copy\.setAttribute\('aria-label', 'Copiar enlace'\)/);
-    assert.match(sets, /copy\.innerHTML = icon\('link'\)/);
-    assert.match(css, /\.share-copy \{[^}]*width: 48px;[^}]*height: 48px;[^}]*border-radius: 50%;/);
+    assert.match(sets, /el\('button', 'destination-choice share-copy-choice'\)/);
+    assert.match(sets, /copyIcon\.innerHTML = icon\('link'\)/);
+    assert.match(sets, /destinations\.append\(copy\)/);
+    assert.doesNotMatch(sets, /share-link-row|copyLabel/);
+    assert.match(css, /\.destination-grid \{[^}]*grid-template-columns: repeat\(6,minmax\(0,1fr\)\);/);
+    assert.match(css, /\.share-copy-mark \{[^}]*background: var\(--text\);/);
+});
+
+test('expanded comments omit fire reactions and use a smaller compact label', async () => {
+    const [html, sets, css] = await Promise.all([read('index.html'), read('js/sets.js'), read('styles.css')]);
+    assert.doesNotMatch(html, /community-fire|fire-reaction|🔥/);
+    assert.doesNotMatch(sets, /community-fire|toggleFire|fireReactions|pendingFire|ncc-fire-reactions/);
+    assert.doesNotMatch(css, /\.fire-reaction/);
+    assert.match(css, /\.community-toggle \{[^}]*font-size: 10px;[^}]*letter-spacing: \.08em;/);
+});
+
+test('mobile enlarges the skull while closing the gap before tracklist', async () => {
+    const css = await read('styles.css');
+    assert.match(css, /@media \(max-width: 760px\) \{[^]*\.expanded-skull-media \{ height: clamp\(150px,44vw,190px\); \}/);
+    assert.match(css, /@media \(max-width: 760px\) \{[^]*\.now-player-tracklist \{ margin-top: 4px; padding-top: 6px; \}/);
 });
 
 test('mobile expanded player allows the set title to use two lines', async () => {

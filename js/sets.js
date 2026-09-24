@@ -1,14 +1,13 @@
 // Shared set details, administration and social actions; one persistent audio element.
 (() => {
     const api = '/api';
-    let admin = false, adminTracks = [], archiveTracks = [], detailTrack = null, editorTrack = null, shareTrack = null, reordering = false;
+    let admin = false, adminTracks = [], archiveTracks = [], detailTrack = null, editorTrack = null, reordering = false;
     let tracklistQuery = '', nowPlayerOpen = false, nowPlayerTrackKey = '', nowPlayerTrack = null, playerReturnFocus = null;
-    let socialLikes = new Set(), pendingLikes = new Set(), fireReactions = new Set(), pendingFire = new Set(), commentLikes = new Set(), communityRequest = 0;
+    let socialLikes = new Set(), pendingLikes = new Set(), commentLikes = new Set(), communityRequest = 0;
     const communityCache = new Map();
     const analyticsOnce = new Set();
     let analyticsPlayingTrack = null;
     try { socialLikes = new Set(JSON.parse(localStorage.getItem('ncc-public-likes-v1') || '[]')); } catch {}
-    try { fireReactions = new Set(JSON.parse(localStorage.getItem('ncc-fire-reactions-v1') || '[]')); } catch {}
     try { commentLikes = new Set(JSON.parse(localStorage.getItem('ncc-comment-likes-v1') || '[]')); } catch {}
     const el = (tag, className, text) => {
         const node = document.createElement(tag); if (className) node.className = className; if (text !== undefined) node.textContent = text; return node;
@@ -91,11 +90,6 @@
         $('expanded-like').dataset.likeId = track.id || '';
         $('community-title').textContent = `FREAKS COMMENTS · ${data?.comments?.length ?? 0}`;
         $('community-toggle-count').textContent = data?.comments?.length ?? 0;
-        const fire = $('community-fire');
-        fire.disabled = pendingFire.has(track.id) || !data;
-        fire.setAttribute('aria-pressed', String(fireReactions.has(track.id)));
-        fire.setAttribute('aria-label', `${fireReactions.has(track.id) ? 'Quitar reacción de fuego' : 'Reaccionar con fuego'} a ${track.name}`);
-        $('community-fire-count').textContent = data?.fireCount ?? '—';
         const list = $('comment-list'); list.replaceChildren();
         if (!data) { list.append(el('p', 'empty-state', 'Cargando comentarios…')); return; }
         if (!data.comments?.length) { list.append(el('p', 'empty-state', 'Todavía no hay comentarios. Sé el primer freak.')); return; }
@@ -135,32 +129,17 @@
         renderCommunity(track, communityCache.get(track.id) || null);
         try {
             const data = await request(`/sets/${track.id}/community`);
-            if (!Array.isArray(data.comments) || !Number.isFinite(Number(data.fireCount))) throw new Error('Respuesta inválida.');
+            if (!Array.isArray(data.comments)) throw new Error('Respuesta inválida.');
             if (requestId !== communityRequest) return;
-            const normalized = { fireCount: Number(data.fireCount), comments: data.comments.slice(0, 100).map(comment => ({
+            const normalized = { comments: data.comments.slice(0, 100).map(comment => ({
                 ...comment,
                 positionSeconds: comment.positionSeconds === null || comment.positionSeconds === undefined ? null : Number(comment.positionSeconds)
             })) };
             communityCache.set(track.id, normalized); renderCommunity(track, normalized);
         } catch (error) {
             if (requestId !== communityRequest) return;
-            $('community-fire').disabled = true; $('community-fire-count').textContent = '—';
             const list = $('comment-list'); list.replaceChildren(el('p', 'empty-state', error.message || 'Comentarios no disponibles.'));
         }
-    }
-    async function toggleFire(track) {
-        if (!track?.id || pendingFire.has(track.id) || !communityCache.has(track.id)) return;
-        let visitor;
-        try { visitor = communityVisitor(); } catch (error) { $('comment-status').textContent = error.message; return; }
-        const reacted = !fireReactions.has(track.id); pendingFire.add(track.id); renderCommunity(track, communityCache.get(track.id));
-        try {
-            const result = await request(`/sets/${track.id}/fire`, { method: 'PUT', body: JSON.stringify({ visitor, reacted }) });
-            if (result.reacted) fireReactions.add(track.id); else fireReactions.delete(track.id);
-            const data = communityCache.get(track.id); data.fireCount = Number(result.count); communityCache.set(track.id, data);
-            try { localStorage.setItem('ncc-fire-reactions-v1', JSON.stringify([...fireReactions])); } catch {}
-            $('comment-status').textContent = result.reacted ? 'Reacción 🔥 agregada.' : 'Reacción retirada.';
-        } catch (error) { $('comment-status').textContent = error.message; }
-        finally { pendingFire.delete(track.id); renderCommunity(track, communityCache.get(track.id)); }
     }
     function commentPositionSeconds(track = activeCommunityTrack() || currentTrack()) {
         return currentTrack()?.key === track?.key && isSeekable(audio) ? audio.currentTime : 0;
@@ -544,9 +523,8 @@
     async function shareSet(track) {
         if (!track?.slug) { showMessage('El enlace del set todavía no está disponible.'); return; }
         const data = { title: track.name, text: track.name, url: setURL(track) };
-        shareTrack = track;
         renderSharePreview(track);
-        const dialog = $('share-dialog'); dialog.querySelector('.destination-grid').replaceChildren();
+        const dialog = $('share-dialog'), destinations = dialog.querySelector('.destination-grid'); destinations.replaceChildren();
         for (const platform of [
             { id: 'twitter', name: 'X', url: 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(data.title) + '&url=' + encodeURIComponent(data.url) },
             { id: 'facebook', name: 'Facebook', url: 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(data.url) },
@@ -569,8 +547,16 @@
                     $('share-status').textContent = 'No se pudo copiar automáticamente. Usá el botón Copiar enlace.';
                 });
             });
-            dialog.querySelector('.destination-grid').append(link);
+            destinations.append(link);
         }
+        const copy = el('button', 'destination-choice share-copy-choice'); copy.type = 'button'; copy.setAttribute('aria-label', 'Copiar enlace'); copy.title = 'Copiar enlace';
+        const copyIcon = el('span', 'destination-mark share-copy-mark'); copyIcon.innerHTML = icon('link');
+        copy.append(copyIcon, el('span', 'destination-label', 'Copiar'));
+        copy.addEventListener('click', async () => {
+            try { await navigator.clipboard.writeText(data.url); recordAnalytics('share', track, 'copy', false); $('share-status').textContent = 'Enlace copiado.'; }
+            catch { $('share-status').textContent = 'No se pudo copiar el enlace.'; }
+        });
+        destinations.append(copy);
         $('share-status').textContent = ''; dialog.showModal();
     }
     async function loadAdmin() {
@@ -799,7 +785,6 @@
         $('expanded-like').addEventListener('click', () => toggleLike(activeCommunityTrack() || currentTrack()));
         $('expanded-share').addEventListener('click', () => shareSet(activeCommunityTrack() || currentTrack()));
         $('expanded-skull-toggle').addEventListener('click', () => playSet(nowPlayerTrack || currentTrack()));
-        $('community-fire').addEventListener('click', () => toggleFire(nowPlayerTrack || currentTrack()));
         $('community-toggle').addEventListener('click', () => setCommunityExpanded($('community-toggle').getAttribute('aria-expanded') !== 'true'));
         $('comment-form').addEventListener('submit', submitComment);
         $('comment-body').addEventListener('input', event => { $('comment-count').textContent = `${event.target.value.length}/600`; });
@@ -823,12 +808,7 @@
         const previewWaveform = el('div', 'share-preview-waveform'); previewWaveform.id = 'share-preview-waveform'; previewWaveform.setAttribute('aria-hidden', 'true');
         previewBody.append(previewTop, previewWaveform); preview.append(cover, previewBody); sharing.append(preview);
         const shareHeading = el('p', 'share-section-label', 'Compartir en'); sharing.append(shareHeading, el('div', 'destination-grid'));
-        const copyLabel = el('p', 'share-section-label', 'Copiar enlace'); sharing.append(copyLabel);
-        const linkRow = el('div', 'share-link-row');
-        const copy = el('button', 'share-copy'); copy.type = 'button'; copy.setAttribute('aria-label', 'Copiar enlace'); copy.title = 'Copiar enlace'; copy.innerHTML = icon('link'); copy.addEventListener('click', async () => {
-            try { await navigator.clipboard.writeText(setURL(shareTrack)); recordAnalytics('share', shareTrack, 'copy', false); $('share-status').textContent = 'Enlace copiado.'; }
-            catch { $('share-status').textContent = 'No se pudo copiar el enlace.'; }
-        }); linkRow.append(copy); sharing.append(linkRow); const status = el('p'); status.id = 'share-status'; status.setAttribute('role', 'status'); sharing.append(status);
+        const status = el('p'); status.id = 'share-status'; status.setAttribute('role', 'status'); sharing.append(status);
         const moderationDialog = makeDialog('moderation-dialog', 'Moderar comentarios'); const moderationList = el('div', 'moderation-list'); moderationList.id = 'moderation-list'; moderationDialog.append(moderationList);
         const analyticsDialog = makeDialog('analytics-dialog', 'Estadísticas'); const analyticsContent = el('div', 'analytics-content'); analyticsContent.id = 'analytics-content'; analyticsDialog.append(analyticsContent);
         const editor = makeDialog('edit-dialog', 'Editar set'); const form = el('form', 'set-form');
