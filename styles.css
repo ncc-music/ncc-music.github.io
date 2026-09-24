@@ -820,6 +820,7 @@ body.player-expanded { overflow: hidden; }
 .comment-user-compact:focus-within { border-color: #9fbe7a99; box-shadow: 0 0 0 2px #9fbe7a17; }
 .comment-user-compact label { flex: 0 0 auto; color: var(--muted); font-size: 10px; }
 .comment-user-compact input { flex: 1 1 auto; min-width: 0; padding: 4px 0; color: var(--text); background: transparent; border: 0; font: inherit; font-size: 11px; text-overflow: ellipsis; }
+.comment-user-compact input::placeholder { color: var(--muted); opacity: .72; }
 .comment-user-compact input:focus { outline: none; }
 .waveform-action-row > .track-action { width: 36px; min-width: 36px; min-height: 36px; padding: 6px; border: 1px solid #ffffff24; border-radius: 50%; }
 .waveform-action-row > .track-action .like-count { display: none; }

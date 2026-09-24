@@ -1,10 +1,10 @@
 const CACHE_PREFIX = 'ncc-music-';
-const CACHE_NAME = `${CACHE_PREFIX}shell-v43`;
+const CACHE_NAME = `${CACHE_PREFIX}shell-v44`;
 const APP_SHELL = [
     '/',
     '/index.html',
     '/manifest.webmanifest',
-    '/styles.css?v=20260924commentheader',
+    '/styles.css?v=20260924commentidentity',
     '/assets/app-icons/icon-192-v2.png',
     '/assets/app-icons/icon-512-v2.png',
     '/assets/app-icons/icon-maskable-512-v2.png',
@@ -18,7 +18,7 @@ const APP_SHELL = [
     '/js/gdrive-player.js?v=20260923sets2',
     '/js/detail-waveform.js?v=20260924commenthover',
     '/js/tracklist-search.js?v=20260921b',
-    '/js/sets.js?v=20260924commentheader',
+    '/js/sets.js?v=20260924commentidentity',
     '/js/content.js?v=20260921e',
     '/js/visits.js?v=20260914',
     '/js/pwa.js?v=20260923silent'

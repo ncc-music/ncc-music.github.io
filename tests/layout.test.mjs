@@ -163,6 +163,10 @@ test('user and timed comment fields share the compact action row', async () => {
     assert.doesNotMatch(html, /Comentarios vinculados al tiempo/);
     assert.equal((html.match(/id="comment-name"/g) || []).length, 1);
     assert.equal((html.match(/id="comment-count"/g) || []).length, 1);
+    assert.match(html, /id="comment-name"[^>]*placeholder="AnonymousFreak"/);
+    assert.doesNotMatch(html, /id="comment-name"[^>]*value="AnonymousFreak"/);
+    assert.match(css, /\.comment-user-compact input::placeholder \{[^}]*color: var\(--muted\);[^}]*opacity: \.72;/);
+    assert.match(await read('js/sets.js'), /const chosenName = \$\('comment-name'\)\.value\.trim\(\), name = chosenName \|\| 'AnonymousFreak'/);
 });
 
 test('Freaks Comments uses one toggle heading with its count beside the label', async () => {

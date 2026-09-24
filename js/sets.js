@@ -167,8 +167,8 @@
         event.preventDefault();
         const track = activeCommunityTrack() || currentTrack(); if (!track?.id) return;
         setCommunityExpanded(true);
-        const name = $('comment-name').value.trim() || 'AnonymousFreak', body = $('comment-body').value.trim();
-        $('comment-name').value = name;
+        const chosenName = $('comment-name').value.trim(), name = chosenName || 'AnonymousFreak', body = $('comment-body').value.trim();
+        $('comment-name').value = chosenName;
         if (!body) { $('comment-status').textContent = 'Escribí un comentario.'; $('comment-body').focus(); return; }
         let visitor;
         try { visitor = communityVisitor(); } catch (error) { $('comment-status').textContent = error.message; return; }
@@ -179,7 +179,7 @@
             const data = communityCache.get(track.id) || { fireCount: 0, comments: [] };
             data.comments = [result.comment, ...data.comments].slice(0, 100); communityCache.set(track.id, data);
             $('comment-body').value = ''; $('comment-count').textContent = '0/280';
-            try { if (name) localStorage.setItem('ncc-comment-name-v1', name); else localStorage.removeItem('ncc-comment-name-v1'); } catch {}
+            try { if (chosenName) localStorage.setItem('ncc-comment-name-v1', chosenName); else localStorage.removeItem('ncc-comment-name-v1'); } catch {}
             $('comment-status').textContent = `Publicado como ${result.comment.author} en ${formatTime(result.comment.positionSeconds || 0)}.`;
             clearCommentPosition(); renderCommunity(track, data);
         } catch (error) { $('comment-status').textContent = error.message; }
@@ -808,7 +808,10 @@
         $('expanded-waveform').addEventListener('ncc:comment-position', event => selectCommentPosition(event.detail?.seconds));
         $('comment-form').addEventListener('submit', submitComment);
         $('comment-body').addEventListener('input', event => { $('comment-count').textContent = `${event.target.value.length}/280`; });
-        try { $('comment-name').value = localStorage.getItem('ncc-comment-name-v1') || 'AnonymousFreak'; } catch { $('comment-name').value = 'AnonymousFreak'; }
+        try {
+            const savedCommentName = localStorage.getItem('ncc-comment-name-v1') || '';
+            $('comment-name').value = savedCommentName === 'AnonymousFreak' ? '' : savedCommentName;
+        } catch { $('comment-name').value = ''; }
         for (const eventName of ['play', 'pause', 'playing', 'waiting', 'timeupdate', 'loadedmetadata', 'durationchange']) audio.addEventListener(eventName, syncNowPlayer);
         audio.addEventListener('playing', () => { analyticsPlayingTrack = currentTrack(); recordAnalytics('play_start', analyticsPlayingTrack); });
         audio.addEventListener('ended', () => { recordAnalytics('play_complete', analyticsPlayingTrack); analyticsPlayingTrack = null; });
