@@ -89,7 +89,6 @@
         if (!track?.id || visible?.id !== track.id) return;
         window.NCCDetailWaveform?.setComments(data?.comments || []);
         $('expanded-like').dataset.likeId = track.id || '';
-        $('community-title').textContent = `FREAKS COMMENTS · ${data?.comments?.length ?? 0}`;
         $('community-toggle-count').textContent = data?.comments?.length ?? 0;
         const list = $('comment-list'); list.replaceChildren();
         if (!data) { list.append(el('p', 'empty-state', 'Cargando comentarios…')); return; }

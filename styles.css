@@ -816,7 +816,7 @@ body.player-expanded { overflow: hidden; }
 .now-player-community { margin-top: 0; padding-top: 0; border-top: 0; }
 .waveform-community { margin-top: 0; padding: 0; border: 0; }
 .waveform-action-row { display: flex; align-items: center; gap: 5px; margin-top: 8px; }
-.comment-user-compact { display: flex; flex: 0 1 170px; align-items: center; gap: 6px; min-width: 100px; max-width: 180px; min-height: 38px; padding: 3px 10px; background: #08090a; border: 1px solid #ffffff38; border-radius: 999px; box-shadow: inset 0 1px #ffffff08; }
+.comment-user-compact { display: flex; flex: 0 1 340px; align-items: center; gap: 6px; min-width: 200px; max-width: 360px; min-height: 38px; padding: 3px 10px; background: #08090a; border: 1px solid #ffffff38; border-radius: 999px; box-shadow: inset 0 1px #ffffff08; }
 .comment-user-compact:focus-within { border-color: #9fbe7a99; box-shadow: 0 0 0 2px #9fbe7a17; }
 .comment-user-compact label { flex: 0 0 auto; color: var(--muted); font-size: 10px; }
 .comment-user-compact input { flex: 1 1 auto; min-width: 0; padding: 4px 0; color: var(--text); background: transparent; border: 0; font: inherit; font-size: 11px; text-overflow: ellipsis; }
@@ -831,14 +831,11 @@ body.player-expanded { overflow: hidden; }
 .waveform-action-row .waveform-inline-form .comment-send { grid-column: 3; width: 30px; min-width: 30px; min-height: 30px; padding: 5px; }
 .community-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 40px; margin-top: 8px; padding: 8px 3px; color: var(--muted); background: transparent; border-top: 1px solid #ffffff18; font-size: 10px; font-weight: 750; letter-spacing: .08em; text-align: left; }
 .community-toggle:hover { color: var(--text); }
-.community-toggle-meta { display: inline-flex; align-items: center; gap: 9px; color: var(--accent); font-variant-numeric: tabular-nums; }
+.community-toggle-label { display: inline-flex; align-items: center; gap: 7px; }
+#community-toggle-count { color: var(--accent); font-variant-numeric: tabular-nums; }
 .community-toggle-arrow { display: inline-block; color: var(--muted); font-size: 18px; line-height: 1; transition: transform .18s ease; }
 .community-toggle[aria-expanded=true] .community-toggle-arrow { transform: rotate(180deg); }
 .community-shell > .waveform-community[hidden] { display: none; }
-.community-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.community-heading h3 { color: var(--muted); font-size: 14px; letter-spacing: .1em; }
-.community-heading p { margin-top: 2px; color: #7f8582; font-size: 11px; }
-.waveform-community .community-heading { margin-top: 16px; padding-top: 14px; border-top: 1px solid #ffffff14; }
 .comment-form { margin: 10px 0 0; }
 .comment-composer { display: grid; grid-template-columns: auto minmax(160px,1fr) auto auto; align-items: center; gap: 7px; padding: 6px; background: #08090a; border: 1px solid #ffffff38; border-radius: 10px; box-shadow: inset 0 1px #ffffff08; }
 .comment-composer:focus-within { border-color: #9fbe7a99; box-shadow: 0 0 0 2px #9fbe7a17; }

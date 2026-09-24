@@ -81,7 +81,7 @@
                 ]
             }
         </script>
-        <link rel="stylesheet" href="styles.css?v=20260924commentuser">
+        <link rel="stylesheet" href="styles.css?v=20260924commentheader">
         <link rel="manifest" href="manifest.webmanifest">
         <link rel="icon" type="image/png" sizes="192x192" href="assets/app-icons/icon-192-v2.png">
         <link rel="apple-touch-icon" sizes="180x180" href="assets/app-icons/apple-touch-icon-v2.png">
@@ -241,10 +241,9 @@
                                 <button type="button" class="track-action" id="expanded-like" aria-label="Me gusta" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#i-heart"/></svg><span class="like-count">—</span></button>
                                 <button type="button" class="track-action" id="expanded-share" aria-label="Compartir" title="Compartir"><svg class="icon" aria-hidden="true"><use href="#i-share"/></svg></button>
                             </div>
-                            <button type="button" class="community-toggle" id="community-toggle" aria-expanded="false" aria-controls="community-panel"><span>FREAKS COMMENTS</span><span class="community-toggle-meta"><span id="community-toggle-count">0</span><span class="community-toggle-arrow" aria-hidden="true">⌄</span></span></button>
-                <section class="now-player-community waveform-community" id="community-panel" aria-labelledby="community-title" hidden>
+                            <button type="button" class="community-toggle" id="community-toggle" aria-expanded="false" aria-controls="community-panel"><span class="community-toggle-label">FREAKS COMMENTS <span id="community-toggle-count">0</span></span><span class="community-toggle-arrow" aria-hidden="true">⌄</span></button>
+                <section class="now-player-community waveform-community" id="community-panel" aria-label="FREAKS COMMENTS" hidden>
                     <p class="comment-status" id="comment-status" role="status"></p>
-                    <div class="community-heading"><div><h3 id="community-title">FREAKS COMMENTS · 0</h3></div></div>
                     <div class="comment-list" id="comment-list" aria-live="polite"><p class="empty-state">Cargando comentarios…</p></div>
                 </section>
                         </div>
@@ -264,7 +263,7 @@
         <script src="js/gdrive-player.js?v=20260923sets2"></script>
         <script src="js/detail-waveform.js?v=20260924commenthover"></script>
         <script src="js/tracklist-search.js?v=20260921b"></script>
-        <script src="js/sets.js?v=20260924wavecomments"></script>
+        <script src="js/sets.js?v=20260924commentheader"></script>
         <script src="js/content.js?v=20260921e"></script>
         <script src="js/visits.js?v=20260914"></script>
         <script src="js/pwa.js?v=20260923silent"></script>

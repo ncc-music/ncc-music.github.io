@@ -158,11 +158,20 @@ test('user and timed comment fields share the compact action row', async () => {
     const [html, css] = await Promise.all([read('index.html'), read('styles.css')]);
     const actions = html.slice(html.indexOf('<div class="waveform-action-row">'), html.indexOf('<button type="button" class="community-toggle"'));
     assert.ok(actions.indexOf('class="comment-user-compact"') < actions.indexOf('id="comment-form"'));
-    assert.match(css, /\.comment-user-compact \{[^}]*flex: 0 1 170px;[^}]*max-width: 180px;/);
+    assert.match(css, /\.comment-user-compact \{[^}]*flex: 0 1 340px;[^}]*max-width: 360px;/);
     assert.match(css, /\.waveform-inline-form \{[^}]*flex: 1 1 auto;/);
     assert.doesNotMatch(html, /Comentarios vinculados al tiempo/);
     assert.equal((html.match(/id="comment-name"/g) || []).length, 1);
     assert.equal((html.match(/id="comment-count"/g) || []).length, 1);
+});
+
+test('Freaks Comments uses one toggle heading with its count beside the label', async () => {
+    const [html, sets] = await Promise.all([read('index.html'), read('js/sets.js')]);
+    assert.match(html, /class="community-toggle-label">FREAKS COMMENTS <span id="community-toggle-count">0<\/span>/);
+    assert.equal((html.match(/FREAKS COMMENTS/g) || []).length, 2);
+    assert.match(html, /id="community-panel" aria-label="FREAKS COMMENTS"/);
+    assert.doesNotMatch(html, /id="community-title"|class="community-heading"/);
+    assert.doesNotMatch(sets, /community-title/);
 });
 
 test('mobile expanded player covers the complete viewport', async () => {
