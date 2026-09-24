@@ -81,7 +81,7 @@
                 ]
             }
         </script>
-        <link rel="stylesheet" href="styles.css?v=20260923playbuttons3">
+        <link rel="stylesheet" href="styles.css?v=20260923tracklistscroll">
         <link rel="manifest" href="manifest.webmanifest">
         <link rel="icon" type="image/png" sizes="192x192" href="assets/app-icons/icon-192-v2.png">
         <link rel="apple-touch-icon" sizes="180x180" href="assets/app-icons/apple-touch-icon-v2.png">
@@ -247,7 +247,7 @@
                         </div>
                     </div>
                 </div>
-                <section class="now-player-tracklist" aria-labelledby="expanded-tracklist-title"><h3 id="expanded-tracklist-title">TRACKLIST</h3><ol id="expanded-tracklist"></ol><p id="expanded-tracklist-empty" hidden>Todavía no hay un tracklist publicado para este set.</p></section>
+                <section class="now-player-tracklist" aria-labelledby="expanded-tracklist-title"><h3 id="expanded-tracklist-title"><button type="button" class="tracklist-scroll" id="tracklist-scroll" aria-label="Mostrar los temas del tracklist">TRACKLIST</button></h3><ol id="expanded-tracklist"></ol><p id="expanded-tracklist-empty" hidden>Todavía no hay un tracklist publicado para este set.</p></section>
             </div>
         </section>
         <section class="player-dock" aria-label="Reproductor de música"><div class="now-playing"><img id="now-cover" src="assets/cardu-skull-mustard.webp?v=20260923" alt="Abrir reproductor ampliado" class="now-cover" role="button" tabindex="0" decoding="async"><div class="now-info" id="now-info"><span id="player-mode" class="player-mode">LISTO PARA ESCUCHAR</span><p id="track-artist">CARDÚ</p><h2><button type="button" id="track-name" class="track-name-button" aria-label="Elegí un set para abrir el reproductor" disabled>Elegí un set</button></h2></div><button type="button" id="expand-player" class="expand-player" aria-label="Abrir reproductor ampliado" aria-controls="now-player" aria-expanded="false"><svg class="icon" aria-hidden="true"><use href="#i-expand"/></svg></button></div>
@@ -261,7 +261,7 @@
         <script src="js/gdrive-player.js?v=20260923sets2"></script>
         <script src="js/detail-waveform.js?v=20260922o"></script>
         <script src="js/tracklist-search.js?v=20260921b"></script>
-        <script src="js/sets.js?v=20260923ops3"></script>
+        <script src="js/sets.js?v=20260923tracklistscroll"></script>
         <script src="js/content.js?v=20260921e"></script>
         <script src="js/visits.js?v=20260914"></script>
         <script src="js/pwa.js?v=20260923silent"></script>

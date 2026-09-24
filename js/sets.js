@@ -785,6 +785,12 @@
         $('expanded-like').addEventListener('click', () => toggleLike(activeCommunityTrack() || currentTrack()));
         $('expanded-share').addEventListener('click', () => shareSet(activeCommunityTrack() || currentTrack()));
         $('expanded-skull-toggle').addEventListener('click', () => playSet(nowPlayerTrack || currentTrack()));
+        $('tracklist-scroll').addEventListener('click', () => {
+            $('expanded-tracklist-title').scrollIntoView({
+                behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+                block: 'start'
+            });
+        });
         $('community-toggle').addEventListener('click', () => setCommunityExpanded($('community-toggle').getAttribute('aria-expanded') !== 'true'));
         $('comment-form').addEventListener('submit', submitComment);
         $('comment-body').addEventListener('input', event => { $('comment-count').textContent = `${event.target.value.length}/600`; });

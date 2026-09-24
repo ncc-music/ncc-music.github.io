@@ -103,11 +103,14 @@ test('expanded player close control stays compact', async () => {
 });
 
 test('expanded player reveals the beginning of the tracklist sooner', async () => {
-    const css = await read('styles.css');
+    const [html, sets, css] = await Promise.all([read('index.html'), read('js/sets.js'), read('styles.css')]);
     assert.match(css, /\.waveform-community-card \.detail-waveform canvas \{ height: clamp\(122px,17dvh,144px\); \}/);
     assert.match(css, /\.now-player-tracklist \{ margin-top: 10px; padding-top: 10px;/);
     assert.match(css, /\.now-player-tracklist h3 \{ margin: 0 0 8px;/);
     assert.match(css, /\.now-player-tracklist li \{ padding: 3px 0 3px 8px; \}/);
+    assert.match(html, /id="tracklist-scroll"[^>]*aria-label="Mostrar los temas del tracklist"[^>]*>TRACKLIST<\/button>/);
+    assert.match(css, /\.tracklist-scroll \{[^}]*padding: 0;[^}]*background: transparent;[^}]*cursor: pointer;/);
+    assert.match(sets, /\$\('tracklist-scroll'\)\.addEventListener\('click',[^]*?\$\('expanded-tracklist-title'\)\.scrollIntoView\(\{[^]*?behavior: matchMedia\('\(prefers-reduced-motion: reduce\)'\)\.matches \? 'auto' : 'smooth',[^]*?block: 'start'/);
 });
 
 test('mobile expanded player relies on the swipe handle instead of a close button', async () => {

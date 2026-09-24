@@ -806,6 +806,9 @@ body.player-expanded { overflow: hidden; }
 .waveform-community-card .detail-waveform canvas { height: clamp(122px,17dvh,144px); }
 .now-player-tracklist { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
 .now-player-tracklist h3 { margin: 0 0 8px; color: var(--muted); font-size: 14px; letter-spacing: .1em; }
+.tracklist-scroll { display: inline-block; padding: 0; color: inherit; background: transparent; font: inherit; letter-spacing: inherit; line-height: inherit; text-align: left; cursor: pointer; }
+.tracklist-scroll:hover, .tracklist-scroll:focus-visible { color: var(--text); }
+.tracklist-scroll:focus-visible { outline: 1px solid currentColor; outline-offset: 4px; }
 .now-player-tracklist ol { padding-left: 2.2em; margin: 0; list-style-type: decimal-leading-zero; }
 .now-player-tracklist li { padding: 3px 0 3px 8px; }
 .now-player-tracklist li::marker { color: var(--muted); }
