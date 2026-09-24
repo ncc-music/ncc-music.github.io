@@ -158,8 +158,12 @@ test('user and timed comment fields share the compact action row', async () => {
     const [html, css] = await Promise.all([read('index.html'), read('styles.css')]);
     const actions = html.slice(html.indexOf('<div class="waveform-action-row">'), html.indexOf('<button type="button" class="community-toggle"'));
     assert.ok(actions.indexOf('class="comment-user-compact"') < actions.indexOf('id="comment-form"'));
-    assert.match(css, /\.comment-user-compact \{[^}]*flex: 0 0 200px;[^}]*max-width: 200px;/);
-    assert.match(css, /@media \(max-width: 760px\) \{[^]*\.comment-user-compact \{[^}]*flex-basis: 88px;[^}]*max-width: 92px;/);
+    assert.match(css, /\.comment-user-compact \{[^}]*flex: 0 0 220px;[^}]*max-width: 220px;/);
+    assert.match(css, /@media \(max-width: 760px\) \{[^]*\.comment-user-compact \{[^}]*flex-basis: 118px;[^}]*max-width: 124px;/);
+    assert.match(css, /\.comment-user-compact \{[^}]*height: 38px;[^}]*min-height: 38px;/);
+    assert.match(css, /\.comment-user-compact label \{[^}]*font-size: 12px;/);
+    assert.match(css, /\.comment-user-compact input \{[^}]*font-size: 12px;/);
+    assert.match(css, /\.waveform-inline-form \.comment-composer \{[^}]*height: 38px;[^}]*min-height: 38px;/);
     assert.match(css, /\.waveform-inline-form \{[^}]*flex: 1 1 auto;/);
     assert.doesNotMatch(html, /Comentarios vinculados al tiempo/);
     assert.equal((html.match(/id="comment-name"/g) || []).length, 1);
