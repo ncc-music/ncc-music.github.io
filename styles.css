@@ -876,25 +876,29 @@ body.player-expanded { overflow: hidden; }
 .waveform-play.is-invisible { opacity: 0; pointer-events: none; }
 .waveform-frame.is-loading .waveform-play { opacity: .28; pointer-events: none; }
 .waveform-guide { position: absolute; top: 8%; bottom: 8%; z-index: 2; width: 2px; transform: translateX(-50%); background: var(--accent); border-radius: 2px; box-shadow: 0 0 0 1px #10111299, 0 0 10px #9fbe7a88; pointer-events: none; }
-.waveform-hover-time { position: absolute; top: 5px; z-index: 4; padding: 3px 5px; transform: translateX(-50%); color: #111; background: var(--accent); border: 1px solid #101112; border-radius: 3px; box-shadow: 0 3px 10px #000a; font-size: 9px; font-weight: 850; font-variant-numeric: tabular-nums; line-height: 1; pointer-events: none; }
+.waveform-hover-time { position: absolute; top: 5px; z-index: 4; padding: 2px 4px; transform: translateX(-50%); color: #111; background: var(--accent); border: 1px solid #101112; border-radius: 3px; box-shadow: 0 2px 8px #0009; font-size: 8px; font-weight: 850; font-variant-numeric: tabular-nums; line-height: 1; pointer-events: none; }
 .waveform-comment-cue { position: absolute; top: 73.5%; z-index: 4; display: grid; place-items: center; width: 22px; height: 22px; transform: translate(-50%,-35%); color: #111; background: var(--accent); border: 2px solid #101112; border-radius: 50%; box-shadow: 0 3px 9px #000c; font-size: 15px; font-weight: 900; line-height: 1; pointer-events: none; }
 .waveform-hover-time[hidden], .waveform-comment-cue[hidden] { display: none; }
-.waveform-comment-markers { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
-.waveform-comment-marker { position: absolute; top: 73.5%; display: grid; place-items: center; width: 22px; height: 22px; padding: 0; transform: translate(-50%,-35%); color: #111; background: transparent; border: 0; border-radius: 50%; filter: drop-shadow(0 3px 5px #000b); pointer-events: auto; }
-.waveform-comment-marker::after { content: ""; position: absolute; bottom: 19px; left: 50%; width: 1px; height: 22px; transform: translateX(-50%); background: #f0f1f252; pointer-events: none; }
+.waveform-comment-markers { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+.waveform-comment-marker { position: absolute; top: 73.5%; display: grid; place-items: center; width: 32px; height: 32px; padding: 0; transform: translate(-50%,-40%); color: #111; background: transparent; border: 0; border-radius: 50%; filter: drop-shadow(0 3px 5px #000b); pointer-events: auto; }
+.waveform-comment-marker::after { content: ""; position: absolute; bottom: 29px; left: 50%; width: 1px; height: 22px; transform: translateX(-50%); background: #f0f1f252; pointer-events: none; }
 .waveform-comment-avatar { display: grid; place-items: center; width: 20px; height: 20px; color: #111; background: #f0f1f2; border: 2px solid #101112; border-radius: 50%; font-size: 7px; font-weight: 900; }
 .waveform-comment-marker.is-cluster .waveform-comment-avatar { color: #111; background: var(--accent); font-size: 9px; }
 .waveform-comment-marker:hover .waveform-comment-avatar, .waveform-comment-marker:focus-visible .waveform-comment-avatar, .waveform-comment-marker.is-open .waveform-comment-avatar { background: var(--accent); }
-.waveform-comment-bubble { position: absolute; bottom: 29px; left: 50%; z-index: 5; display: block; width: max-content; max-width: min(260px,70vw); padding: 8px 10px; transform: translate(-50%,5px); color: var(--text); background: #111315f5; border: 1px solid #ffffff28; border-radius: 5px; box-shadow: 0 8px 28px #000c; opacity: 0; visibility: hidden; text-align: left; pointer-events: none; }
+.waveform-comment-bubble { position: absolute; bottom: 35px; left: 50%; z-index: 5; display: block; width: max-content; max-width: min(290px,76vw); padding: 8px 10px; transform: translate(-50%,5px); color: var(--text); background: #111315f5; border: 1px solid #ffffff28; border-radius: 5px; box-shadow: 0 8px 28px #000c; opacity: 0; visibility: hidden; text-align: left; pointer-events: none; }
 .waveform-comment-bubble-meta, .waveform-comment-bubble-body { display: block; }
 .waveform-comment-bubble-meta { margin-bottom: 3px; color: var(--accent); font-size: 10px; font-weight: 800; white-space: nowrap; }
-.waveform-comment-bubble-body { overflow: hidden; max-width: 240px; font-size: 12px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+.waveform-comment-bubble-body { max-width: 270px; font-size: 12px; line-height: 1.38; overflow-wrap: anywhere; white-space: normal; }
+.waveform-comment-line { display: block; padding: 3px 0; border-top: 1px solid #ffffff12; }
+.waveform-comment-line:first-child { padding-top: 0; border-top: 0; }
+.waveform-comment-more { display: block; padding-top: 4px; color: var(--accent); font-size: 10px; font-weight: 800; }
 .waveform-comment-marker:hover .waveform-comment-bubble, .waveform-comment-marker:focus-visible .waveform-comment-bubble, .waveform-comment-marker.is-open .waveform-comment-bubble { transform: translate(-50%,0); opacity: 1; visibility: visible; }
 .waveform-comment-marker.is-edge-start .waveform-comment-bubble { left: -1px; transform: translate(0,5px); }
 .waveform-comment-marker.is-edge-start:hover .waveform-comment-bubble, .waveform-comment-marker.is-edge-start:focus-visible .waveform-comment-bubble, .waveform-comment-marker.is-edge-start.is-open .waveform-comment-bubble { transform: translate(0,0); }
 .waveform-comment-marker.is-edge-end .waveform-comment-bubble { right: -1px; left: auto; transform: translate(0,5px); }
 .waveform-comment-marker.is-edge-end:hover .waveform-comment-bubble, .waveform-comment-marker.is-edge-end:focus-visible .waveform-comment-bubble, .waveform-comment-marker.is-edge-end.is-open .waveform-comment-bubble { transform: translate(0,0); }
-.waveform-comment-marker.is-draft { color: #111; background: var(--accent); border: 2px solid #101112; border-radius: 50%; font-size: 13px; font-weight: 900; }
+.waveform-comment-marker.is-draft { width: 22px; height: 22px; transform: translate(-50%,-35%); color: #111; background: var(--accent); border: 2px solid #101112; border-radius: 50%; font-size: 13px; font-weight: 900; }
+.waveform-comment-marker.is-draft::after { bottom: 19px; }
 .waveform-frame.is-comment-picking canvas { cursor: copy; }
 .waveform-frame.is-comment-zone canvas { cursor: copy; }
 .expanded-waveform .waveform-play { isolation: isolate; width: 62px; height: 62px; color: #090a0b; background: transparent; border: 0; }

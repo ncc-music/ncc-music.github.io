@@ -82,9 +82,15 @@
                 marker.setAttribute('aria-label', group.items.length > 1 ? `${group.items.length} comentarios cerca de ${formatTime(seconds)}` : `Comentario de ${comment.author || 'AnonymousFreak'} en ${formatTime(seconds)}`);
                 avatar.textContent = group.items.length > 1 ? String(group.items.length) : commentInitials(comment.author);
                 bubbleMeta.textContent = group.items.length > 1 ? `${group.items.length} COMENTARIOS · ${formatTime(seconds)}` : `${comment.author || 'AnonymousFreak'} · ${formatTime(seconds)}`;
-                bubbleBody.textContent = group.items.length > 1
-                    ? group.items.slice(0, 3).map(item => `${item.comment.author || 'AnonymousFreak'}: ${item.comment.body || ''}`).join(' · ')
-                    : comment.body || '';
+                if (group.items.length > 1) {
+                    for (const item of group.items.slice(0, 6)) {
+                        const line = document.createElement('span'); line.className = 'waveform-comment-line';
+                        line.textContent = `${item.comment.author || 'AnonymousFreak'}: ${item.comment.body || ''}`; bubbleBody.append(line);
+                    }
+                    if (group.items.length > 6) {
+                        const more = document.createElement('span'); more.className = 'waveform-comment-more'; more.textContent = `+ ${group.items.length - 6} más`; bubbleBody.append(more);
+                    }
+                } else bubbleBody.textContent = comment.body || '';
                 bubble.append(bubbleMeta, bubbleBody); marker.append(avatar, bubble);
                 marker.addEventListener('click', event => {
                     event.stopPropagation();

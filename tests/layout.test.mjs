@@ -76,6 +76,15 @@ test('expanded waveform normalizes and smooths peaks, clusters comments and anim
     assert.match(source, /requestAnimationFrame\(animateLoading\)/);
 });
 
+test('waveform hover keeps time compact and reveals complete comments above the controls', async () => {
+    const [css, source] = await Promise.all([read('styles.css'), read('js/detail-waveform.js')]);
+    assert.match(css, /\.waveform-hover-time \{[^}]*padding: 2px 4px;[^}]*font-size: 8px;/);
+    assert.match(css, /\.waveform-comment-markers \{[^}]*z-index: 5;/);
+    assert.match(css, /\.waveform-comment-marker \{[^}]*width: 32px;[^}]*height: 32px;/);
+    assert.match(css, /\.waveform-comment-bubble-body \{[^}]*overflow-wrap: anywhere;[^}]*white-space: normal;/);
+    assert.match(source, /line\.className = 'waveform-comment-line'/);
+});
+
 test('waveform focus never draws the green keyboard outline', async () => {
     const css = await read('styles.css');
     assert.match(css, /\.detail-waveform canvas:focus, \.detail-waveform canvas:focus-visible \{ outline: none; \}/);
