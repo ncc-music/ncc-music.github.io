@@ -189,7 +189,11 @@ test('mini player controls use the monochrome brush language with clear hierarch
     assert.match(css, /\.play-button \{[^}]*width: 46px;[^}]*height: 46px;[^}]*background: transparent;/);
     assert.match(css, /\.play-button::before \{[^}]*player-control-brush\.png\?v=20260923[^}]*mask:/);
     assert.match(css, /\.play-button::after \{[^}]*inset: 5px;[^}]*border: 3px solid #090a0b;[^}]*border-radius: 48% 52% 47% 53%;/);
-    assert.match(css, /\.play-button \.icon \{[^}]*width: 27px;[^}]*height: 27px;[^}]*translateX\(1\.5px\)/);
+    assert.match(css, /\.play-button \.icon \{[^}]*width: 27px;[^}]*height: 27px;[^}]*transform: none;/);
+    assert.match(css, /\.track-play \{[^}]*width: 40px;[^}]*height: 40px;[^}]*background: transparent;[^}]*border: 0;/);
+    assert.match(css, /\.track-play::after \{[^}]*inset: 4px;[^}]*border: 2px solid #090a0b;/);
+    assert.match(css, /\.expanded-skull-control \{[^}]*width: 44px;[^}]*height: 44px;[^}]*background: transparent;[^}]*border: 0;/);
+    assert.match(css, /\.expanded-waveform \.waveform-play \{[^}]*width: 62px;[^}]*height: 62px;[^}]*background: transparent;[^}]*border: 0;/);
     assert.match(css, /body\[data-playing=true\] \.play-button::before \{ background: var\(--accent\); \}/);
     assert.match(css, /\.transport-buttons \.icon-button \{[^}]*width: 40px;[^}]*height: 40px;[^}]*border-radius: 50%;/);
     assert.match(css, /\.player-dock \.progress-control input \{[^}]*height: 4px;[^}]*var\(--accent\) var\(--progress\)/);

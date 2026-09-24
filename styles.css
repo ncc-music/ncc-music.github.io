@@ -84,15 +84,20 @@ body[data-radio=on] .radio-icon { color: var(--accent); }
 .track-row.active { background: #ffffff05; }
 .track-number { display: grid; place-items: center; color: var(--muted); font-size: 12px; }
 .track-number .icon { width: 18px; height: 18px; color: var(--accent); }
-.track-play { display: grid; place-items: center; justify-self: center; width: 40px; height: 40px; padding: 0; color: var(--text); background: #ffffff0a; border: 1px solid #ffffff20; border-radius: 50%; }
-.track-play:hover { color: #111; background: var(--accent); border-color: var(--accent); }
-.track-play .icon { width: 19px; height: 19px; }
-.track-row.active .track-play { color: var(--accent); border-color: #9fbe7a66; }
-.track-row.active .track-play:hover { color: #111; }
-.track-row.active .track-play.is-playing { color: #fff; background: #050505; border-color: #fff; }
-.track-row.active .track-play.is-playing:hover { color: #fff; background: #050505; border-color: #fff; box-shadow: 0 0 0 2px #fff3; }
+.track-play { position: relative; isolation: isolate; display: grid; place-items: center; justify-self: center; width: 40px; height: 40px; padding: 0; color: #090a0b; background: transparent; border: 0; border-radius: 50%; transition: transform .16s ease; }
+.track-play::before { position: absolute; inset: 0; z-index: -1; content: ""; background: var(--text); -webkit-mask: url("assets/player-control-brush.png?v=20260923") center / contain no-repeat; mask: url("assets/player-control-brush.png?v=20260923") center / contain no-repeat; }
+.track-play::after { position: absolute; inset: 4px; z-index: 0; content: ""; border: 2px solid #090a0b; border-radius: 48% 52% 47% 53%; transform: rotate(-2deg); pointer-events: none; }
+.track-play:hover { color: #090a0b; background: transparent; transform: scale(1.05); }
+.track-play:hover::before { background: var(--accent); }
+.track-play .icon { position: relative; z-index: 1; width: 23px; height: 23px; }
+.track-row.active .track-play { color: #090a0b; }
+.track-row.active .track-play.is-playing { color: #090a0b; background: transparent; }
+.track-row.active .track-play.is-playing::before { background: var(--accent); }
+.track-row.active .track-play.is-playing:hover { color: #090a0b; background: transparent; box-shadow: none; }
 .track-vu { display: inline-flex; align-items: flex-end; justify-content: center; width: 22px; height: 18px; gap: 2px; }
+.track-play .track-vu { position: relative; z-index: 1; }
 .track-vu i { display: block; width: 3px; height: 100%; background: #fff; border-radius: 1px 1px 0 0; transform-origin: center bottom; animation: ncc-track-vu .72s steps(5,end) infinite alternate; }
+.track-play.is-playing .track-vu i { background: #090a0b; }
 .track-vu i:nth-child(1) { animation-delay: -.46s; animation-duration: .61s; }
 .track-vu i:nth-child(2) { animation-delay: -.19s; animation-duration: .83s; }
 .track-vu i:nth-child(3) { animation-delay: -.57s; animation-duration: .54s; }
@@ -151,8 +156,7 @@ body[data-radio=on] .player-mode { color: var(--accent); }
 .play-button { position: relative; isolation: isolate; display: grid; place-items: center; width: 46px; height: 46px; padding: 0; color: #0b0c0d; background: transparent; border-radius: 50%; transition: color .16s ease, transform .16s ease; }
 .play-button::before { position: absolute; inset: -1px; z-index: -1; content: ""; background: var(--text); -webkit-mask: url("assets/player-control-brush.png?v=20260923") center / contain no-repeat; mask: url("assets/player-control-brush.png?v=20260923") center / contain no-repeat; transition: background .16s ease, transform .16s ease; }
 .play-button::after { position: absolute; inset: 5px; z-index: 0; content: ""; border: 3px solid #090a0b; border-radius: 48% 52% 47% 53%; transform: rotate(-2deg); pointer-events: none; }
-.play-button .icon { position: relative; z-index: 1; width: 27px; height: 27px; transform: translateX(1.5px); }
-body[data-playing=true] .play-button .icon { transform: none; }
+.play-button .icon { position: relative; z-index: 1; width: 27px; height: 27px; transform: none; }
 .play-button:hover:not(:disabled) { color: #080909; background: transparent; transform: scale(1.05); }
 .play-button:hover:not(:disabled)::before, body[data-playing=true] .play-button::before { background: var(--accent); }
 .transport-buttons .icon-button:focus-visible, .play-button:focus-visible { outline: none; box-shadow: 0 0 0 2px #141517, 0 0 0 4px #ffffffb8; }
@@ -778,10 +782,13 @@ body.player-expanded { overflow: hidden; }
 .expanded-player-visual { display: flex; min-width: 0; flex-direction: column; gap: 10px; }
 .expanded-skull-media { position: relative; order: -1; display: grid; place-items: center; width: 100%; height: clamp(210px,30dvh,270px); min-width: 0; padding: 0; overflow: hidden; color: var(--text); background: #050606; border: 1px solid #ffffff14; border-radius: 7px; cursor: pointer; }
 .expanded-skull-media:focus, .expanded-skull-media:focus-visible { outline: none; }
-.expanded-skull-control { position: absolute; right: 12px; bottom: 12px; z-index: 2; display: grid; place-items: center; width: 44px; height: 44px; color: #111; background: #eef0f2e8; border: 3px solid #090a0bcc; border-radius: 50%; box-shadow: 0 7px 22px #000b; transition: transform .16s ease, background .16s ease; }
-.expanded-skull-media:hover .expanded-skull-control { transform: scale(1.06); background: var(--accent); }
+.expanded-skull-control { position: absolute; right: 12px; bottom: 12px; z-index: 2; isolation: isolate; display: grid; place-items: center; width: 44px; height: 44px; color: #090a0b; background: transparent; border: 0; border-radius: 50%; box-shadow: 0 7px 22px #000b; transition: transform .16s ease; }
+.expanded-skull-control::before { position: absolute; inset: 0; z-index: -1; content: ""; background: var(--text); -webkit-mask: url("assets/player-control-brush.png?v=20260923") center / contain no-repeat; mask: url("assets/player-control-brush.png?v=20260923") center / contain no-repeat; }
+.expanded-skull-control::after { position: absolute; inset: 5px; z-index: 0; content: ""; border: 2px solid #090a0b; border-radius: 48% 52% 47% 53%; transform: rotate(-2deg); }
+.expanded-skull-media:hover .expanded-skull-control { transform: scale(1.06); }
+.expanded-skull-media:hover .expanded-skull-control::before { background: var(--accent); }
 .expanded-skull-media:focus-visible .expanded-skull-control { box-shadow: 0 0 0 2px var(--text), 0 7px 22px #000b; }
-.expanded-skull-control .icon { width: 22px; height: 22px; }
+.expanded-skull-control .icon { position: relative; z-index: 1; width: 24px; height: 24px; }
 .expanded-skull-media img, .expanded-skull-media video { position: absolute; top: 50%; left: 50%; display: block; width: calc(100% - clamp(12px,2vw,22px)); height: calc(100% - clamp(12px,2vw,22px)); transform: translate(-50%,-50%); object-fit: contain; object-position: center; }
 .expanded-skull-media video[hidden], .expanded-skull-media img[hidden] { display: none; }
 .detail-waveform-card { margin-top: 28px; }
@@ -881,8 +888,12 @@ body.player-expanded { overflow: hidden; }
 .waveform-comment-marker.is-edge-end:hover .waveform-comment-bubble, .waveform-comment-marker.is-edge-end:focus-visible .waveform-comment-bubble, .waveform-comment-marker.is-edge-end.is-open .waveform-comment-bubble { transform: translate(0,0); }
 .waveform-comment-marker.is-draft { color: #111; background: var(--accent); border: 2px solid #101112; border-radius: 50%; font-size: 15px; font-weight: 900; }
 .waveform-frame.is-comment-picking canvas { cursor: copy; }
-.expanded-waveform .waveform-play { width: 62px; height: 62px; color: #111; background: var(--text); }
-.expanded-waveform .waveform-play:hover { background: var(--accent); }
+.expanded-waveform .waveform-play { isolation: isolate; width: 62px; height: 62px; color: #090a0b; background: transparent; border: 0; }
+.expanded-waveform .waveform-play::before { position: absolute; inset: 0; z-index: -1; content: ""; background: var(--text); -webkit-mask: url("assets/player-control-brush.png?v=20260923") center / contain no-repeat; mask: url("assets/player-control-brush.png?v=20260923") center / contain no-repeat; }
+.expanded-waveform .waveform-play::after { position: absolute; inset: 7px; z-index: 0; content: ""; border: 4px solid #090a0b; border-radius: 48% 52% 47% 53%; transform: rotate(-2deg); }
+.expanded-waveform .waveform-play .icon { position: relative; z-index: 1; width: 34px; height: 34px; }
+.expanded-waveform .waveform-play:hover { background: transparent; }
+.expanded-waveform .waveform-play:hover::before { background: var(--accent); }
 
 @media (min-width: 761px) and (max-width: 1200px) {
     :root { --expanded-player-header-offset: 182px; }
