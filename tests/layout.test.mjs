@@ -31,6 +31,16 @@ test('mobile header keeps every link on one compact row without changing desktop
     assert.doesNotMatch(css.slice(0, css.indexOf('@media(max-width:760px)')), /\.site-header \{[^}]*height: 106px;/);
 });
 
+test('social icons keep monochrome artwork and reveal muted network colors on interaction', async () => {
+    const css = await read('styles.css');
+    assert.match(css, /\.social-btn img \{[^}]*mix-blend-mode: screen;/);
+    assert.match(css, /\.social-btn\[aria-label="SoundCloud"\] \{ --social-pastel: #d6a06f; \}/);
+    assert.match(css, /\.social-btn\[aria-label="Instagram"\] \{ --social-pastel: #c58dad; \}/);
+    assert.match(css, /\.social-btn\[aria-label="Facebook"\] \{ --social-pastel: #8fa9cf; \}/);
+    assert.match(css, /\.social-btn\[aria-label\^="Telegram"\] \{ --social-pastel: #8bc5d6; \}/);
+    assert.match(css, /\.social-btn:hover img, \.social-btn:focus-visible img \{ mix-blend-mode: multiply; \}/);
+});
+
 test('footer removes About and moves the manifesto rabbit there only on mobile', async () => {
     const [html, css] = await Promise.all([read('index.html'), read('styles.css')]);
     assert.doesNotMatch(html, /footer-about/);

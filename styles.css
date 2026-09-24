@@ -204,10 +204,15 @@ input[type=range]:disabled { opacity: .4; cursor: default; }
 .collection-arrow { width: 18px; height: 18px; margin-left: auto; margin-right: 18px; color: var(--muted); }
 /* Circular social logos use the same monochrome brushwork as the banner. */
 .social-links { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0; }
-.social-btn { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%; color: #fff; background: transparent; transition: transform .2s; }
+.social-btn { --social-pastel: #dedee0; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; flex-shrink: 0; overflow: hidden; border-radius: 50%; color: #fff; background: transparent; transition: transform .2s, background-color .2s; }
 .social-btn img { display: block; width: 100%; height: auto; mix-blend-mode: screen; }
-.social-btn:hover, .social-btn:focus-visible { color: #fff; transform: translateY(-2px); }
-.social-btn:focus-visible { outline-color: #fff; }
+.social-btn[aria-label="SoundCloud"] { --social-pastel: #d6a06f; }
+.social-btn[aria-label="Instagram"] { --social-pastel: #c58dad; }
+.social-btn[aria-label="Facebook"] { --social-pastel: #8fa9cf; }
+.social-btn[aria-label^="Telegram"] { --social-pastel: #8bc5d6; }
+.social-btn:hover, .social-btn:focus-visible { color: var(--social-pastel); background: var(--social-pastel); transform: translateY(-2px); }
+.social-btn:hover img, .social-btn:focus-visible img { mix-blend-mode: multiply; }
+.social-btn:focus-visible { outline-color: var(--social-pastel); }
 @media(min-width:1600px) {
     .player-dock { padding-left: max(32px,calc((100vw - 1440px) / 2)); padding-right: max(32px,calc((100vw - 1440px) / 2)); }
 }
