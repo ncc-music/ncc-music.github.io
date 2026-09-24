@@ -154,6 +154,17 @@ test('mobile comment row stays on one compact line and leaves the tracklist head
     assert.match(css, /@media \(max-width: 760px\) \{[^]*\.waveform-action-row \.waveform-inline-form \.comment-send \{[^}]*align-self: center;[^}]*height: 26px;[^}]*margin: 0;/);
 });
 
+test('user and timed comment fields share the compact action row', async () => {
+    const [html, css] = await Promise.all([read('index.html'), read('styles.css')]);
+    const actions = html.slice(html.indexOf('<div class="waveform-action-row">'), html.indexOf('<button type="button" class="community-toggle"'));
+    assert.ok(actions.indexOf('class="comment-user-compact"') < actions.indexOf('id="comment-form"'));
+    assert.match(css, /\.comment-user-compact \{[^}]*flex: 0 1 170px;[^}]*max-width: 180px;/);
+    assert.match(css, /\.waveform-inline-form \{[^}]*flex: 1 1 auto;/);
+    assert.doesNotMatch(html, /Comentarios vinculados al tiempo/);
+    assert.equal((html.match(/id="comment-name"/g) || []).length, 1);
+    assert.equal((html.match(/id="comment-count"/g) || []).length, 1);
+});
+
 test('mobile expanded player covers the complete viewport', async () => {
     const css = await read('styles.css');
     assert.match(css, /@media \(max-width: 760px\) \{[^]*:root:has\(body\.player-expanded\) \{ scrollbar-gutter: auto; \}/);

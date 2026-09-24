@@ -816,19 +816,19 @@ body.player-expanded { overflow: hidden; }
 .now-player-community { margin-top: 0; padding-top: 0; border-top: 0; }
 .waveform-community { margin-top: 0; padding: 0; border: 0; }
 .waveform-action-row { display: flex; align-items: center; gap: 5px; margin-top: 8px; }
-.waveform-user-row { display: flex; align-items: center; gap: 7px; min-height: 32px; margin: 8px 77px 5px 41px; padding: 3px 10px; background: #08090a; border: 1px solid #ffffff38; border-radius: 999px; box-shadow: inset 0 1px #ffffff08; }
-.waveform-user-row:focus-within { border-color: #9fbe7a99; box-shadow: 0 0 0 2px #9fbe7a17; }
-.waveform-user-row label { flex: 0 0 auto; color: var(--muted); font-size: 11px; }
-.waveform-user-row input { flex: 1 1 auto; min-width: 0; padding: 4px 2px; color: var(--text); background: transparent; border: 0; font: inherit; font-size: 12px; }
-.waveform-user-row input:focus { outline: none; }
-.waveform-user-row > span { flex: 0 0 auto; color: var(--muted); font-size: 10px; font-variant-numeric: tabular-nums; }
-.waveform-community .waveform-user-row { margin: 12px 0 6px; }
+.comment-user-compact { display: flex; flex: 0 1 170px; align-items: center; gap: 6px; min-width: 100px; max-width: 180px; min-height: 38px; padding: 3px 10px; background: #08090a; border: 1px solid #ffffff38; border-radius: 999px; box-shadow: inset 0 1px #ffffff08; }
+.comment-user-compact:focus-within { border-color: #9fbe7a99; box-shadow: 0 0 0 2px #9fbe7a17; }
+.comment-user-compact label { flex: 0 0 auto; color: var(--muted); font-size: 10px; }
+.comment-user-compact input { flex: 1 1 auto; min-width: 0; padding: 4px 0; color: var(--text); background: transparent; border: 0; font: inherit; font-size: 11px; text-overflow: ellipsis; }
+.comment-user-compact input:focus { outline: none; }
 .waveform-action-row > .track-action { width: 36px; min-width: 36px; min-height: 36px; padding: 6px; border: 1px solid #ffffff24; border-radius: 50%; }
 .waveform-action-row > .track-action .like-count { display: none; }
 .waveform-inline-form { flex: 1 1 auto; min-width: 0; margin: 0; }
-.waveform-inline-form .comment-composer { grid-template-columns: minmax(0,1fr) auto; gap: 4px; padding: 3px 4px 3px 12px; border-radius: 999px; }
+.waveform-action-row .waveform-inline-form { margin: 0; }
+.waveform-inline-form .comment-composer { grid-template-columns: minmax(0,1fr) auto auto; gap: 4px; padding: 3px 4px 3px 12px; border-radius: 999px; }
 .waveform-action-row .waveform-inline-form textarea { min-height: 30px; max-height: 30px; padding: 6px 2px; overflow: hidden; resize: none; font-size: 12px; }
-.waveform-action-row .waveform-inline-form .comment-send { grid-column: 2; width: 30px; min-width: 30px; min-height: 30px; padding: 5px; }
+.comment-count-inline { align-self: center; color: var(--muted); font-size: 9px; font-variant-numeric: tabular-nums; }
+.waveform-action-row .waveform-inline-form .comment-send { grid-column: 3; width: 30px; min-width: 30px; min-height: 30px; padding: 5px; }
 .community-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 40px; margin-top: 8px; padding: 8px 3px; color: var(--muted); background: transparent; border-top: 1px solid #ffffff18; font-size: 10px; font-weight: 750; letter-spacing: .08em; text-align: left; }
 .community-toggle:hover { color: var(--text); }
 .community-toggle-meta { display: inline-flex; align-items: center; gap: 9px; color: var(--accent); font-variant-numeric: tabular-nums; }
@@ -926,11 +926,15 @@ body.player-expanded { overflow: hidden; }
     .expanded-waveform-heading img { width: 50px; height: 50px; }
     .expanded-waveform-heading h2 { font-size: 19px; }
     .waveform-action-row { gap: 3px; margin-top: 5px; }
+    .comment-user-compact { flex-basis: 88px; min-width: 78px; max-width: 92px; min-height: 32px; padding: 2px 7px; gap: 4px; }
+    .comment-user-compact label { font-size: 8px; }
+    .comment-user-compact input { font-size: 9px; }
     .waveform-action-row > .track-action { width: 30px; min-width: 30px; min-height: 30px; padding: 4px; }
     .waveform-action-row .waveform-inline-form { align-self: center; margin: 0; }
     .waveform-inline-form .comment-composer { min-height: 32px; padding: 2px 3px 2px 9px; }
+    .comment-count-inline { display: none; }
     .waveform-action-row .waveform-inline-form textarea { min-height: 26px; max-height: 26px; padding: 5px 1px; overflow: hidden; font-size: 11px; line-height: 16px; white-space: nowrap; }
-    .waveform-action-row .waveform-inline-form .comment-send { align-self: center; justify-self: center; width: 26px; min-width: 26px; height: 26px; min-height: 26px; margin: 0; padding: 4px; line-height: 0; }
+    .waveform-action-row .waveform-inline-form .comment-send { grid-column: 2; align-self: center; justify-self: center; width: 26px; min-width: 26px; height: 26px; min-height: 26px; margin: 0; padding: 4px; line-height: 0; }
     .community-toggle { min-height: 34px; margin-top: 5px; padding-block: 6px; }
     .now-player-tracklist { margin-top: 4px; padding-top: 6px; }
     .tracklist-record summary { display: block; }
