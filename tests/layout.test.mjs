@@ -59,6 +59,23 @@ test('waveform long press uses the familiar half-second scrub delay', async () =
     assert.match(source, /const HOLD_TO_SCRUB_MS = 500;/);
 });
 
+test('expanded waveform supports timed comments without toggling playback in its lower zone', async () => {
+    const [html, source, sets] = await Promise.all([read('index.html'), read('js/detail-waveform.js'), read('js/sets.js')]);
+    assert.match(html, /id="comment-body"[^>]*maxlength="280"[^>]*placeholder="Comentario en: 0:00"/);
+    assert.match(source, /const COMMENT_ZONE_START = \.68;/);
+    assert.match(source, /pointer\.commenting/);
+    assert.match(source, /new CustomEvent\('ncc:comment-position'/);
+    assert.match(sets, /placeholder = `Comentario en: \$\{formatTime\(seconds\)\}`/);
+});
+
+test('expanded waveform normalizes and smooths peaks, clusters comments and animates loading', async () => {
+    const source = await read('js/detail-waveform.js');
+    assert.match(source, /const preparePeaks = source =>/);
+    assert.match(source, /COMMENT_CLUSTER_DISTANCE/);
+    assert.match(source, /function drawLoading/);
+    assert.match(source, /requestAnimationFrame\(animateLoading\)/);
+});
+
 test('waveform focus never draws the green keyboard outline', async () => {
     const css = await read('styles.css');
     assert.match(css, /\.detail-waveform canvas:focus, \.detail-waveform canvas:focus-visible \{ outline: none; \}/);

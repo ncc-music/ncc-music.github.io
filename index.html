@@ -81,7 +81,7 @@
                 ]
             }
         </script>
-        <link rel="stylesheet" href="styles.css?v=20260923tracklistscroll">
+        <link rel="stylesheet" href="styles.css?v=20260924wavecomments">
         <link rel="manifest" href="manifest.webmanifest">
         <link rel="icon" type="image/png" sizes="192x192" href="assets/app-icons/icon-192-v2.png">
         <link rel="apple-touch-icon" sizes="180x180" href="assets/app-icons/apple-touch-icon-v2.png">
@@ -229,7 +229,7 @@
                             <div class="waveform-action-row">
                                 <form class="comment-form waveform-inline-form" id="comment-form">
                                     <div class="comment-composer">
-                                        <label class="sr-only" for="comment-body">Comentario</label><textarea id="comment-body" name="comment" maxlength="600" rows="1" required placeholder="Escribe tu comentario"></textarea>
+                                        <label class="sr-only" for="comment-body">Comentario</label><textarea id="comment-body" name="comment" maxlength="280" rows="1" required placeholder="Comentario en: 0:00"></textarea>
                                         <span class="sr-only" aria-label="Momento actual del comentario"><span id="comment-position-current-time">0:00</span></span>
                                         <button type="submit" class="primary-button comment-send" id="comment-submit" aria-label="Publicar comentario" title="Publicar comentario"><svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></button>
                                     </div>
@@ -239,7 +239,7 @@
                             </div>
                             <button type="button" class="community-toggle" id="community-toggle" aria-expanded="false" aria-controls="community-panel"><span>FREAKS COMMENTS</span><span class="community-toggle-meta"><span id="community-toggle-count">0</span><span class="community-toggle-arrow" aria-hidden="true">⌄</span></span></button>
                 <section class="now-player-community waveform-community" id="community-panel" aria-labelledby="community-title" hidden>
-                    <div class="waveform-user-row"><label for="comment-name">User:</label><input id="comment-name" name="name" maxlength="32" autocomplete="nickname" value="AnonymousFreak"><span id="comment-count">0/600</span></div>
+                    <div class="waveform-user-row"><label for="comment-name">User:</label><input id="comment-name" name="name" maxlength="32" autocomplete="nickname" value="AnonymousFreak"><span id="comment-count">0/280</span></div>
                     <p class="comment-status" id="comment-status" role="status"></p>
                     <div class="community-heading"><div><h3 id="community-title">FREAKS COMMENTS · 0</h3><p>Comentarios vinculados al tiempo</p></div></div>
                     <div class="comment-list" id="comment-list" aria-live="polite"><p class="empty-state">Cargando comentarios…</p></div>
@@ -259,9 +259,9 @@
         <audio id="audio-player" preload="metadata"></audio>
         <script src="js/waveform-stream.js?v=20260920"></script>
         <script src="js/gdrive-player.js?v=20260923sets2"></script>
-        <script src="js/detail-waveform.js?v=20260922o"></script>
+        <script src="js/detail-waveform.js?v=20260924wavecomments"></script>
         <script src="js/tracklist-search.js?v=20260921b"></script>
-        <script src="js/sets.js?v=20260923tracklistscroll"></script>
+        <script src="js/sets.js?v=20260924wavecomments"></script>
         <script src="js/content.js?v=20260921e"></script>
         <script src="js/visits.js?v=20260914"></script>
         <script src="js/pwa.js?v=20260923silent"></script>

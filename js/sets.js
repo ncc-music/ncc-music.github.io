@@ -4,6 +4,7 @@
     let admin = false, adminTracks = [], archiveTracks = [], detailTrack = null, editorTrack = null, reordering = false;
     let tracklistQuery = '', nowPlayerOpen = false, nowPlayerTrackKey = '', nowPlayerTrack = null, playerReturnFocus = null;
     let socialLikes = new Set(), pendingLikes = new Set(), commentLikes = new Set(), communityRequest = 0;
+    let commentDraftPosition = null, commentDraftTrackKey = '';
     const communityCache = new Map();
     const analyticsOnce = new Set();
     let analyticsPlayingTrack = null;
@@ -142,13 +143,26 @@
         }
     }
     function commentPositionSeconds(track = activeCommunityTrack() || currentTrack()) {
+        if (Number.isFinite(commentDraftPosition) && commentDraftTrackKey === track?.key) return commentDraftPosition;
         return currentTrack()?.key === track?.key && isSeekable(audio) ? audio.currentTime : 0;
     }
     function syncCommentPosition() {
         const readout = $('comment-position-current-time'); if (!readout) return;
-        readout.textContent = formatTime(commentPositionSeconds());
-        $('comment-body').placeholder = 'Escribe tu comentario';
-        window.NCCDetailWaveform?.setDraftPosition(null);
+        const track = activeCommunityTrack() || currentTrack(), seconds = commentPositionSeconds(track);
+        readout.textContent = formatTime(seconds);
+        $('comment-body').placeholder = `Comentario en: ${formatTime(seconds)}`;
+        window.NCCDetailWaveform?.setDraftPosition(commentDraftTrackKey === track?.key ? commentDraftPosition : null);
+    }
+    function clearCommentPosition() {
+        commentDraftPosition = null; commentDraftTrackKey = '';
+        window.NCCDetailWaveform?.setDraftPosition(null); syncCommentPosition();
+    }
+    function selectCommentPosition(seconds) {
+        const track = activeCommunityTrack() || currentTrack();
+        if (!track || !Number.isFinite(Number(seconds))) return;
+        commentDraftPosition = Math.max(0, Number(seconds)); commentDraftTrackKey = track.key;
+        syncCommentPosition(); $('comment-body').focus();
+        $('comment-status').textContent = `Comentario ubicado en ${formatTime(commentDraftPosition)}.`;
     }
     async function submitComment(event) {
         event.preventDefault();
@@ -165,10 +179,10 @@
             const result = await request(`/sets/${track.id}/comments`, { method: 'POST', body: JSON.stringify({ visitor, author: name, body, positionSeconds }) });
             const data = communityCache.get(track.id) || { fireCount: 0, comments: [] };
             data.comments = [result.comment, ...data.comments].slice(0, 100); communityCache.set(track.id, data);
-            $('comment-body').value = ''; $('comment-count').textContent = '0/600';
+            $('comment-body').value = ''; $('comment-count').textContent = '0/280';
             try { if (name) localStorage.setItem('ncc-comment-name-v1', name); else localStorage.removeItem('ncc-comment-name-v1'); } catch {}
             $('comment-status').textContent = `Publicado como ${result.comment.author} en ${formatTime(result.comment.positionSeconds || 0)}.`;
-            syncCommentPosition(); renderCommunity(track, data);
+            clearCommentPosition(); renderCommunity(track, data);
         } catch (error) { $('comment-status').textContent = error.message; }
         finally { button.disabled = false; }
     }
@@ -410,8 +424,8 @@
         for (const line of track.tracklist || []) { const item = el('li'); appendTracklistLine(item, line); list.append(item); }
         $('expanded-like').dataset.likeId = track.id || '';
         $('expanded-waveform').replaceChildren(); window.NCCDetailWaveform.mount(track, $('expanded-waveform'));
-        syncCommentPosition();
-        $('comment-body').value = ''; $('comment-count').textContent = '0/600'; $('comment-status').textContent = '';
+        clearCommentPosition();
+        $('comment-body').value = ''; $('comment-count').textContent = '0/280'; $('comment-status').textContent = '';
         loadCommunity(track);
         syncNowPlayer();
     }
@@ -484,8 +498,8 @@
         root.append(buildCard(detailTrack, true));
         if (!nowPlayerOpen) {
             if (detailTrack.available) window.NCCDetailWaveform.mount(detailTrack, $('detail-waveform-host'));
-            syncCommentPosition();
-            $('comment-body').value = ''; $('comment-count').textContent = '0/600'; $('comment-status').textContent = ''; loadCommunity(detailTrack);
+            clearCommentPosition();
+            $('comment-body').value = ''; $('comment-count').textContent = '0/280'; $('comment-status').textContent = ''; loadCommunity(detailTrack);
         }
         const focus = root.querySelector('.tracklist-focus'); if (focus) requestAnimationFrame(() => focus.scrollIntoView({ block: 'center' }));
         document.title = detailTrack.name + ' | NCC Music'; syncSocial();
@@ -792,8 +806,9 @@
             });
         });
         $('community-toggle').addEventListener('click', () => setCommunityExpanded($('community-toggle').getAttribute('aria-expanded') !== 'true'));
+        $('expanded-waveform').addEventListener('ncc:comment-position', event => selectCommentPosition(event.detail?.seconds));
         $('comment-form').addEventListener('submit', submitComment);
-        $('comment-body').addEventListener('input', event => { $('comment-count').textContent = `${event.target.value.length}/600`; });
+        $('comment-body').addEventListener('input', event => { $('comment-count').textContent = `${event.target.value.length}/280`; });
         try { $('comment-name').value = localStorage.getItem('ncc-comment-name-v1') || 'AnonymousFreak'; } catch { $('comment-name').value = 'AnonymousFreak'; }
         for (const eventName of ['play', 'pause', 'playing', 'waiting', 'timeupdate', 'loadedmetadata', 'durationchange']) audio.addEventListener(eventName, syncNowPlayer);
         audio.addEventListener('playing', () => { analyticsPlayingTrack = currentTrack(); recordAnalytics('play_start', analyticsPlayingTrack); });

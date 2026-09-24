@@ -874,13 +874,18 @@ body.player-expanded { overflow: hidden; }
 .waveform-play:hover { transform: translate(-50%,-50%) scale(1.06); background: #c9ddb2; }
 .waveform-play .icon { width: 30px; height: 30px; }
 .waveform-play.is-invisible { opacity: 0; pointer-events: none; }
+.waveform-frame.is-loading .waveform-play { opacity: .28; pointer-events: none; }
 .waveform-guide { position: absolute; top: 8%; bottom: 8%; z-index: 2; width: 2px; transform: translateX(-50%); background: var(--accent); border-radius: 2px; box-shadow: 0 0 0 1px #10111299, 0 0 10px #9fbe7a88; pointer-events: none; }
+.waveform-hover-time { position: absolute; top: 5px; z-index: 4; padding: 3px 5px; transform: translateX(-50%); color: #111; background: var(--accent); border: 1px solid #101112; border-radius: 3px; box-shadow: 0 3px 10px #000a; font-size: 9px; font-weight: 850; font-variant-numeric: tabular-nums; line-height: 1; pointer-events: none; }
+.waveform-comment-cue { position: absolute; top: 73.5%; z-index: 4; display: grid; place-items: center; width: 22px; height: 22px; transform: translate(-50%,-35%); color: #111; background: var(--accent); border: 2px solid #101112; border-radius: 50%; box-shadow: 0 3px 9px #000c; font-size: 15px; font-weight: 900; line-height: 1; pointer-events: none; }
+.waveform-hover-time[hidden], .waveform-comment-cue[hidden] { display: none; }
 .waveform-comment-markers { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
-.waveform-comment-marker { position: absolute; top: 73.5%; display: grid; place-items: center; width: 30px; height: 30px; padding: 0; transform: translate(-50%,-35%); color: #111; background: transparent; border: 0; border-radius: 50%; filter: drop-shadow(0 3px 5px #000b); pointer-events: auto; }
-.waveform-comment-marker::after { content: ""; position: absolute; bottom: 25px; left: 50%; width: 1px; height: 28px; transform: translateX(-50%); background: #f0f1f266; pointer-events: none; }
-.waveform-comment-avatar { display: grid; place-items: center; width: 28px; height: 28px; color: #111; background: #f0f1f2; border: 2px solid #101112; border-radius: 50%; font-size: 9px; font-weight: 900; }
+.waveform-comment-marker { position: absolute; top: 73.5%; display: grid; place-items: center; width: 22px; height: 22px; padding: 0; transform: translate(-50%,-35%); color: #111; background: transparent; border: 0; border-radius: 50%; filter: drop-shadow(0 3px 5px #000b); pointer-events: auto; }
+.waveform-comment-marker::after { content: ""; position: absolute; bottom: 19px; left: 50%; width: 1px; height: 22px; transform: translateX(-50%); background: #f0f1f252; pointer-events: none; }
+.waveform-comment-avatar { display: grid; place-items: center; width: 20px; height: 20px; color: #111; background: #f0f1f2; border: 2px solid #101112; border-radius: 50%; font-size: 7px; font-weight: 900; }
+.waveform-comment-marker.is-cluster .waveform-comment-avatar { color: #111; background: var(--accent); font-size: 9px; }
 .waveform-comment-marker:hover .waveform-comment-avatar, .waveform-comment-marker:focus-visible .waveform-comment-avatar, .waveform-comment-marker.is-open .waveform-comment-avatar { background: var(--accent); }
-.waveform-comment-bubble { position: absolute; bottom: 36px; left: 50%; z-index: 5; display: block; width: max-content; max-width: min(260px,70vw); padding: 8px 10px; transform: translate(-50%,5px); color: var(--text); background: #111315f5; border: 1px solid #ffffff28; border-radius: 5px; box-shadow: 0 8px 28px #000c; opacity: 0; visibility: hidden; text-align: left; pointer-events: none; }
+.waveform-comment-bubble { position: absolute; bottom: 29px; left: 50%; z-index: 5; display: block; width: max-content; max-width: min(260px,70vw); padding: 8px 10px; transform: translate(-50%,5px); color: var(--text); background: #111315f5; border: 1px solid #ffffff28; border-radius: 5px; box-shadow: 0 8px 28px #000c; opacity: 0; visibility: hidden; text-align: left; pointer-events: none; }
 .waveform-comment-bubble-meta, .waveform-comment-bubble-body { display: block; }
 .waveform-comment-bubble-meta { margin-bottom: 3px; color: var(--accent); font-size: 10px; font-weight: 800; white-space: nowrap; }
 .waveform-comment-bubble-body { overflow: hidden; max-width: 240px; font-size: 12px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
@@ -889,8 +894,9 @@ body.player-expanded { overflow: hidden; }
 .waveform-comment-marker.is-edge-start:hover .waveform-comment-bubble, .waveform-comment-marker.is-edge-start:focus-visible .waveform-comment-bubble, .waveform-comment-marker.is-edge-start.is-open .waveform-comment-bubble { transform: translate(0,0); }
 .waveform-comment-marker.is-edge-end .waveform-comment-bubble { right: -1px; left: auto; transform: translate(0,5px); }
 .waveform-comment-marker.is-edge-end:hover .waveform-comment-bubble, .waveform-comment-marker.is-edge-end:focus-visible .waveform-comment-bubble, .waveform-comment-marker.is-edge-end.is-open .waveform-comment-bubble { transform: translate(0,0); }
-.waveform-comment-marker.is-draft { color: #111; background: var(--accent); border: 2px solid #101112; border-radius: 50%; font-size: 15px; font-weight: 900; }
+.waveform-comment-marker.is-draft { color: #111; background: var(--accent); border: 2px solid #101112; border-radius: 50%; font-size: 13px; font-weight: 900; }
 .waveform-frame.is-comment-picking canvas { cursor: copy; }
+.waveform-frame.is-comment-zone canvas { cursor: copy; }
 .expanded-waveform .waveform-play { isolation: isolate; width: 62px; height: 62px; color: #090a0b; background: transparent; border: 0; }
 .expanded-waveform .waveform-play::before { position: absolute; inset: 0; z-index: -1; content: ""; background: var(--text); -webkit-mask: url("assets/player-control-brush.png?v=20260923") center / contain no-repeat; mask: url("assets/player-control-brush.png?v=20260923") center / contain no-repeat; }
 .expanded-waveform .waveform-play::after { position: absolute; inset: 7px; z-index: 0; content: ""; border: 4px solid #090a0b; border-radius: 48% 52% 47% 53%; transform: rotate(-2deg); }

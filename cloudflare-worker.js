@@ -653,7 +653,7 @@ async function handleSetService(request, env) {
                 return reply({ count: results[1].results[0].count, reacted: input.reacted });
             }
             if (section === 'comments' && request.method === 'POST') {
-                const body = cleanCommunityText(input.body, 600);
+                const body = cleanCommunityText(input.body, 280);
                 const suppliedAuthor = typeof input.author === 'string' ? input.author.trim() : '';
                 const author = suppliedAuthor ? cleanCommunityText(suppliedAuthor, 32) : 'AnonymousFreak';
                 const rawPosition = input.positionSeconds;

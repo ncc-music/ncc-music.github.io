@@ -80,6 +80,7 @@ test('community rejects unsafe requests and rate limits anonymous comments', asy
     assert.equal((await worker.fetch(req(path, 'POST', { visitor, body: 'Nope' }, { Origin: 'https://foreign.example' }), environment)).status, 403);
     assert.equal((await worker.fetch(req(path, 'POST', { visitor: '<script>', body: 'Nope' }), environment)).status, 400);
     assert.equal((await worker.fetch(req(path, 'POST', { visitor, author: 'A'.repeat(33), body: 'Nope' }), environment)).status, 400);
+    assert.equal((await worker.fetch(req(path, 'POST', { visitor, body: 'A'.repeat(281) }), environment)).status, 400);
     assert.equal((await worker.fetch(req(path, 'POST', { visitor, body: 'Nope', positionSeconds: 90000 }), environment)).status, 400);
     for (let index = 0; index < 5; index++) assert.equal((await worker.fetch(req(path, 'POST', { visitor, body: `Comment ${index}` }), environment)).status, 201);
     assert.equal((await worker.fetch(req(path, 'POST', { visitor, body: 'One too many' }), environment)).status, 429);
