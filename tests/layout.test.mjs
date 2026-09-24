@@ -89,7 +89,7 @@ test('expanded player leaves the complete desktop header visible and fills the m
 test('expanded artwork sits in a compact horizontal stage above the waveform', async () => {
     const css = await read('styles.css');
     assert.match(css, /\.expanded-player-visual \{[^}]*flex-direction: column;/);
-    assert.match(css, /\.expanded-skull-media \{[^}]*order: -1;[^}]*width: 100%;[^}]*height: clamp\(190px,27dvh,240px\);/);
+    assert.match(css, /\.expanded-skull-media \{[^}]*order: -1;[^}]*width: 100%;[^}]*height: clamp\(210px,30dvh,270px\);/);
     assert.match(css, /\.expanded-skull-media img, \.expanded-skull-media video \{[^}]*position: absolute;[^}]*top: 50%;[^}]*left: 50%;[^}]*width: calc\(100% - clamp\(12px,2vw,22px\)\);[^}]*height: calc\(100% - clamp\(12px,2vw,22px\)\);[^}]*transform: translate\(-50%,-50%\);[^}]*object-fit: contain;[^}]*object-position: center;/);
     assert.doesNotMatch(css, /\.expanded-player-visual \{[^}]*grid-template-columns:/);
 });
