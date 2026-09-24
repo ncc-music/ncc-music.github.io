@@ -141,17 +141,7 @@ function renderCatalogue() {
         duration.dataset.playlistId = playlist.id; duration.dataset.trackDuration = index;
         duration.textContent = formatTrackDuration(track.duration);
         button.append(number, main, rowPlay, duration);
-        const playAndExpandSelectedTrack = trigger => {
-            const playbackInProgress = Boolean(currentTrack() && !audio.paused && playerState.isPlaying);
-            const previewingAnotherSet = playbackInProgress && currentTrack()?.key !== track.key;
-            if (previewingAnotherSet && window.NCCSets) {
-                window.NCCSets.collapse();
-                window.NCCSets.open(track);
-                return;
-            }
-            if (!playbackInProgress && currentTrack()?.url !== track.url) selectTrack(playlist.id, index, false);
-            if (window.NCCSets) window.NCCSets.expand(trigger, track);
-        };
+        const playAndExpandSelectedTrack = trigger => previewTrackInExpandedPlayer(playlist.id, index, track, trigger);
         number.addEventListener('click', event => { event.stopPropagation(); playAndExpandSelectedTrack(event.currentTarget); });
         title.addEventListener('click', event => { event.stopPropagation(); playAndExpandSelectedTrack(event.currentTarget); });
         rowPlay.addEventListener('click', event => {
@@ -181,8 +171,7 @@ function syncActiveRows() {
         const active = row.dataset.playlistId === playerState.activePlaylistId && Number(row.dataset.trackIndex) === playerState.currentTrackIndex;
         const playlist = getPlaylistById(row.dataset.playlistId);
         const track = playlist?.tracks[Number(row.dataset.trackIndex)];
-        const previewingAnotherSet = Boolean(currentTrack() && !audio.paused && playerState.isPlaying && !active);
-        const action = previewingAnotherSet ? 'Abrir ficha' : 'Abrir reproductor ampliado';
+        const action = 'Abrir reproductor ampliado';
         row.classList.toggle('active', active);
         row.setAttribute('aria-current', active ? 'true' : 'false');
         if (track) {
@@ -265,6 +254,11 @@ function playTrackAndExpand(playlistId, index, track, trigger) {
     const playback = active ? startPlayback() : playTrack(playlistId, index, false);
     window.NCCSets?.expand(trigger, track);
     return playback;
+}
+function previewTrackInExpandedPlayer(playlistId, index, track, trigger) {
+    const playbackInProgress = Boolean(currentTrack() && !audio.paused && playerState.isPlaying);
+    if (!playbackInProgress && currentTrack()?.url !== track.url) selectTrack(playlistId, index, false);
+    window.NCCSets?.expand(trigger, track);
 }
 function togglePlay() {
     if (!currentTrack()) return;

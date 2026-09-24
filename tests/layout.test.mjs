@@ -178,6 +178,19 @@ test('mobile mini player keeps its compact layout and uses a clean expand contro
     assert.match(css, /\.player-dock \.expand-player \{[^}]*grid-column: 3;[^}]*width: 32px;[^}]*height: 32px;/);
 });
 
+test('selecting another set while audio plays previews it in expanded player instead of opening its detail page', async () => {
+    const player = await read('js/gdrive-player.js');
+    const preview = player.slice(player.indexOf('const playAndExpandSelectedTrack'), player.indexOf("number.addEventListener('click'"));
+    assert.match(preview, /previewTrackInExpandedPlayer\(playlist\.id, index, track, trigger\)/);
+    assert.doesNotMatch(preview, /window\.NCCSets\.open\(track\)|window\.NCCSets\.collapse\(\)/);
+    const previewHelper = player.slice(player.indexOf('function previewTrackInExpandedPlayer'), player.indexOf('function togglePlay()'));
+    assert.match(previewHelper, /window\.NCCSets\?\.expand\(trigger, track\)/);
+    assert.doesNotMatch(previewHelper, /window\.NCCSets\.open\(track\)|window\.NCCSets\.collapse\(\)/);
+    const activeRows = player.slice(player.indexOf('function syncActiveRows()'), player.indexOf('function syncPlaybackUI()'));
+    assert.match(activeRows, /const action = 'Abrir reproductor ampliado'/);
+    assert.doesNotMatch(activeRows, /Abrir ficha/);
+});
+
 test('desktop mini player gives the set title more room without changing mobile', async () => {
     const css = await read('styles.css');
     assert.match(css, /@media \(min-width: 761px\) \{[^]*?\.player-dock \{[^}]*padding-left: 12px;[^}]*padding-right: 20px;[^}]*\}[^]*?\.player-dock \.now-playing \{[^}]*gap: 11px;/);

@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'ncc-music-';
-const CACHE_NAME = `${CACHE_PREFIX}shell-v32`;
+const CACHE_NAME = `${CACHE_PREFIX}shell-v33`;
 const APP_SHELL = [
     '/',
     '/index.html',
@@ -14,7 +14,7 @@ const APP_SHELL = [
     '/assets/mixed-by-single-line.webp?v=20260923',
     '/assets/fonts/RoadRage-Regular.woff2',
     '/js/waveform-stream.js?v=20260920',
-    '/js/gdrive-player.js?v=20260923sets',
+    '/js/gdrive-player.js?v=20260923sets2',
     '/js/detail-waveform.js?v=20260922o',
     '/js/tracklist-search.js?v=20260921b',
     '/js/sets.js?v=20260923ops3',
