@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 
 const read = path => readFile(new URL('../' + path, import.meta.url), 'utf8');
 
@@ -177,6 +177,23 @@ test('mobile mini player keeps its compact layout and uses a clean expand contro
     assert.match(css, /\.expand-player \{[^}]*color: var\(--text\);[^}]*background: transparent;[^}]*border: 0;/);
     assert.match(css, /\.expand-player:hover, \.expand-player:focus-visible \{[^}]*color: var\(--accent\);/);
     assert.match(css, /\.player-dock \.expand-player \{[^}]*grid-column: 3;[^}]*width: 32px;[^}]*height: 32px;/);
+    assert.match(css, /\.player-dock \.play-button \{ width: 48px; height: 48px; \}/);
+});
+
+test('mini player controls use the monochrome brush language with clear hierarchy', async () => {
+    const [css, worker, brush] = await Promise.all([
+        read('styles.css'),
+        read('service-worker.js'),
+        stat(new URL('../assets/player-control-brush.png', import.meta.url))
+    ]);
+    assert.match(css, /\.play-button \{[^}]*width: 46px;[^}]*height: 46px;[^}]*background: transparent;/);
+    assert.match(css, /\.play-button::before \{[^}]*player-control-brush\.png\?v=20260923[^}]*mask:/);
+    assert.match(css, /body\[data-playing=true\] \.play-button::before \{ background: var\(--accent\); \}/);
+    assert.match(css, /\.transport-buttons \.icon-button \{[^}]*width: 40px;[^}]*height: 40px;[^}]*border-radius: 50%;/);
+    assert.match(css, /\.player-dock \.progress-control input \{[^}]*height: 4px;[^}]*var\(--accent\) var\(--progress\)/);
+    assert.match(css, /\.transport-buttons \.icon-button:focus-visible, \.play-button:focus-visible \{ outline: none;[^}]*box-shadow:/);
+    assert.match(worker, /player-control-brush\.png\?v=20260923/);
+    assert.ok(brush.size < 60000);
 });
 
 test('selecting another set while audio plays previews it in expanded player instead of opening its detail page', async () => {

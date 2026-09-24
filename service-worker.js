@@ -1,16 +1,17 @@
 const CACHE_PREFIX = 'ncc-music-';
-const CACHE_NAME = `${CACHE_PREFIX}shell-v34`;
+const CACHE_NAME = `${CACHE_PREFIX}shell-v35`;
 const APP_SHELL = [
     '/',
     '/index.html',
     '/manifest.webmanifest',
-    '/styles.css?v=20260923playeractions3',
+    '/styles.css?v=20260923brushcontrols',
     '/assets/app-icons/icon-192-v2.png',
     '/assets/app-icons/icon-512-v2.png',
     '/assets/app-icons/icon-maskable-512-v2.png',
     '/assets/app-icons/apple-touch-icon-v2.png',
     '/assets/cardu-skull-mustard.webp?v=20260923',
     '/assets/player-cover-clean.jpg',
+    '/assets/player-control-brush.png?v=20260923',
     '/assets/mixed-by-single-line.webp?v=20260923',
     '/assets/fonts/RoadRage-Regular.woff2',
     '/js/waveform-stream.js?v=20260920',
