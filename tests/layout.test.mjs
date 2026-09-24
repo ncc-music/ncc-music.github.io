@@ -97,6 +97,7 @@ test('expanded artwork sits in a compact horizontal stage above the waveform', a
 test('expanded player close control stays compact', async () => {
     const css = await read('styles.css');
     assert.match(css, /\.now-player-close \{[^}]*width: 36px;[^}]*height: 36px;[^}]*margin: 0 4px -36px auto;/);
+    assert.match(css, /\.now-player-close:focus, \.now-player-close:focus-visible \{ outline: none; box-shadow: none; \}/);
     assert.match(css, /\.now-player-close \.icon \{ width: 15px; height: 15px; \}/);
     assert.match(css, /\.waveform-community-card \{ margin-top: 0;/);
 });

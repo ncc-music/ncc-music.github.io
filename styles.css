@@ -754,6 +754,7 @@ body.player-expanded { overflow: hidden; }
 @keyframes now-player-rise { from { transform: translateY(100%); } to { transform: translateY(0); } }
 @keyframes now-player-fade-in { from { opacity: 0; } to { opacity: 1; } }
 .now-player-close { position: sticky; top: 0; z-index: 4; display: grid; place-items: center; width: 36px; height: 36px; margin: 0 4px -36px auto; color: var(--text); background: #1b1c1fcc; border: 1px solid #ffffff24; border-radius: 50%; backdrop-filter: blur(10px); }
+.now-player-close:focus, .now-player-close:focus-visible { outline: none; box-shadow: none; }
 .now-player-close .icon { width: 15px; height: 15px; }
 .now-player-layout { width: min(1240px,100%); margin: 0 auto; }
 .waveform-community-card { margin-top: 0; padding: 12px; background: linear-gradient(180deg,#151719 0,#0d0f10 100%); border: 1px solid #ffffff1f; border-radius: 10px; box-shadow: inset 0 1px #ffffff08, 0 18px 50px #0005; }
