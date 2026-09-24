@@ -89,7 +89,7 @@ test('expanded player leaves the complete desktop header visible and fills the m
 test('expanded artwork sits in a compact horizontal stage above the waveform', async () => {
     const css = await read('styles.css');
     assert.match(css, /\.expanded-player-visual \{[^}]*flex-direction: column;/);
-    assert.match(css, /\.expanded-skull-media \{[^}]*order: -1;[^}]*width: 100%;[^}]*height: clamp\(120px,18dvh,180px\);/);
+    assert.match(css, /\.expanded-skull-media \{[^}]*order: -1;[^}]*width: 100%;[^}]*height: clamp\(132px,19dvh,192px\);/);
     assert.match(css, /\.expanded-skull-media img, \.expanded-skull-media video \{[^}]*position: absolute;[^}]*top: 50%;[^}]*left: 50%;[^}]*width: calc\(100% - clamp\(12px,2vw,22px\)\);[^}]*height: calc\(100% - clamp\(12px,2vw,22px\)\);[^}]*transform: translate\(-50%,-50%\);[^}]*object-fit: contain;[^}]*object-position: center;/);
     assert.doesNotMatch(css, /\.expanded-player-visual \{[^}]*grid-template-columns:/);
 });
@@ -121,6 +121,25 @@ test('mobile comment row stays on one compact line and leaves the tracklist head
     assert.match(css, /@media \(max-width: 760px\) \{[^]*\.waveform-action-row \.waveform-inline-form textarea \{[^}]*min-height: 26px;[^}]*max-height: 26px;[^}]*white-space: nowrap;/);
     assert.match(css, /@media \(max-width: 760px\) \{[^]*\.waveform-action-row \.waveform-inline-form \.comment-send \{[^}]*width: 26px;[^}]*min-height: 26px;/);
     assert.match(css, /@media \(max-width: 760px\) \{[^]*\.community-toggle \{[^}]*min-height: 34px;/);
+    assert.match(css, /@media \(max-width: 760px\) \{[^]*\.waveform-action-row \.waveform-inline-form \.comment-send \{[^}]*align-self: center;[^}]*height: 26px;[^}]*margin: 0;/);
+});
+
+test('mobile expanded player covers the complete viewport', async () => {
+    const css = await read('styles.css');
+    assert.match(css, /@media \(max-width: 760px\) \{[^]*:root:has\(body\.player-expanded\) \{ scrollbar-gutter: auto; \}/);
+    assert.match(css, /@media \(max-width: 760px\) \{[^]*\.now-player \{[^}]*inset: 0;[^}]*width: 100vw;[^}]*height: 100dvh;/);
+});
+
+test('expanded actions place likes after comments and keep link copying inside the share dialog', async () => {
+    const [html, sets, css] = await Promise.all([read('index.html'), read('js/sets.js'), read('styles.css')]);
+    const actions = html.slice(html.indexOf('<div class="waveform-action-row">'), html.indexOf('<button type="button" class="community-toggle"'));
+    assert.ok(actions.indexOf('id="comment-form"') < actions.indexOf('id="expanded-like"'));
+    assert.ok(actions.indexOf('id="expanded-like"') < actions.indexOf('id="expanded-share"'));
+    assert.doesNotMatch(actions, /expanded-copy-link/);
+    assert.doesNotMatch(sets, /share-url|copySetLink|expanded-copy-link/);
+    assert.match(sets, /copy\.setAttribute\('aria-label', 'Copiar enlace'\)/);
+    assert.match(sets, /copy\.innerHTML = icon\('link'\)/);
+    assert.match(css, /\.share-copy \{[^}]*width: 48px;[^}]*height: 48px;[^}]*border-radius: 50%;/);
 });
 
 test('mobile expanded player allows the set title to use two lines', async () => {

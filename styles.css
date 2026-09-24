@@ -653,9 +653,10 @@ main { padding-bottom: calc(var(--dock-height) + 64px); }
 .destination-choice:hover .destination-mark { transform: translateY(-3px) rotate(-3deg) scale(1.06); filter: drop-shadow(0 10px 13px #000b) brightness(1.08); }
 .destination-choice:nth-child(even):hover .destination-mark { transform: translateY(-3px) rotate(3deg) scale(1.06); }
 .destination-label { overflow: hidden; width: 100%; color: #dedee0; font-family: "Road Rage", Impact, sans-serif; font-size: 18px; font-weight: 400; letter-spacing: .035em; line-height: 1; text-align: center; text-overflow: ellipsis; text-transform: uppercase; }
-.share-link-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; }
-.set-dialog .share-link-row input { min-width: 0; margin: 0; color: #d7d8da; background: #1b1d20; border-radius: 5px; }
-.share-copy { min-width: 88px; margin: 0 !important; border-radius: 5px; }
+.share-link-row { display: flex; align-items: center; }
+.share-copy { display: grid; place-items: center; width: 48px; height: 48px; margin: 0; color: #111; background: var(--text); border-radius: 50%; }
+.share-copy:hover, .share-copy:focus-visible { background: var(--accent); }
+.share-copy .icon { width: 22px; height: 22px; }
 .share-dialog #share-status { min-height: 21px; margin: 8px 0 0; color: var(--accent); }
 .set-dialog input:not([type=checkbox]), .set-dialog textarea { display: block; width: 100%; color: var(--text); background: var(--bg); border: 1px solid #ffffff30; border-radius: 8px; padding: 12px; font: inherit; margin: 8px 0 20px; }
 .set-dialog textarea { resize: vertical; min-height: 180px; }
@@ -706,8 +707,7 @@ main { padding-bottom: calc(var(--dock-height) + 64px); }
     .share-preview-waveform { height: 34px; }
     .destination-grid { grid-template-columns: repeat(3,1fr); row-gap: 13px; }
     .destination-mark { width: 54px; height: 54px; }
-    .share-link-row { grid-template-columns: 1fr; }
-    .share-copy { width: 100%; }
+    .share-copy { width: 44px; height: 44px; }
 }
 
 .content-paragraph { white-space: pre-line; overflow-wrap: anywhere; }
@@ -760,7 +760,7 @@ body.player-expanded { overflow: hidden; }
 .now-player-layout { width: min(1240px,100%); margin: 0 auto; }
 .waveform-community-card { margin-top: 0; padding: 12px; background: linear-gradient(180deg,#151719 0,#0d0f10 100%); border: 1px solid #ffffff1f; border-radius: 10px; box-shadow: inset 0 1px #ffffff08, 0 18px 50px #0005; }
 .expanded-player-visual { display: flex; min-width: 0; flex-direction: column; gap: 10px; }
-.expanded-skull-media { position: relative; order: -1; display: grid; place-items: center; width: 100%; height: clamp(120px,18dvh,180px); min-width: 0; padding: 0; overflow: hidden; color: var(--text); background: #050606; border: 1px solid #ffffff14; border-radius: 7px; cursor: pointer; }
+.expanded-skull-media { position: relative; order: -1; display: grid; place-items: center; width: 100%; height: clamp(132px,19dvh,192px); min-width: 0; padding: 0; overflow: hidden; color: var(--text); background: #050606; border: 1px solid #ffffff14; border-radius: 7px; cursor: pointer; }
 .expanded-skull-media:focus, .expanded-skull-media:focus-visible { outline: none; }
 .expanded-skull-control { position: absolute; right: 12px; bottom: 12px; z-index: 2; display: grid; place-items: center; width: 44px; height: 44px; color: #111; background: #eef0f2e8; border: 3px solid #090a0bcc; border-radius: 50%; box-shadow: 0 7px 22px #000b; transition: transform .16s ease, background .16s ease; }
 .expanded-skull-media:hover .expanded-skull-control { transform: scale(1.06); background: var(--accent); }
@@ -799,7 +799,6 @@ body.player-expanded { overflow: hidden; }
 .waveform-community .waveform-user-row { margin: 12px 0 6px; }
 .waveform-action-row > .track-action { width: 36px; min-width: 36px; min-height: 36px; padding: 6px; border: 1px solid #ffffff24; border-radius: 50%; }
 .waveform-action-row > .track-action .like-count { display: none; }
-.waveform-action-row > .track-action.is-copied { color: var(--accent); border-color: #9fbe7a88; background: #9fbe7a14; }
 .waveform-inline-form { flex: 1 1 auto; min-width: 0; margin: 0; }
 .waveform-inline-form .comment-composer { grid-template-columns: minmax(0,1fr) auto; gap: 4px; padding: 3px 4px 3px 12px; border-radius: 999px; }
 .waveform-action-row .waveform-inline-form textarea { min-height: 30px; max-height: 30px; padding: 6px 2px; overflow: hidden; resize: none; font-size: 12px; }
@@ -878,22 +877,24 @@ body.player-expanded { overflow: hidden; }
 }
 
 @media (max-width: 760px) {
-    .now-player { height: 100dvh; padding-inline: 18px; box-shadow: none; }
+    :root:has(body.player-expanded) { scrollbar-gutter: auto; }
+    .now-player { inset: 0; width: 100vw; height: 100dvh; padding-inline: 18px; box-shadow: none; }
     .now-player-backdrop { display: none; }
     .now-player-close { display: none; }
     .now-player::before { content: ""; position: absolute; top: max(8px, env(safe-area-inset-top)); left: 50%; width: 42px; height: 4px; transform: translateX(-50%); background: #ffffff5c; border-radius: 999px; }
     .waveform-community-card { padding: 11px; }
     .expanded-player-visual { gap: 10px; }
-    .expanded-skull-media { height: clamp(118px,32vw,160px); }
+    .expanded-skull-media { height: clamp(126px,34vw,168px); }
     .expanded-skull-control { display: none; }
     .waveform-community-card .detail-waveform canvas { height: clamp(118px,19dvh,140px); }
     .expanded-waveform-heading img { width: 50px; height: 50px; }
     .expanded-waveform-heading h2 { font-size: 19px; }
     .waveform-action-row { gap: 3px; margin-top: 5px; }
     .waveform-action-row > .track-action { width: 30px; min-width: 30px; min-height: 30px; padding: 4px; }
+    .waveform-action-row .waveform-inline-form { align-self: center; margin: 0; }
     .waveform-inline-form .comment-composer { min-height: 32px; padding: 2px 3px 2px 9px; }
     .waveform-action-row .waveform-inline-form textarea { min-height: 26px; max-height: 26px; padding: 5px 1px; overflow: hidden; font-size: 11px; line-height: 16px; white-space: nowrap; }
-    .waveform-action-row .waveform-inline-form .comment-send { width: 26px; min-width: 26px; min-height: 26px; padding: 4px; }
+    .waveform-action-row .waveform-inline-form .comment-send { align-self: center; justify-self: center; width: 26px; min-width: 26px; height: 26px; min-height: 26px; margin: 0; padding: 4px; line-height: 0; }
     .community-toggle { min-height: 34px; margin-top: 5px; padding-block: 6px; }
     .tracklist-record summary { display: block; }
     .tracklist-record-meta { display: block; margin-top: 5px; text-align: left; }

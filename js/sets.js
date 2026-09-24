@@ -219,19 +219,6 @@
         });
         syncNowPlayer();
     }
-    async function copySetLink(track, button) {
-        if (!track?.slug || !button) return;
-        const originalLabel = 'Copiar enlace';
-        try {
-            await navigator.clipboard.writeText(setURL(track));
-            recordAnalytics('share', track, 'copy', false);
-            button.classList.add('is-copied'); button.setAttribute('aria-label', 'Enlace copiado'); button.title = 'Enlace copiado';
-            setTimeout(() => { button.classList.remove('is-copied'); button.setAttribute('aria-label', originalLabel); button.title = originalLabel; }, 1600);
-        } catch {
-            shareSet(track);
-            $('share-status').textContent = 'Seleccioná y copiá el enlace.';
-        }
-    }
     const originalActions = createTrackActions;
     createTrackActions = track => {
         const actions = originalActions(track);
@@ -579,12 +566,12 @@
                 navigator.clipboard?.writeText(data.url).then(() => {
                     $('share-status').textContent = 'Enlace copiado. Pegalo en un mensaje o en el sticker Enlace de tu historia de Instagram.';
                 }).catch(() => {
-                    $('share-url').focus(); $('share-url').select(); $('share-status').textContent = 'Copiá este enlace y pegalo en Instagram.';
+                    $('share-status').textContent = 'No se pudo copiar automáticamente. Usá el botón Copiar enlace.';
                 });
             });
             dialog.querySelector('.destination-grid').append(link);
         }
-        $('share-url').value = data.url; $('share-status').textContent = ''; dialog.showModal();
+        $('share-status').textContent = ''; dialog.showModal();
     }
     async function loadAdmin() {
         try {
@@ -811,7 +798,6 @@
         $('now-player-close').addEventListener('click', closeNowPlayer);
         $('expanded-like').addEventListener('click', () => toggleLike(activeCommunityTrack() || currentTrack()));
         $('expanded-share').addEventListener('click', () => shareSet(activeCommunityTrack() || currentTrack()));
-        $('expanded-copy-link').addEventListener('click', event => copySetLink(activeCommunityTrack() || currentTrack(), event.currentTarget));
         $('expanded-skull-toggle').addEventListener('click', () => playSet(nowPlayerTrack || currentTrack()));
         $('community-fire').addEventListener('click', () => toggleFire(nowPlayerTrack || currentTrack()));
         $('community-toggle').addEventListener('click', () => setCommunityExpanded($('community-toggle').getAttribute('aria-expanded') !== 'true'));
@@ -837,11 +823,11 @@
         const previewWaveform = el('div', 'share-preview-waveform'); previewWaveform.id = 'share-preview-waveform'; previewWaveform.setAttribute('aria-hidden', 'true');
         previewBody.append(previewTop, previewWaveform); preview.append(cover, previewBody); sharing.append(preview);
         const shareHeading = el('p', 'share-section-label', 'Compartir en'); sharing.append(shareHeading, el('div', 'destination-grid'));
-        const label = el('label', 'share-section-label', 'Enlace del set'); label.htmlFor = 'share-url'; sharing.append(label);
-        const linkRow = el('div', 'share-link-row'); const input = el('input'); input.id = 'share-url'; input.readOnly = true; linkRow.append(input);
-        const copy = el('button', 'primary-button share-copy', 'Copiar'); copy.type = 'button'; copy.addEventListener('click', async () => {
+        const copyLabel = el('p', 'share-section-label', 'Copiar enlace'); sharing.append(copyLabel);
+        const linkRow = el('div', 'share-link-row');
+        const copy = el('button', 'share-copy'); copy.type = 'button'; copy.setAttribute('aria-label', 'Copiar enlace'); copy.title = 'Copiar enlace'; copy.innerHTML = icon('link'); copy.addEventListener('click', async () => {
             try { await navigator.clipboard.writeText(setURL(shareTrack)); recordAnalytics('share', shareTrack, 'copy', false); $('share-status').textContent = 'Enlace copiado.'; }
-            catch { input.focus(); input.select(); $('share-status').textContent = 'Seleccioná y copiá el enlace.'; }
+            catch { $('share-status').textContent = 'No se pudo copiar el enlace.'; }
         }); linkRow.append(copy); sharing.append(linkRow); const status = el('p'); status.id = 'share-status'; status.setAttribute('role', 'status'); sharing.append(status);
         const moderationDialog = makeDialog('moderation-dialog', 'Moderar comentarios'); const moderationList = el('div', 'moderation-list'); moderationList.id = 'moderation-list'; moderationDialog.append(moderationList);
         const analyticsDialog = makeDialog('analytics-dialog', 'Estadísticas'); const analyticsContent = el('div', 'analytics-content'); analyticsContent.id = 'analytics-content'; analyticsDialog.append(analyticsContent);
