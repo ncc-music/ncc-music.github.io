@@ -929,11 +929,11 @@ body.player-expanded { overflow: hidden; }
     .expanded-waveform-heading img { width: 50px; height: 50px; }
     .expanded-waveform-heading h2 { font-size: 19px; }
     .waveform-action-row { gap: 3px; margin-top: 5px; }
-    .comment-user-compact { flex-basis: 118px; min-width: 110px; max-width: 124px; height: 32px; min-height: 32px; padding: 2px 7px; gap: 4px; }
+    .comment-user-compact { flex: .72 1 0; min-width: 78px; max-width: 118px; height: 32px; min-height: 32px; padding: 2px 7px; gap: 4px; }
     .comment-user-compact label { font-size: 8px; }
     .comment-user-compact input { font-size: 9px; }
     .waveform-action-row > .track-action { width: 30px; min-width: 30px; min-height: 30px; padding: 4px; }
-    .waveform-action-row .waveform-inline-form { align-self: center; margin: 0; }
+    .waveform-action-row .waveform-inline-form { flex: 1 1 0; align-self: center; margin: 0; }
     .waveform-inline-form .comment-composer { height: 32px; min-height: 32px; padding: 2px 3px 2px 9px; }
     .comment-count-inline { display: none; }
     .waveform-action-row .waveform-inline-form textarea { min-height: 26px; max-height: 26px; padding: 5px 1px; overflow: hidden; font-size: 11px; line-height: 16px; white-space: nowrap; }
